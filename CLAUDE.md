@@ -22,9 +22,13 @@ Mijoz → Obyekt → Tijorat taklifi → Shartnoma → Loyiha → Smeta/BOM → 
 - 10–30 foydalanuvchi, bitta kompaniya; multi-tenant tayyor (`companyId`).
 - Lokal DB: docker `swifta-db`, port 5435.
 
-## 1-bosqich holati
-Tayyor: sxema, auth/rollar, FX (CBU), audit, 4 til, dashboard, obyektlar (timeline, BOM, budjet, to'lov jadvali, to'lovlar, xarajatlar, tarix), mijozlar, katalog, moliya, foydalanuvchilar, audit sahifasi, seed, Dockerfile/railway.json.
-Lokal: `pnpm dev --port 3100`; `pnpm db:seed`, `pnpm db:demo` (faqat lokal demo ma'lumot, demo parol demo12345).
+## Konsept
+Kelishilgan arxitektura va ochiq savollar: [docs/KONSEPT.md](docs/KONSEPT.md). Yangi modul yozishdan oldin o'qing.
+Saytga (`railway up`) faqat foydalanuvchi aniq ruxsat bergandan keyin chiqariladi.
+
+## Holat
+Saytda (swifta.uz): obyektlar, mijozlar, katalog, moliya, xarid, ombor, yetkazib beruvchilar, material nazorati, bildirishnomalar.
+Lokal: `pnpm local` (yoki `pnpm dev --port 3100`); `pnpm db:seed`, `pnpm db:demo` (faqat lokal demo, parol demo12345).
 Konteyner start: `prisma migrate deploy` → idempotent seed → `next start`.
 
 <!-- BEGIN:nextjs-agent-rules -->
