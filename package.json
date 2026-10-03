@@ -13,7 +13,8 @@
     "db:demo": "tsx scripts/demo-data.ts",
     "i18n:cyrl": "tsx scripts/translit-uz.ts",
     "i18n:check": "tsx scripts/check-i18n.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "local": "./scripts/local.sh"
   },
   "dependencies": {
     "@prisma/client": "6",

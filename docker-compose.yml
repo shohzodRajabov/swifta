@@ -1,0 +1,17 @@
+# Local development database. App runs with `pnpm dev` (see README).
+services:
+  db:
+    image: postgres:16
+    container_name: swifta-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: swifta
+      POSTGRES_PASSWORD: swifta
+      POSTGRES_DB: swifta
+    ports:
+      - "5435:5432"
+    volumes:
+      - swifta-db:/var/lib/postgresql/data
+
+volumes:
+  swifta-db:
