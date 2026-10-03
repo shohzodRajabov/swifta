@@ -11,11 +11,12 @@ import { ActionForm, DeleteButton, SubmitButton } from "@/components/forms/actio
 import { MoneyInput } from "@/components/forms/money-input";
 import { Money } from "@/components/money";
 import { addBomItem, deleteBomItem } from "@/app/(app)/projects/actions";
+import { projectVatRate } from "@/server/projects/defaults";
 
 export async function BomTab({ user, projectId }: { user: CurrentUser; projectId: string }) {
   const t = await getTranslations();
-  const canEdit = can(user.role, "bom.edit");
-  const showPrice = canEdit || can(user.role, "finance.view");
+  const canEdit = can(user, "bom.edit");
+  const showPrice = canEdit || can(user, "finance.view");
   const [items, products] = await Promise.all([
     db.bomItem.findMany({ where: { projectId }, orderBy: [{ kind: "asc" }, { createdAt: "asc" }] }),
     canEdit
@@ -28,6 +29,7 @@ export async function BomTab({ user, projectId }: { user: CurrentUser; projectId
   ]);
 
   const materials = await projectMaterials(projectId);
+  const defaultVat = await projectVatRate(projectId);
   // Flow numbers are aggregated per catalog product; show them on the first BOM line of each product.
   const flowFor = (bomId: string) => {
     const row = materials.find((r) => r.bomItemIds.includes(bomId));
@@ -161,7 +163,7 @@ export async function BomTab({ user, projectId }: { user: CurrentUser; projectId
                 <Input name="unit" placeholder="m, dona, kg" />
               </Field>
             </div>
-            <MoneyInput label={t("bom.unitPrice")} />
+            <MoneyInput label={t("bom.unitPrice")} vat defaultVat={defaultVat} />
             <div className="md:col-span-2">
               <SubmitButton>{t("common.add")}</SubmitButton>
             </div>

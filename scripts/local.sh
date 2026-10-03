@@ -20,7 +20,7 @@ until docker exec swifta-db pg_isready -U swifta >/dev/null 2>&1; do sleep 1; do
 [ -d node_modules ] || pnpm install
 pnpm exec prisma migrate deploy
 SEED_ADMIN_PASSWORD="${SEED_ADMIN_PASSWORD:-admin12345}" pnpm db:seed
-if [ "$(docker exec swifta-db psql -U swifta -tAc 'select count(*) from "Project"')" = "0" ]; then
+if [ "$(docker exec swifta-db psql -U swifta -tAc 'select count(*) from "Company" where "isDemo"')" = "0" ]; then
   pnpm db:demo
 fi
 

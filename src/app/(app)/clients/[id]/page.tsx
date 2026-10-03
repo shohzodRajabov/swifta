@@ -8,18 +8,25 @@ import { db } from "@/lib/db";
 import { computeMetrics, sumAmounts } from "@/lib/metrics";
 import { Badge, Card, CardHeader, Empty, LinkButton, PageHeader, Table, Td, Th } from "@/components/ui";
 import { Money } from "@/components/money";
-import { StageBadge } from "@/components/project-bits";
+import { StatusBadge } from "@/components/project-bits";
 
 export default async function ClientPage({ params }: PageProps<"/clients/[id]">) {
   const { id } = await params;
   const user = await requirePermission("clients.view");
   const client = await db.client.findFirst({
     where: { id, companyId: user.companyId },
-    include: { projects: { orderBy: { createdAt: "desc" } } },
+    include: {
+      projects: { orderBy: { createdAt: "desc" }, include: { statusDef: { include: { group: true } } } },
+      ownedProjects: {
+        where: { NOT: { clientId: id } },
+        orderBy: { createdAt: "desc" },
+        include: { statusDef: { include: { group: true } }, client: { select: { name: true } } },
+      },
+    },
   });
   if (!client) notFound();
   const t = await getTranslations();
-  const showMoney = can(user.role, "finance.view") || can(user.role, "payments.edit");
+  const showMoney = can(user, "finance.view") || can(user, "payments.edit");
   const metrics = showMoney ? await computeMetrics(client.projects) : null;
   const all = metrics ? [...metrics.values()] : [];
 
@@ -41,13 +48,13 @@ export default async function ClientPage({ params }: PageProps<"/clients/[id]">)
         back={{ href: "/clients", label: t("clients.title") }}
         actions={
           <>
-            {can(user.role, "projects.edit") && (
+            {can(user, "projects.edit") && (
               <LinkButton href={`/projects/new?client=${client.id}`} variant="secondary">
                 <Plus className="size-4" aria-hidden />
                 {t("projects.new")}
               </LinkButton>
             )}
-            {can(user.role, "clients.edit") && (
+            {can(user, "clients.edit") && (
               <LinkButton href={`/clients/${client.id}/edit`} variant="secondary">
                 <Pencil className="size-4" aria-hidden />
                 {t("common.edit")}
@@ -61,9 +68,9 @@ export default async function ClientPage({ params }: PageProps<"/clients/[id]">)
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
           {(
             [
-              ["clients.contracts", sumAmounts(all.map((m) => m.contract))],
+              ["clients.contracts", sumAmounts(all.map((m) => m.contractTotalGross))],
               ["clients.paid", sumAmounts(all.map((m) => m.received))],
-              ["clients.debt", sumAmounts(all.map((m) => m.clientDebt))],
+              ["clients.debt", sumAmounts(all.map((m) => m.receivable))],
             ] as const
           ).map(([label, value]) => (
             <Card key={label} className="p-4">
@@ -85,7 +92,7 @@ export default async function ClientPage({ params }: PageProps<"/clients/[id]">)
                 <tr>
                   <Th>{t("projects.code")}</Th>
                   <Th>{t("projects.name")}</Th>
-                  <Th>{t("projects.stage")}</Th>
+                  <Th>{t("projects.status")}</Th>
                   {metrics && <Th className="text-right">{t("projects.contractAmount")}</Th>}
                   {metrics && <Th className="text-right">{t("clients.debt")}</Th>}
                 </tr>
@@ -100,16 +107,16 @@ export default async function ClientPage({ params }: PageProps<"/clients/[id]">)
                       </Link>
                     </Td>
                     <Td>
-                      <StageBadge stage={p.stage} />
+                      <StatusBadge status={p.statusDef} />
                     </Td>
                     {metrics && (
                       <Td className="text-right">
-                        <Money value={metrics.get(p.id)!.contract} size="sm" />
+                        <Money value={metrics.get(p.id)!.contractTotalGross} size="sm" />
                       </Td>
                     )}
                     {metrics && (
                       <Td className="text-right">
-                        <Money value={metrics.get(p.id)!.clientDebt} size="sm" />
+                        <Money value={metrics.get(p.id)!.receivable} size="sm" />
                       </Td>
                     )}
                   </tr>
@@ -119,7 +126,33 @@ export default async function ClientPage({ params }: PageProps<"/clients/[id]">)
           )}
         </Card>
 
-        <Card>
+        {client.ownedProjects.length > 0 && (
+          <Card className="xl:col-start-1">
+            <CardHeader title={t("clients.ownedProjects")} subtitle={t("clients.ownedProjectsHint")} />
+            <Table>
+              <tbody>
+                {client.ownedProjects.map((p) => (
+                  <tr key={p.id}>
+                    <Td className="num text-muted">{p.code}</Td>
+                    <Td>
+                      <Link href={`/projects/${p.id}`} className="font-medium hover:text-primary">
+                        {p.name}
+                      </Link>
+                      <div className="text-xs text-muted">
+                        {t("projects.customer")}: {p.client.name}
+                      </div>
+                    </Td>
+                    <Td>
+                      <StatusBadge status={p.statusDef} />
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </Card>
+        )}
+
+        <Card className="xl:col-start-2 xl:row-start-1">
           <CardHeader title={t("projects.info")} />
           <dl className="divide-y divide-border text-sm">
             {info.map(([k, v]) => (

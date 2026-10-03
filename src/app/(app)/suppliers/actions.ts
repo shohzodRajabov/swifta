@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { resolveMoney } from "@/lib/fx";
 import { toDateOnly } from "@/lib/utils";
+import { approvalFor } from "@/server/finance/approval";
 import {
   fail,
   formObject,
@@ -131,6 +132,7 @@ export async function addSupplierPayment(supplierId: string, _: ActionState, for
       .parse(formObject(formData));
     if (data.orderId && !(await db.purchaseOrder.findFirst({ where: { id: data.orderId, supplierId } }))) fail("invalid");
     const m = await resolveMoney({ amount: data.amount, currency: data.currency, date: data.date, manualRate: data.rate });
+    const approval = await approvalFor(user, m.amountUzs);
     await db.$transaction(async (tx) => {
       const p = await tx.supplierPayment.create({
         data: {
@@ -141,6 +143,8 @@ export async function addSupplierPayment(supplierId: string, _: ActionState, for
           reference: data.reference,
           note: data.note,
           ...m,
+          approval,
+          ...(approval === "APPROVED" ? { approvedById: user.id, approvedAt: new Date() } : {}),
         },
       });
       await audit(tx, { companyId: user.companyId, userId: user.id }, "SupplierPayment", p.id, "create", null, p);

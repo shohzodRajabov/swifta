@@ -21,9 +21,9 @@ export default async function SupplierPage({ params }: PageProps<"/suppliers/[id
   const supplier = await db.supplier.findFirst({ where: { id, companyId: user.companyId } });
   if (!supplier) notFound();
   const t = await getTranslations();
-  const canEdit = can(user.role, "suppliers.edit");
-  const canPay = can(user.role, "supplierPayments.edit");
-  const showMoney = can(user.role, "finance.view") || canPay;
+  const canEdit = can(user, "suppliers.edit");
+  const canPay = can(user, "supplierPayments.edit");
+  const showMoney = can(user, "finance.view") || canPay;
 
   const [prices, orders, payments, products, balances] = await Promise.all([
     db.supplierPrice.findMany({ where: { supplierId: id }, include: { product: true }, orderBy: { date: "desc" } }),
@@ -60,7 +60,7 @@ export default async function SupplierPage({ params }: PageProps<"/suppliers/[id
         back={{ href: "/suppliers", label: t("suppliers.title") }}
         actions={
           <>
-            {can(user.role, "procurement.edit") && (
+            {can(user, "procurement.edit") && (
               <LinkButton href={`/procurement/new?supplier=${id}`} variant="secondary">
                 <Plus className="size-4" aria-hidden />
                 {t("procurement.new")}

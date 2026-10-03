@@ -7,12 +7,17 @@
 // the exchange rate used (`fxRate` = UZS per 1 USD), the rate's date and source,
 // and both normalized values `amountUzs` / `amountUsd`. Base currency is UZS.
 //
-// Plan / Commitment / Actual are never mixed:
-//   PLAN       -> BomItem, BudgetLine, PaymentMilestone
-//   COMMITMENT -> PurchaseOrder lines (not cancelled)
-//   ACTUAL     -> Expense, ClientPayment, materials issued to the project (StockMovement)
+// VAT: amounts are entered gross (as on the invoice) together with `vatRate` (0 = no VAT).
+// Net = gross * 100 / (100 + vatRate). Profit uses net values for legal entities under the general tax regime.
+//
+// Plan / Forecast / Actual are never mixed (see docs/KONSEPT.md):
+//   PLAN       -> contract (+ amendments), BomItem, BudgetLine, PaymentMilestone, planned task costs
+//   COMMITMENT -> purchase orders and contractor agreements not yet delivered (feeds the forecast)
+//   ACTUAL     -> signed acts (revenue), approved expenses, issued materials, approved work sessions (labour),
+//                 verified contractor work
 //
 // Material flow: BOM (plan) -> PO line (ordered) -> RECEIPT -> ISSUE to project -> CONSUMPTION (used)
+// Work flow: Task -> WorkSession (physical quantity, recorded once) -> members (hours, share, contribution)
 
 generator client {
   provider = "prisma-client-js"
@@ -83,13 +88,16 @@ enum ClientType {
 enum CostCategory {
   EQUIPMENT
   MATERIAL
-  LABOR
-  SUBCONTRACTOR
+  LABOR // internal labour
+  OUTSOURCING // external masters / brigades per task
+  SUBCONTRACTOR // firms taking a scope under contract
   TRANSPORT
+  WAREHOUSE
   TOOLS
   HOTEL
   CUSTOMS
   INSTALLATION
+  TAX // turnover tax on revenue (turnover regime)
   OTHER
 }
 
@@ -115,6 +123,261 @@ enum MovementType {
   CONSUMPTION // used on site (does not touch warehouse stock)
 }
 
+enum StatusGroupCode {
+  NEW
+  OFFER
+  CONTRACT
+  WORK
+  TESTING
+  LAUNCHED
+  DONE
+  SERVICE
+}
+
+enum TaxRegime {
+  GENERAL // VAT + profit tax
+  TURNOVER // turnover tax, no VAT
+}
+
+enum SalaryInputMode {
+  NET // "qo'lga" — after income tax
+  GROSS
+}
+
+enum ApprovalStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+enum DocumentCategory {
+  CONTRACT
+  SIGNED_CONTRACT
+  ADDITIONAL_AGREEMENT
+  COMMERCIAL_OFFER
+  TECH_SPEC
+  PROJECT_FILES
+  DRAWING
+  SPECIFICATION
+  SMETA
+  INVOICE
+  PURCHASE_ORDER
+  WAYBILL
+  ACT
+  COMPLETION_ACT
+  HIDDEN_WORKS_ACT
+  TEST_ACT
+  PAYMENT_PROOF
+  FINAL_DOCS
+  WARRANTY
+  PASSPORT
+  CERTIFICATE
+  PHOTO
+  CORRESPONDENCE
+  SERVICE_REPORT
+  CONTRACTOR_DOC
+  OTHER
+}
+
+enum ActStatus {
+  DRAFT
+  SIGNED
+  CANCELLED
+}
+
+enum OverheadCategory {
+  OFFICE_RENT
+  OFFICE_SALARY
+  PAYROLL_UNALLOCATED
+  VEHICLE
+  FUEL
+  UTILITIES
+  COMMUNICATION
+  MARKETING
+  BANK_FEES
+  TAXES_FEES
+  TOOLS
+  WORKSHOP
+  OTHER
+}
+
+enum BackupStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum GroupRole {
+  LEADER
+  SENIOR
+  WORKER
+}
+
+enum TaskStatus {
+  NEW
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  INSPECTION
+  APPROVED
+  REJECTED
+  REWORK
+  BLOCKED
+  CANCELLED
+}
+
+enum AssigneeKind {
+  EMPLOYEE
+  GROUP
+  CONTRACTOR
+}
+
+enum TaskEventType {
+  CREATED
+  STATUS
+  START
+  PAUSE
+  PROGRESS
+  FINISH
+  COMMENT
+  PROBLEM
+  PHOTO
+}
+
+enum ContributionMethod {
+  EQUAL // proportional to hours worked in the session
+  LEADER // leader enters percentages
+  RULE // admin-configured weights by group role
+  EFFICIENCY // weighted by each member's historical efficiency index
+}
+
+enum SessionStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum Confirmation {
+  PENDING
+  CONFIRMED
+  DISPUTED
+}
+
+enum InspectionResult {
+  PASSED
+  REJECTED
+}
+
+enum RemarkStatus {
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  FIXED
+  REINSPECTION
+  ACCEPTED
+}
+
+enum AttendanceType {
+  OBJECT
+  WORKSHOP
+  TRAVEL
+  OFFICE
+  IDLE_MATERIAL
+  IDLE_CLIENT
+  IDLE_OTHER
+  ABSENT
+  LEAVE
+  SICK
+}
+
+enum LocationKind {
+  FLOOR
+  ZONE
+  ROOM
+  OTHER
+}
+
+enum PayrollStatus {
+  OPEN
+  CLOSED
+}
+
+enum ContractorKind {
+  INDIVIDUAL
+  BRIGADE
+  COMPANY
+}
+
+enum Availability {
+  AVAILABLE
+  BUSY
+  UNAVAILABLE
+  BLACKLISTED
+}
+
+enum OutsourceStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  VERIFIED
+  REJECTED
+  CANCELLED
+}
+
+enum KpiSubject {
+  EMPLOYEE
+  GROUP
+  CONTRACTOR
+}
+
+enum KpiRuleStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum KpiPeriodStatus {
+  CALCULATED
+  APPROVED
+}
+
+enum ZoneKind {
+  POINT
+  LINE
+  RECT
+  POLYGON
+}
+
+enum ImportStatus {
+  DRAFT
+  APPROVED
+  REJECTED
+}
+
+enum ServiceTicketStatus {
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum ServiceFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  ANNUAL
+  ON_CALL
+}
+
+enum ServiceContractStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
 enum PaymentMethod {
   BANK
   CASH
@@ -128,44 +391,163 @@ model Company {
   baseCurrency     Currency @default(UZS)
   /// Notify when material usage exceeds plan by more than this percent.
   overuseThreshold Decimal  @default(5) @db.Decimal(5, 2)
-  createdAt        DateTime @default(now())
+  /// Demo workspace: never mixed with real data.
+  isDemo           Boolean  @default(false)
 
-  users          User[]
-  clients        Client[]
-  projects       Project[]
-  categories     ProductCategory[]
-  products       Product[]
-  auditLogs      AuditLog[]
-  suppliers      Supplier[]
-  warehouses     Warehouse[]
-  purchaseOrders PurchaseOrder[]
-  movements      StockMovement[]
+  // Payroll & taxes
+  normWorkDays    Int             @default(22)
+  normHoursPerDay Decimal         @default(8) @db.Decimal(4, 2)
+  salaryInputMode SalaryInputMode @default(NET)
+  incomeTaxRate   Decimal         @default(12) @db.Decimal(5, 2)
+  socialTaxRate   Decimal         @default(12) @db.Decimal(5, 2)
+
+  // Finance controls
+  approvalThresholdUzs Decimal @default(10000000) @db.Decimal(18, 2)
+
+  // Workforce
+  /// Weights by group role for the RULE contribution method, e.g. {"LEADER":1.2,"SENIOR":1.1,"WORKER":1}
+  contributionWeights   Json?
+  defaultContribution   ContributionMethod @default(EQUAL)
+  efficiencyMinSessions Int                @default(5)
+
+  // Contractors: configurable formulas (component -> weight)
+  contractorRatingConfig      Json?
+  contractorReliabilityConfig Json?
+  contractorPhoneRequired     Boolean @default(true)
+
+  // Telegram digest
+  telegramBotToken     String?
+  telegramChatId       String?
+  telegramDigestHour   Int       @default(19)
+  telegramLastDigestAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  users            User[]
+  roles            RoleDef[]
+  legalEntities    LegalEntity[]
+  statusGroups     StatusGroup[]
+  files            FileObject[]
+  documents        Document[]
+  overheads        OverheadExpense[]
+  employees        Employee[]
+  groups           WorkGroup[]
+  workTypes        WorkType[]
+  tasks            Task[]
+  sessions         WorkSession[]
+  remarks          Remark[]
+  attendance       AttendanceDay[]
+  payrollMonths    PayrollMonth[]
+  smetaImports     SmetaImport[]
+  contractors      Contractor[]
+  kpiRules         KpiRule[]
+  kpiPeriods       KpiPeriod[]
+  drawings         Drawing[]
+  serviceContracts ServiceContract[]
+  serviceTickets   ServiceTicket[]
+  clients          Client[]
+  projects         Project[]
+  categories       ProductCategory[]
+  products         Product[]
+  auditLogs        AuditLog[]
+  suppliers        Supplier[]
+  warehouses       Warehouse[]
+  purchaseOrders   PurchaseOrder[]
+  movements        StockMovement[]
 }
 
 model User {
-  id           String   @id @default(cuid())
-  companyId    String
-  company      Company  @relation(fields: [companyId], references: [id])
-  email        String
-  name         String
-  position     String?
-  phone        String?
-  passwordHash String
-  role         Role
-  locale       String   @default("uz")
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  companyId          String
+  company            Company   @relation(fields: [companyId], references: [id])
+  email              String?
+  name               String
+  position           String?
+  /// Login phone, normalized to digits with country code (998XXXXXXXXX).
+  phone              String?
+  passwordHash       String
+  /// Deprecated: replaced by `roleId` (kept for data safety).
+  role               Role?
+  roleId             String?
+  roleDef            RoleDef?  @relation(fields: [roleId], references: [id])
+  /// Set when an admin issues a one-time password; the user must choose their own on next login.
+  mustChangePassword Boolean   @default(false)
+  lastLoginAt        DateTime?
+  locale             String    @default("uz")
+  active             Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  managedProjects  Project[]           @relation("ProjectManager")
-  engineerProjects Project[]           @relation("ProjectEngineer")
-  stageEvents      ProjectStageEvent[]
-  expenses         Expense[]
-  auditLogs        AuditLog[]
-  movements        StockMovement[]     @relation("MovementCreatedBy")
-  purchaseOrders   PurchaseOrder[]
+  employee           Employee?
+  managedProjects    Project[]           @relation("ProjectManager")
+  engineerProjects   Project[]           @relation("ProjectEngineer")
+  chiefProjects      Project[]           @relation("ProjectChiefEngineer")
+  foremanProjects    Project[]           @relation("ProjectForeman")
+  stageEvents        ProjectStageEvent[]
+  expenses           Expense[]           @relation("ExpenseCreatedBy")
+  auditLogs          AuditLog[]
+  movements          StockMovement[]     @relation("MovementCreatedBy")
+  purchaseOrders     PurchaseOrder[]
+  uploadedFiles      FileObject[]
+  responsibleTasks   Task[]              @relation("TaskResponsible")
+  inspectorTasks     Task[]              @relation("TaskInspector")
+  approverTasks      Task[]              @relation("TaskApprover")
+  createdTasks       Task[]              @relation("TaskCreatedBy")
+  taskEvents         TaskEvent[]
+  recordedSessions   WorkSession[]       @relation("SessionRecordedBy")
+  approvedSessions   WorkSession[]       @relation("SessionApprovedBy")
+  inspections        Inspection[]
+  responsibleRemarks Remark[]            @relation("RemarkResponsible")
+  createdRemarks     Remark[]            @relation("RemarkCreatedBy")
+  serviceTickets     ServiceTicket[]
 
   @@unique([companyId, email])
+  @@unique([companyId, phone])
+}
+
+/// Admin-configurable role: a named set of permissions (see src/lib/permissions.ts).
+model RoleDef {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  /// System key for built-in roles (ADMIN, DIRECTOR, ...); null for custom roles.
+  key         String?
+  name        String
+  description String?
+  permissions String[]
+  isSystem    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  users User[]
+
+  @@unique([companyId, name])
+  @@unique([companyId, key])
+}
+
+/// Our own legal entities that sign contracts with customers.
+model LegalEntity {
+  id              String    @id @default(cuid())
+  companyId       String
+  company         Company   @relation(fields: [companyId], references: [id])
+  name            String
+  tin             String?
+  address         String?
+  bankDetails     String?
+  director        String?
+  phone           String?
+  taxRegime       TaxRegime @default(GENERAL)
+  vatRate         Decimal   @default(12) @db.Decimal(5, 2)
+  turnoverTaxRate Decimal   @default(4) @db.Decimal(5, 2)
+  profitTaxRate   Decimal   @default(15) @db.Decimal(5, 2)
+  isDefault       Boolean   @default(false)
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+
+  projects  Project[]
+  overheads OverheadExpense[]
+
+  @@unique([companyId, name])
 }
 
 model AuditLog {
@@ -213,34 +595,58 @@ model Client {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
-  projects Project[]
+  projects         Project[]         @relation("ProjectCustomer")
+  ownedProjects    Project[]         @relation("ProjectOwner")
+  serviceContracts ServiceContract[]
+  serviceTickets   ServiceTicket[]
 
   @@index([companyId, name])
 }
 
 model Project {
-  id             String        @id @default(cuid())
-  companyId      String
-  company        Company       @relation(fields: [companyId], references: [id])
-  code           String
-  name           String
-  clientId       String
-  client         Client        @relation(fields: [clientId], references: [id])
-  address        String?
-  contractNumber String?
-  contractDate   DateTime?     @db.Date
-  managerId      String?
-  manager        User?         @relation("ProjectManager", fields: [managerId], references: [id])
-  engineerId     String?
-  engineer       User?         @relation("ProjectEngineer", fields: [engineerId], references: [id])
-  installTeam    String?
-  startDate      DateTime?     @db.Date
-  plannedEndDate DateTime?     @db.Date
-  actualEndDate  DateTime?     @db.Date
-  stage          ProjectStage  @default(NEW_REQUEST)
-  status         ProjectStatus @default(ACTIVE)
-  priority       Priority      @default(MEDIUM)
-  note           String?
+  id               String        @id @default(cuid())
+  companyId        String
+  company          Company       @relation(fields: [companyId], references: [id])
+  code             String
+  name             String
+  /// Customer / general contractor: signs the contract with us and pays us.
+  clientId         String
+  client           Client        @relation("ProjectCustomer", fields: [clientId], references: [id])
+  /// Owner of the object (e.g. a bank); may equal the customer.
+  ownerId          String?
+  owner            Client?       @relation("ProjectOwner", fields: [ownerId], references: [id])
+  /// Which of our legal entities signs the contract.
+  legalEntityId    String?
+  legalEntity      LegalEntity?  @relation(fields: [legalEntityId], references: [id])
+  objectType       String?
+  siteContactName  String?
+  siteContactPhone String?
+  siteContactEmail String?
+  address          String?
+  contractNumber   String?
+  contractDate     DateTime?     @db.Date
+  managerId        String?
+  manager          User?         @relation("ProjectManager", fields: [managerId], references: [id])
+  engineerId       String?
+  engineer         User?         @relation("ProjectEngineer", fields: [engineerId], references: [id])
+  chiefEngineerId  String?
+  chiefEngineer    User?         @relation("ProjectChiefEngineer", fields: [chiefEngineerId], references: [id])
+  foremanId        String?
+  foreman          User?         @relation("ProjectForeman", fields: [foremanId], references: [id])
+  installTeam      String?
+  startDate        DateTime?     @db.Date
+  plannedEndDate   DateTime?     @db.Date
+  actualEndDate    DateTime?     @db.Date
+  /// Deprecated: replaced by `statusId` (admin-configurable statuses).
+  stage            ProjectStage  @default(NEW_REQUEST)
+  statusId         String?
+  statusDef        StatusDef?    @relation(fields: [statusId], references: [id])
+  status           ProjectStatus @default(ACTIVE)
+  warrantyMonths   Int?
+  warrantyStart    DateTime?     @db.Date
+  warrantyEnd      DateTime?     @db.Date
+  priority         Priority      @default(MEDIUM)
+  note             String?
 
   // Contract value (planned revenue)
   contractAmount    Decimal  @default(0) @db.Decimal(18, 2)
@@ -250,31 +656,48 @@ model Project {
   contractFxSource  String   @default("CBU")
   contractAmountUzs Decimal  @default(0) @db.Decimal(18, 2)
   contractAmountUsd Decimal  @default(0) @db.Decimal(18, 2)
+  contractVatRate   Decimal  @default(0) @db.Decimal(5, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  stageEvents    ProjectStageEvent[]
-  bomItems       BomItem[]
-  budgetLines    BudgetLine[]
-  milestones     PaymentMilestone[]
-  payments       ClientPayment[]
-  expenses       Expense[]
-  purchaseOrders PurchaseOrder[]
-  movements      StockMovement[]
+  stageEvents        ProjectStageEvent[]
+  amendments         ContractAmendment[]
+  acts               Act[]
+  documents          Document[]
+  locations          ProjectLocation[]
+  tasks              Task[]
+  sessions           WorkSession[]
+  remarks            Remark[]
+  attendance         AttendanceDay[]
+  smetaImports       SmetaImport[]
+  contractorPayments ContractorPayment[]
+  drawings           Drawing[]
+  serviceContracts   ServiceContract[]
+  serviceTickets     ServiceTicket[]
+  bomItems           BomItem[]
+  budgetLines        BudgetLine[]
+  milestones         PaymentMilestone[]
+  payments           ClientPayment[]
+  expenses           Expense[]
+  purchaseOrders     PurchaseOrder[]
+  movements          StockMovement[]
 
   @@unique([companyId, code])
   @@index([companyId, stage])
 }
 
 model ProjectStageEvent {
-  id        String       @id @default(cuid())
+  id        String        @id @default(cuid())
   projectId String
-  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  stage     ProjectStage
-  enteredAt DateTime     @default(now())
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// Deprecated (old fixed stages); new events use `statusId`.
+  stage     ProjectStage?
+  statusId  String?
+  statusDef StatusDef?    @relation(fields: [statusId], references: [id])
+  enteredAt DateTime      @default(now())
   userId    String?
-  user      User?        @relation(fields: [userId], references: [id])
+  user      User?         @relation(fields: [userId], references: [id])
   note      String?
 
   @@index([projectId, enteredAt])
@@ -345,12 +768,14 @@ model BomItem {
   unitPriceUzs   Decimal  @db.Decimal(18, 2)
   plannedCostUzs Decimal  @db.Decimal(18, 2)
   plannedCostUsd Decimal  @db.Decimal(18, 2)
+  vatRate        Decimal  @default(0) @db.Decimal(5, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   poLines   PurchaseOrderLine[]
   movements StockMovement[]
+  tasks     Task[]
 
   @@index([projectId])
 }
@@ -370,6 +795,7 @@ model BudgetLine {
   fxSource  String   @default("CBU")
   amountUzs Decimal  @db.Decimal(18, 2)
   amountUsd Decimal  @db.Decimal(18, 2)
+  vatRate   Decimal  @default(0) @db.Decimal(5, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -431,7 +857,7 @@ model Expense {
   supplier    String?
   reference   String?
   createdById String?
-  createdBy   User?        @relation(fields: [createdById], references: [id])
+  createdBy   User?        @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
 
   amount    Decimal  @db.Decimal(18, 2)
   currency  Currency @default(UZS)
@@ -440,6 +866,12 @@ model Expense {
   fxSource  String   @default("CBU")
   amountUzs Decimal  @db.Decimal(18, 2)
   amountUsd Decimal  @db.Decimal(18, 2)
+  vatRate   Decimal  @default(0) @db.Decimal(5, 2)
+
+  approval     ApprovalStatus @default(APPROVED)
+  approvedById String?
+  approvedAt   DateTime?
+  rejectReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -538,6 +970,7 @@ model PurchaseOrder {
   totalAmount Decimal  @default(0) @db.Decimal(18, 2)
   totalUzs    Decimal  @default(0) @db.Decimal(18, 2)
   totalUsd    Decimal  @default(0) @db.Decimal(18, 2)
+  vatRate     Decimal  @default(0) @db.Decimal(5, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -575,35 +1008,45 @@ model PurchaseOrderLine {
 /// Every warehouse / material event. Quantities are always positive; the type gives the direction
 /// (ADJUSTMENT uses a signed qty).
 model StockMovement {
-  id            String             @id @default(cuid())
-  companyId     String
-  company       Company            @relation(fields: [companyId], references: [id])
-  type          MovementType
-  date          DateTime           @db.Date
-  productId     String?
-  product       Product?           @relation(fields: [productId], references: [id])
-  bomItemId     String?
-  bomItem       BomItem?           @relation(fields: [bomItemId], references: [id], onDelete: SetNull)
-  name          String
-  unit          String
-  qty           Decimal            @db.Decimal(14, 3)
-  warehouseId   String?
-  warehouse     Warehouse?         @relation("MovementFrom", fields: [warehouseId], references: [id])
-  toWarehouseId String?
-  toWarehouse   Warehouse?         @relation("MovementTo", fields: [toWarehouseId], references: [id])
-  projectId     String?
-  project       Project?           @relation(fields: [projectId], references: [id])
-  poLineId      String?
-  poLine        PurchaseOrderLine? @relation(fields: [poLineId], references: [id])
-  /// Cost per unit at the time of the movement (for valuation and project actual cost).
-  unitCostUzs   Decimal            @default(0) @db.Decimal(18, 2)
-  unitCostUsd   Decimal            @default(0) @db.Decimal(18, 4)
-  responsible   String?
-  document      String?
-  note          String?
-  createdById   String?
-  createdBy     User?              @relation("MovementCreatedBy", fields: [createdById], references: [id])
-  createdAt     DateTime           @default(now())
+  id              String             @id @default(cuid())
+  companyId       String
+  company         Company            @relation(fields: [companyId], references: [id])
+  type            MovementType
+  date            DateTime           @db.Date
+  productId       String?
+  product         Product?           @relation(fields: [productId], references: [id])
+  bomItemId       String?
+  bomItem         BomItem?           @relation(fields: [bomItemId], references: [id], onDelete: SetNull)
+  name            String
+  unit            String
+  qty             Decimal            @db.Decimal(14, 3)
+  warehouseId     String?
+  warehouse       Warehouse?         @relation("MovementFrom", fields: [warehouseId], references: [id])
+  toWarehouseId   String?
+  toWarehouse     Warehouse?         @relation("MovementTo", fields: [toWarehouseId], references: [id])
+  projectId       String?
+  project         Project?           @relation(fields: [projectId], references: [id])
+  poLineId        String?
+  poLine          PurchaseOrderLine? @relation(fields: [poLineId], references: [id])
+  /// Cost per unit at the time of the movement (for valuation and project actual cost), gross and net of VAT.
+  unitCostUzs     Decimal            @default(0) @db.Decimal(18, 2)
+  unitCostUsd     Decimal            @default(0) @db.Decimal(18, 4)
+  unitCostNetUzs  Decimal            @default(0) @db.Decimal(18, 2)
+  unitCostNetUsd  Decimal            @default(0) @db.Decimal(18, 4)
+  vatRate         Decimal            @default(0) @db.Decimal(5, 2)
+  /// Material use recorded against a task / work session / service ticket.
+  taskId          String?
+  task            Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  sessionId       String?
+  session         WorkSession?       @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  serviceTicketId String?
+  serviceTicket   ServiceTicket?     @relation(fields: [serviceTicketId], references: [id], onDelete: SetNull)
+  responsible     String?
+  document        String?
+  note            String?
+  createdById     String?
+  createdBy       User?              @relation("MovementCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime           @default(now())
 
   @@index([companyId, type, date])
   @@index([projectId])
@@ -631,7 +1074,953 @@ model SupplierPayment {
   amountUzs Decimal  @db.Decimal(18, 2)
   amountUsd Decimal  @db.Decimal(18, 2)
 
+  approval     ApprovalStatus @default(APPROVED)
+  approvedById String?
+  approvedAt   DateTime?
+  rejectReason String?
+
   createdAt DateTime @default(now())
 
   @@index([supplierId, date])
+}
+
+// =====================================================================================
+// Statuses (admin-configurable), documents, contract revenue, overhead, backups
+// =====================================================================================
+
+/// Fixed status groups A–H; the `code` drives business logic, the name/colour are editable.
+model StatusGroup {
+  id        String          @id @default(cuid())
+  companyId String
+  company   Company         @relation(fields: [companyId], references: [id])
+  code      StatusGroupCode
+  letter    String
+  name      String
+  color     String          @default("#64748b")
+  sortOrder Int             @default(0)
+
+  statuses StatusDef[]
+
+  @@unique([companyId, code])
+}
+
+model StatusDef {
+  id           String             @id @default(cuid())
+  groupId      String
+  group        StatusGroup        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  code         String
+  name         String
+  sortOrder    Int                @default(0)
+  active       Boolean            @default(true)
+  /// Document categories that must exist on the project before entering this status.
+  requiredDocs DocumentCategory[]
+
+  projects Project[]
+  events   ProjectStageEvent[]
+
+  @@unique([groupId, code])
+}
+
+/// A stored file (local disk in development, S3 bucket in production).
+model FileObject {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id])
+  storageKey   String   @unique
+  fileName     String
+  mime         String
+  size         Int
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  versions        DocumentVersion[]
+  attachments     Attachment[]
+  drawingVersions DrawingVersion[]
+  smetaImports    SmetaImport[]
+}
+
+/// A managed document with immutable versions (v1, v2, ...).
+model Document {
+  id           String           @id @default(cuid())
+  companyId    String
+  company      Company          @relation(fields: [companyId], references: [id])
+  projectId    String?
+  project      Project?         @relation(fields: [projectId], references: [id])
+  contractorId String?
+  contractor   Contractor?      @relation(fields: [contractorId], references: [id])
+  category     DocumentCategory
+  title        String
+  createdById  String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  versions DocumentVersion[]
+  acts     Act[]
+
+  @@index([companyId, projectId, category])
+}
+
+model DocumentVersion {
+  id          String     @id @default(cuid())
+  documentId  String
+  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version     Int
+  fileId      String
+  file        FileObject @relation(fields: [fileId], references: [id])
+  note        String?
+  createdById String?
+  createdAt   DateTime   @default(now())
+
+  @@unique([documentId, version])
+}
+
+/// Photos / files attached to a record (task, session, remark, expense, ticket ...).
+model Attachment {
+  id         String     @id @default(cuid())
+  companyId  String
+  fileId     String
+  file       FileObject @relation(fields: [fileId], references: [id])
+  entityType String
+  entityId   String
+  createdAt  DateTime   @default(now())
+
+  @@index([entityType, entityId])
+}
+
+/// Additional agreement that changes the contract value (e.g. extra works).
+model ContractAmendment {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number      String
+  date        DateTime @db.Date
+  description String
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+  vatRate   Decimal  @default(0) @db.Decimal(5, 2)
+
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+}
+
+/// ACTUAL revenue: act of completed works (Forma 2/3), interim or final.
+model Act {
+  id         String    @id @default(cuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number     String
+  date       DateTime  @db.Date
+  periodFrom DateTime? @db.Date
+  periodTo   DateTime? @db.Date
+  status     ActStatus @default(DRAFT)
+  signedAt   DateTime?
+  note       String?
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id])
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+  vatRate   Decimal  @default(0) @db.Decimal(5, 2)
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lines ActLine[]
+
+  @@index([projectId, date])
+}
+
+model ActLine {
+  id          String  @id @default(cuid())
+  actId       String
+  act         Act     @relation(fields: [actId], references: [id], onDelete: Cascade)
+  taskId      String?
+  description String
+  qty         Decimal @db.Decimal(14, 3)
+  unit        String
+  amountUzs   Decimal @db.Decimal(18, 2)
+}
+
+/// Company-level costs not tied to a project (office, vehicles, unallocated payroll ...).
+model OverheadExpense {
+  id             String           @id @default(cuid())
+  companyId      String
+  company        Company          @relation(fields: [companyId], references: [id])
+  legalEntityId  String?
+  legalEntity    LegalEntity?     @relation(fields: [legalEntityId], references: [id])
+  category       OverheadCategory
+  date           DateTime         @db.Date
+  description    String
+  supplier       String?
+  reference      String?
+  /// MANUAL or PAYROLL (generated when a payroll month is closed)
+  source         String           @default("MANUAL")
+  payrollMonthId String?
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+  vatRate   Decimal  @default(0) @db.Decimal(5, 2)
+
+  approval     ApprovalStatus @default(APPROVED)
+  approvedById String?
+  approvedAt   DateTime?
+  rejectReason String?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId, date])
+}
+
+/// Database backups (pg_dump to object storage). Not tenant-scoped.
+model BackupRun {
+  id          String       @id @default(cuid())
+  trigger     String // SCHEDULE | MANUAL
+  status      BackupStatus @default(RUNNING)
+  storageKey  String?
+  sizeBytes   Int?
+  error       String?
+  createdById String?
+  startedAt   DateTime     @default(now())
+  finishedAt  DateTime?
+}
+
+// =====================================================================================
+// Workforce: employees, groups (with history), tasks, work sessions, inspections, remarks
+// =====================================================================================
+
+model Employee {
+  id         String    @id @default(cuid())
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id])
+  fullName   String
+  phone      String?
+  position   String?
+  department String?
+  /// Monthly salary as entered (net "qo'lga" or gross — see Company.salaryInputMode), UZS.
+  salary     Decimal   @default(0) @db.Decimal(18, 2)
+  /// Overrides Company.normWorkDays for this employee.
+  normDays   Int?
+  hireDate   DateTime? @db.Date
+  active     Boolean   @default(true)
+  userId     String?   @unique
+  user       User?     @relation(fields: [userId], references: [id])
+  note       String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  memberships    GroupMember[]
+  assignments    TaskAssignment[]
+  sessionsLed    WorkSession[]       @relation("SessionLeader")
+  sessionMembers WorkSessionMember[]
+  taskEvents     TaskEvent[]
+  attendance     AttendanceDay[]
+  payrollLines   PayrollLine[]
+  kpiSnapshots   KpiSnapshot[]
+
+  @@index([companyId, fullName])
+}
+
+model WorkGroup {
+  id             String   @id @default(cuid())
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id])
+  name           String
+  specialization String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  members      GroupMember[]
+  assignments  TaskAssignment[]
+  sessions     WorkSession[]
+  kpiSnapshots KpiSnapshot[]
+
+  @@unique([companyId, name])
+}
+
+/// Group composition with history: membership is valid from `fromDate` until `toDate` (inclusive), open if null.
+model GroupMember {
+  id         String    @id @default(cuid())
+  groupId    String
+  group      WorkGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  role       GroupRole @default(WORKER)
+  fromDate   DateTime  @db.Date
+  toDate     DateTime? @db.Date
+  createdAt  DateTime  @default(now())
+
+  @@index([groupId, fromDate])
+  @@index([employeeId])
+}
+
+model WorkType {
+  id        String  @id @default(cuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+  name      String
+  unit      String
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  tasks Task[]
+
+  @@unique([companyId, name])
+}
+
+/// Floor / zone / room tree of a project.
+model ProjectLocation {
+  id        String            @id @default(cuid())
+  projectId String
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    ProjectLocation?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  ProjectLocation[] @relation("LocationTree")
+  kind      LocationKind      @default(ZONE)
+  name      String
+  sortOrder Int               @default(0)
+
+  tasks   Task[]
+  remarks Remark[]
+  zones   DrawingZone[]
+
+  @@index([projectId])
+}
+
+model Task {
+  id              String           @id @default(cuid())
+  companyId       String
+  company         Company          @relation(fields: [companyId], references: [id])
+  projectId       String
+  project         Project          @relation(fields: [projectId], references: [id])
+  /// Sequential number per company (T-145).
+  number          Int
+  parentId        String?
+  parent          Task?            @relation("SubTasks", fields: [parentId], references: [id])
+  subtasks        Task[]           @relation("SubTasks")
+  title           String
+  description     String?
+  workTypeId      String?
+  workType        WorkType?        @relation(fields: [workTypeId], references: [id])
+  locationId      String?
+  location        ProjectLocation? @relation(fields: [locationId], references: [id])
+  unit            String?
+  plannedQty      Decimal?         @db.Decimal(14, 3)
+  /// Value of this work in the estimate (UZS, net); drives weighted project progress.
+  plannedValueUzs Decimal?         @db.Decimal(18, 2)
+  /// Manual weight when the task has no estimate value.
+  weight          Decimal?         @db.Decimal(8, 3)
+  status          TaskStatus       @default(NEW)
+  priority        Priority         @default(MEDIUM)
+  startDate       DateTime?        @db.Date
+  deadline        DateTime?        @db.Date
+  actualStart     DateTime?
+  actualFinish    DateTime?
+  /// Self-reported progress by performers (0–100); physical progress comes from work sessions.
+  reportedPercent Int?
+  responsibleId   String?
+  responsible     User?            @relation("TaskResponsible", fields: [responsibleId], references: [id])
+  inspectorId     String?
+  inspector       User?            @relation("TaskInspector", fields: [inspectorId], references: [id])
+  approverId      String?
+  approver        User?            @relation("TaskApprover", fields: [approverId], references: [id])
+  /// Users allowed to record work sessions (set by the task owner / admin / manager).
+  recorderUserIds String[]
+  createdById     String?
+  createdBy       User?            @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  bomItemId       String?
+  bomItem         BomItem?         @relation(fields: [bomItemId], references: [id], onDelete: SetNull)
+  importId        String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  assignments TaskAssignment[]
+  events      TaskEvent[]
+  sessions    WorkSession[]
+  inspections Inspection[]
+  remarks     Remark[]
+  materials   StockMovement[]
+  zoneLinks   DrawingZoneTask[]
+
+  @@unique([companyId, number])
+  @@index([projectId, status])
+  @@index([deadline])
+}
+
+/// Who performs a task: an employee, a group or an external contractor (outsource).
+model TaskAssignment {
+  id           String       @id @default(cuid())
+  taskId       String
+  task         Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  kind         AssigneeKind
+  employeeId   String?
+  employee     Employee?    @relation(fields: [employeeId], references: [id])
+  groupId      String?
+  group        WorkGroup?   @relation(fields: [groupId], references: [id])
+  contractorId String?
+  contractor   Contractor?  @relation(fields: [contractorId], references: [id])
+  plannedQty   Decimal?     @db.Decimal(14, 3)
+  note         String?
+
+  // ---- outsource (contractor) terms ----
+  contactName     String?
+  contactPhone    String?
+  plannedCostUzs  Decimal?         @db.Decimal(18, 2)
+  agreedAmount    Decimal?         @db.Decimal(18, 2)
+  currency        Currency         @default(UZS)
+  fxRate          Decimal?         @db.Decimal(14, 4)
+  fxDate          DateTime?        @db.Date
+  fxSource        String?
+  agreedUzs       Decimal?         @db.Decimal(18, 2)
+  agreedUsd       Decimal?         @db.Decimal(18, 2)
+  actualUzs       Decimal?         @db.Decimal(18, 2)
+  actualUsd       Decimal?         @db.Decimal(18, 2)
+  vatRate         Decimal          @default(0) @db.Decimal(5, 2)
+  outsourceStatus OutsourceStatus?
+  startDate       DateTime?        @db.Date
+  deadline        DateTime?        @db.Date
+  completedQty    Decimal?         @db.Decimal(14, 3)
+  completedAt     DateTime?
+  verifiedById    String?
+  verifiedAt      DateTime?
+  /// 1–5, given when the work is verified.
+  qualityScore    Int?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  sessions WorkSession[]
+  payments ContractorPayment[]
+
+  @@index([taskId])
+  @@index([contractorId])
+}
+
+model TaskEvent {
+  id         String        @id @default(cuid())
+  taskId     String
+  task       Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  type       TaskEventType
+  userId     String?
+  user       User?         @relation(fields: [userId], references: [id])
+  employeeId String?
+  employee   Employee?     @relation(fields: [employeeId], references: [id])
+  percent    Int?
+  note       String?
+  fromStatus TaskStatus?
+  toStatus   TaskStatus?
+  at         DateTime      @default(now())
+
+  @@index([taskId, at])
+  @@index([employeeId, at])
+}
+
+/// One block of work on a task by a group (or individual / contractor) on a day.
+/// The physical quantity is recorded here exactly once.
+model WorkSession {
+  id           String             @id @default(cuid())
+  companyId    String
+  company      Company            @relation(fields: [companyId], references: [id])
+  projectId    String
+  project      Project            @relation(fields: [projectId], references: [id])
+  taskId       String
+  task         Task               @relation(fields: [taskId], references: [id])
+  groupId      String?
+  group        WorkGroup?         @relation(fields: [groupId], references: [id])
+  assignmentId String?
+  assignment   TaskAssignment?    @relation(fields: [assignmentId], references: [id])
+  leaderId     String?
+  leader       Employee?          @relation("SessionLeader", fields: [leaderId], references: [id])
+  date         DateTime           @db.Date
+  startTime    DateTime?
+  endTime      DateTime?
+  hours        Decimal            @default(8) @db.Decimal(5, 2)
+  quantity     Decimal            @default(0) @db.Decimal(14, 3)
+  unit         String?
+  note         String?
+  problems     String?
+  method       ContributionMethod @default(EQUAL)
+  status       SessionStatus      @default(SUBMITTED)
+  recordedById String?
+  recordedBy   User?              @relation("SessionRecordedBy", fields: [recordedById], references: [id])
+  approvedById String?
+  approvedBy   User?              @relation("SessionApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  rejectReason String?
+  /// Frozen at approval: sum of members' hours x hourly cost.
+  laborCostUzs Decimal            @default(0) @db.Decimal(18, 2)
+  laborCostUsd Decimal            @default(0) @db.Decimal(18, 2)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  members   WorkSessionMember[]
+  materials StockMovement[]
+
+  @@index([companyId, date])
+  @@index([taskId, date])
+  @@index([projectId, date])
+}
+
+/// Individual participation in a session. Share and contribution are frozen when the session is recorded,
+/// so later formula changes never rewrite history. Contribution is for KPI only (never added to project volume).
+model WorkSessionMember {
+  id              String       @id @default(cuid())
+  sessionId       String
+  session         WorkSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  employeeId      String
+  employee        Employee     @relation(fields: [employeeId], references: [id])
+  role            GroupRole    @default(WORKER)
+  hours           Decimal      @db.Decimal(5, 2)
+  sharePercent    Decimal      @db.Decimal(7, 4)
+  contributionQty Decimal      @db.Decimal(14, 3)
+  hourlyCostUzs   Decimal      @default(0) @db.Decimal(18, 2)
+  laborCostUzs    Decimal      @default(0) @db.Decimal(18, 2)
+  confirmation    Confirmation @default(PENDING)
+  confirmedAt     DateTime?
+  note            String?
+
+  @@unique([sessionId, employeeId])
+  @@index([employeeId])
+}
+
+model Inspection {
+  id          String           @id @default(cuid())
+  taskId      String
+  task        Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  attempt     Int
+  inspectorId String?
+  inspector   User?            @relation(fields: [inspectorId], references: [id])
+  result      InspectionResult
+  note        String?
+  at          DateTime         @default(now())
+
+  remarks Remark[]
+
+  @@index([taskId])
+}
+
+/// A defect / remark with its own workflow; may be pinned to a drawing.
+model Remark {
+  id                String           @id @default(cuid())
+  companyId         String
+  company           Company          @relation(fields: [companyId], references: [id])
+  projectId         String
+  project           Project          @relation(fields: [projectId], references: [id])
+  number            Int
+  taskId            String?
+  task              Task?            @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  locationId        String?
+  location          ProjectLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  inspectionId      String?
+  inspection        Inspection?      @relation(fields: [inspectionId], references: [id], onDelete: SetNull)
+  drawingVersionId  String?
+  drawingVersion    DrawingVersion?  @relation(fields: [drawingVersionId], references: [id], onDelete: SetNull)
+  drawingPage       Int?
+  posX              Float?
+  posY              Float?
+  description       String
+  priority          Priority         @default(MEDIUM)
+  status            RemarkStatus     @default(NEW)
+  responsibleUserId String?
+  responsible       User?            @relation("RemarkResponsible", fields: [responsibleUserId], references: [id])
+  deadline          DateTime?        @db.Date
+  createdById       String?
+  createdBy         User?            @relation("RemarkCreatedBy", fields: [createdById], references: [id])
+  fixedAt           DateTime?
+  acceptedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([companyId, number])
+  @@index([projectId, status])
+}
+
+/// One record per employee per day. Worked days include object work, workshop, travel and idle days
+/// that are not the worker's fault; ABSENT / LEAVE / SICK are not worked days.
+model AttendanceDay {
+  id           String         @id @default(cuid())
+  companyId    String
+  company      Company        @relation(fields: [companyId], references: [id])
+  employeeId   String
+  employee     Employee       @relation(fields: [employeeId], references: [id])
+  date         DateTime       @db.Date
+  type         AttendanceType
+  projectId    String?
+  project      Project?       @relation(fields: [projectId], references: [id])
+  hours        Decimal?       @db.Decimal(5, 2)
+  note         String?
+  /// SESSION (derived from a work session), ACTIVITY (worker pressed start) or MANUAL
+  source       String         @default("MANUAL")
+  recordedById String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([companyId, date])
+}
+
+model PayrollMonth {
+  id         String        @id @default(cuid())
+  companyId  String
+  company    Company       @relation(fields: [companyId], references: [id])
+  month      String // YYYY-MM
+  status     PayrollStatus @default(OPEN)
+  closedAt   DateTime?
+  closedById String?
+  createdAt  DateTime      @default(now())
+
+  lines PayrollLine[]
+
+  @@unique([companyId, month])
+}
+
+/// Estimated monthly labour cost per employee (management accounting, not official payroll).
+model PayrollLine {
+  id              String       @id @default(cuid())
+  monthId         String
+  month           PayrollMonth @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  employeeId      String
+  employee        Employee     @relation(fields: [employeeId], references: [id])
+  salary          Decimal      @db.Decimal(18, 2)
+  normDays        Int
+  workedDays      Int
+  dailyRateUzs    Decimal      @db.Decimal(18, 2)
+  earnedUzs       Decimal      @db.Decimal(18, 2)
+  employerCostUzs Decimal      @db.Decimal(18, 2)
+  allocatedUzs    Decimal      @db.Decimal(18, 2)
+  unallocatedUzs  Decimal      @db.Decimal(18, 2)
+}
+
+/// Estimate (BOQ) imported from Excel; rows are reviewed and approved by an admin before anything is created.
+model SmetaImport {
+  id           String       @id @default(cuid())
+  companyId    String
+  company      Company      @relation(fields: [companyId], references: [id])
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id])
+  fileId       String
+  file         FileObject   @relation(fields: [fileId], references: [id])
+  status       ImportStatus @default(DRAFT)
+  /// Parsed rows: [{row, name, unit, qty, unitPrice, total, kind: TASK|EQUIPMENT|MATERIAL|SKIP, ...}]
+  rows         Json
+  currency     Currency     @default(UZS)
+  vatRate      Decimal      @default(0) @db.Decimal(5, 2)
+  createdById  String?
+  approvedById String?
+  approvedAt   DateTime?
+  createdAt    DateTime     @default(now())
+}
+
+// =====================================================================================
+// Contractors (external masters, brigades, subcontractor firms)
+// =====================================================================================
+
+model Contractor {
+  id              String         @id @default(cuid())
+  companyId       String
+  company         Company        @relation(fields: [companyId], references: [id])
+  number          Int
+  kind            ContractorKind @default(INDIVIDUAL)
+  name            String
+  phone           String?
+  phone2          String?
+  email           String?
+  address         String?
+  specializations String[]
+  regions         String[]
+  tin             String?
+  bankDetails     String?
+  note            String?
+  active          Boolean        @default(true)
+  availability    Availability   @default(AVAILABLE)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  contacts     ContractorContact[]
+  assignments  TaskAssignment[]
+  payments     ContractorPayment[]
+  scores       ContractorScore[]
+  documents    Document[]
+  kpiSnapshots KpiSnapshot[]
+
+  @@unique([companyId, number])
+  @@index([companyId, name])
+}
+
+model ContractorContact {
+  id           String     @id @default(cuid())
+  contractorId String
+  contractor   Contractor @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String?
+  role         String?
+}
+
+model ContractorPayment {
+  id           String          @id @default(cuid())
+  contractorId String
+  contractor   Contractor      @relation(fields: [contractorId], references: [id])
+  assignmentId String?
+  assignment   TaskAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  projectId    String?
+  project      Project?        @relation(fields: [projectId], references: [id])
+  date         DateTime        @db.Date
+  method       PaymentMethod   @default(CASH)
+  reference    String?
+  note         String?
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+
+  approval     ApprovalStatus @default(APPROVED)
+  approvedById String?
+  approvedAt   DateTime?
+  rejectReason String?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([contractorId, date])
+}
+
+/// History of computed rating / reliability (snapshot after each verified job).
+model ContractorScore {
+  id           String     @id @default(cuid())
+  contractorId String
+  contractor   Contractor @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  at           DateTime   @default(now())
+  rating       Decimal    @db.Decimal(4, 2)
+  reliability  Decimal    @db.Decimal(5, 2)
+  components   Json
+}
+
+// =====================================================================================
+// KPI (versioned rules, monthly snapshots with drill-down sources)
+// =====================================================================================
+
+model KpiRule {
+  id            String        @id @default(cuid())
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id])
+  subject       KpiSubject    @default(EMPLOYEE)
+  name          String
+  version       Int
+  effectiveFrom DateTime      @db.Date
+  effectiveTo   DateTime?     @db.Date
+  /// [{key, weight, params?}] — component keys are implemented in src/server/kpi/components.ts
+  components    Json
+  status        KpiRuleStatus @default(DRAFT)
+  createdById   String?
+  createdAt     DateTime      @default(now())
+
+  periods KpiPeriod[]
+
+  @@unique([companyId, subject, version])
+}
+
+model KpiPeriod {
+  id           String          @id @default(cuid())
+  companyId    String
+  company      Company         @relation(fields: [companyId], references: [id])
+  month        String // YYYY-MM
+  subject      KpiSubject
+  ruleId       String
+  rule         KpiRule         @relation(fields: [ruleId], references: [id])
+  status       KpiPeriodStatus @default(CALCULATED)
+  calculatedAt DateTime        @default(now())
+  approvedById String?
+  approvedAt   DateTime?
+
+  snapshots KpiSnapshot[]
+
+  @@unique([companyId, month, subject])
+}
+
+model KpiSnapshot {
+  id           String      @id @default(cuid())
+  periodId     String
+  period       KpiPeriod   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  employeeId   String?
+  employee     Employee?   @relation(fields: [employeeId], references: [id])
+  groupId      String?
+  group        WorkGroup?  @relation(fields: [groupId], references: [id])
+  contractorId String?
+  contractor   Contractor? @relation(fields: [contractorId], references: [id])
+  score        Decimal     @db.Decimal(6, 2)
+  /// [{key, value, weight, weighted, raw, sources: [{type, id}]}]
+  components   Json
+  createdAt    DateTime    @default(now())
+
+  @@index([periodId])
+}
+
+// =====================================================================================
+// Drawings / visual progress (PDF first; DWG/IFC later)
+// =====================================================================================
+
+model Drawing {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
+  title      String
+  discipline String?
+  createdAt  DateTime @default(now())
+
+  versions DrawingVersion[]
+
+  @@index([projectId])
+}
+
+model DrawingVersion {
+  id          String     @id @default(cuid())
+  drawingId   String
+  drawing     Drawing    @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  version     Int
+  fileId      String
+  file        FileObject @relation(fields: [fileId], references: [id])
+  pageCount   Int        @default(1)
+  note        String?
+  /// Set when zones were carried over from the previous version and need review.
+  needsReview Boolean    @default(false)
+  createdById String?
+  createdAt   DateTime   @default(now())
+
+  zones   DrawingZone[]
+  remarks Remark[]
+
+  @@unique([drawingId, version])
+}
+
+/// Geometry is stored in page-relative coordinates (0..1) so it survives zoom and rendering size.
+model DrawingZone {
+  id          String           @id @default(cuid())
+  versionId   String
+  version     DrawingVersion   @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  page        Int
+  name        String
+  kind        ZoneKind
+  geometry    Json
+  locationId  String?
+  location    ProjectLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  needsReview Boolean          @default(false)
+  createdById String?
+  createdAt   DateTime         @default(now())
+
+  tasks DrawingZoneTask[]
+
+  @@index([versionId, page])
+}
+
+model DrawingZoneTask {
+  zoneId String
+  zone   DrawingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  taskId String
+  task   Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@id([zoneId, taskId])
+}
+
+// =====================================================================================
+// Warranty & service
+// =====================================================================================
+
+model ServiceContract {
+  id               String                @id @default(cuid())
+  companyId        String
+  company          Company               @relation(fields: [companyId], references: [id])
+  clientId         String
+  client           Client                @relation(fields: [clientId], references: [id])
+  projectId        String?
+  project          Project?              @relation(fields: [projectId], references: [id])
+  number           String
+  startDate        DateTime              @db.Date
+  endDate          DateTime              @db.Date
+  frequency        ServiceFrequency      @default(MONTHLY)
+  slaResponseHours Int?
+  slaResolveHours  Int?
+  slaText          String?
+  status           ServiceContractStatus @default(ACTIVE)
+  note             String?
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+  vatRate   Decimal  @default(0) @db.Decimal(5, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets ServiceTicket[]
+
+  @@index([companyId, endDate])
+}
+
+model ServiceTicket {
+  id                String              @id @default(cuid())
+  companyId         String
+  company           Company             @relation(fields: [companyId], references: [id])
+  number            Int
+  clientId          String?
+  client            Client?             @relation(fields: [clientId], references: [id])
+  projectId         String?
+  project           Project?            @relation(fields: [projectId], references: [id])
+  serviceContractId String?
+  serviceContract   ServiceContract?    @relation(fields: [serviceContractId], references: [id])
+  siteAddress       String?
+  title             String
+  problem           String
+  diagnosis         String?
+  solution          String?
+  priority          Priority            @default(MEDIUM)
+  status            ServiceTicketStatus @default(NEW)
+  /// Within warranty: costs are ours, nothing is billed.
+  isWarranty        Boolean             @default(false)
+  responsibleUserId String?
+  responsible       User?               @relation(fields: [responsibleUserId], references: [id])
+  reportedAt        DateTime            @default(now())
+  dueAt             DateTime?
+  resolvedAt        DateTime?
+  laborHours        Decimal?            @db.Decimal(6, 2)
+  laborCostUzs      Decimal             @default(0) @db.Decimal(18, 2)
+  otherCostUzs      Decimal             @default(0) @db.Decimal(18, 2)
+  chargeUzs         Decimal             @default(0) @db.Decimal(18, 2)
+  createdById       String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  parts StockMovement[]
+
+  @@unique([companyId, number])
+  @@index([companyId, status])
 }

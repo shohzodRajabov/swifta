@@ -27,7 +27,7 @@ export async function supplierBalances(companyId: string, supplierIds?: string[]
     }),
     db.supplierPayment.groupBy({
       by: ["supplierId"],
-      where: { supplier: { companyId }, supplierId: filter },
+      where: { supplier: { companyId }, supplierId: filter, approval: "APPROVED" },
       _sum: { amountUzs: true, amountUsd: true },
       _count: true,
     }),

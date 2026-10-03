@@ -12,7 +12,7 @@ export default async function SuppliersPage({ searchParams }: PageProps<"/suppli
   const user = await requirePermission("suppliers.view");
   const { q } = (await searchParams) as { q?: string };
   const t = await getTranslations();
-  const showMoney = can(user.role, "finance.view") || can(user.role, "supplierPayments.edit");
+  const showMoney = can(user, "finance.view") || can(user, "supplierPayments.edit");
 
   const suppliers = await db.supplier.findMany({
     where: {
@@ -37,7 +37,7 @@ export default async function SuppliersPage({ searchParams }: PageProps<"/suppli
       <PageHeader
         title={t("suppliers.title")}
         actions={
-          can(user.role, "suppliers.edit") && (
+          can(user, "suppliers.edit") && (
             <LinkButton href="/suppliers/new">
               <Plus className="size-4" aria-hidden />
               {t("suppliers.new")}

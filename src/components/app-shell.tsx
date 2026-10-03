@@ -5,6 +5,14 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   Bell,
+  CalendarDays,
+  FlaskConical,
+  Gauge,
+  HardHat,
+  Settings,
+  UserRound,
+  UsersRound,
+  Wrench,
   Boxes,
   Building2,
   ClipboardList,
@@ -27,49 +35,43 @@ import { cn } from "@/lib/utils";
 import { LocaleSwitcher } from "./locale-switcher";
 import { logout } from "@/app/login/actions";
 
-type NavKey =
-  | "dashboard"
-  | "projects"
-  | "clients"
-  | "catalog"
-  | "finance"
-  | "procurement"
-  | "warehouse"
-  | "suppliers"
-  | "tasks"
-  | "documents"
-  | "reports"
-  | "users"
-  | "audit"
-  | "notifications";
-
-const ICONS: Record<NavKey, typeof Boxes> = {
+const ICONS: Record<string, typeof Boxes> = {
   dashboard: LayoutDashboard,
+  me: UserRound,
   projects: Building2,
+  tasks: ClipboardList,
   clients: Contact,
+  contractors: HardHat,
   catalog: Boxes,
   finance: Wallet,
   procurement: ShoppingCart,
   warehouse: Warehouse,
   suppliers: Truck,
-  tasks: ClipboardList,
   documents: FileText,
+  kpi: Gauge,
+  service: Wrench,
   reports: PieChart,
   users: Users,
+  settings: Settings,
   audit: ScrollText,
   notifications: Bell,
+  employees: UsersRound,
+  calendar: CalendarDays,
 };
 
-export type NavItem = { key: NavKey; href: string; phase?: number; badge?: number };
+export type NavItem = { key: string; href: string; phase?: number; badge?: number };
 export type NavSection = { key: "sectionMain" | "sectionSoon" | "sectionAdmin"; items: NavItem[] };
 
 export function AppShell({
   sections,
   user,
+  workspace,
   children,
 }: {
   sections: NavSection[];
   user: { name: string; roleLabel: string };
+  /** Demo workspace switch: shown when the user may use the demo. */
+  workspace?: { isDemo: boolean; canSwitch: boolean; switchAction: () => Promise<void> };
   children: ReactNode;
 }) {
   const t = useTranslations();
@@ -87,7 +89,7 @@ export function AppShell({
           </div>
           <ul className="flex flex-col gap-0.5">
             {section.items.map((item) => {
-              const Icon = ICONS[item.key];
+              const Icon = ICONS[item.key] ?? Boxes;
               if (item.phase) {
                 return (
                   <li key={item.key}>
@@ -134,6 +136,20 @@ export function AppShell({
 
   const footer = (
     <div className="border-t border-border px-4 py-3">
+      {workspace?.canSwitch && (
+        <form action={workspace.switchAction} className="mb-2">
+          <button
+            type="submit"
+            className={cn(
+              "flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium",
+              workspace.isDemo ? "border-warning/40 bg-warning-soft text-warning" : "border-border text-muted hover:bg-surface-2",
+            )}
+          >
+            <FlaskConical className="size-3.5 shrink-0" aria-hidden />
+            {workspace.isDemo ? t("workspace.backToMain") : t("workspace.openDemo")}
+          </button>
+        </form>
+      )}
       <div className="mb-2 min-w-0">
         <div className="truncate text-sm font-medium">{user.name}</div>
         <div className="truncate text-xs text-muted">{user.roleLabel}</div>
@@ -184,6 +200,11 @@ export function AppShell({
         </div>
       )}
 
+      {workspace?.isDemo && (
+        <div className="sticky top-0 z-20 bg-warning px-4 py-1.5 text-center text-xs font-medium text-white lg:top-0">
+          {t("workspace.demoBanner")}
+        </div>
+      )}
       <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
   );

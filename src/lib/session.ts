@@ -1,10 +1,10 @@
 import { SignJWT, jwtVerify } from "jose";
-import type { Role } from "@prisma/client";
 
 export const SESSION_COOKIE = "swifta_session";
 const MAX_AGE = 60 * 60 * 24 * 14; // 14 days
 
-export type SessionPayload = { userId: string; companyId: string; role: Role };
+/** `homeUserId` is set while an admin is viewing the demo workspace (to switch back). */
+export type SessionPayload = { userId: string; companyId: string; homeUserId?: string | null };
 
 function key() {
   const secret = process.env.AUTH_SECRET;

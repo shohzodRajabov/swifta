@@ -12,7 +12,7 @@ export default async function ClientsPage({ searchParams }: PageProps<"/clients"
   const user = await requirePermission("clients.view");
   const { q } = (await searchParams) as { q?: string };
   const t = await getTranslations();
-  const showMoney = can(user.role, "finance.view") || can(user.role, "payments.edit");
+  const showMoney = can(user, "finance.view") || can(user, "payments.edit");
 
   const clients = await db.client.findMany({
     where: {
@@ -28,7 +28,7 @@ export default async function ClientsPage({ searchParams }: PageProps<"/clients"
           }
         : {}),
     },
-    include: { projects: true },
+    include: { projects: true, ownedProjects: { select: { id: true } } },
     orderBy: { name: "asc" },
   });
   const metrics = showMoney ? await computeMetrics(clients.flatMap((c) => c.projects)) : null;
@@ -38,7 +38,7 @@ export default async function ClientsPage({ searchParams }: PageProps<"/clients"
       <PageHeader
         title={t("clients.title")}
         actions={
-          can(user.role, "clients.edit") && (
+          can(user, "clients.edit") && (
             <LinkButton href="/clients/new">
               <Plus className="size-4" aria-hidden />
               {t("clients.new")}
@@ -82,12 +82,12 @@ export default async function ClientsPage({ searchParams }: PageProps<"/clients"
                     <Td className="num text-right">{c.projects.length}</Td>
                     {metrics && (
                       <Td className="text-right">
-                        <Money value={sumAmounts(ms.map((m) => m.contract))} size="sm" />
+                        <Money value={sumAmounts(ms.map((m) => m.contractTotalGross))} size="sm" />
                       </Td>
                     )}
                     {metrics && (
                       <Td className="text-right">
-                        <Money value={sumAmounts(ms.map((m) => m.clientDebt))} size="sm" />
+                        <Money value={sumAmounts(ms.map((m) => m.receivable))} size="sm" />
                       </Td>
                     )}
                   </tr>

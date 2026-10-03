@@ -28,8 +28,8 @@ export default async function WarehousePage({ searchParams }: PageProps<"/wareho
   };
   const tab: Tab = sp.tab === "movements" || sp.tab === "new" ? sp.tab : "stock";
   const t = await getTranslations();
-  const canEdit = can(user.role, "warehouse.edit");
-  const showMoney = can(user.role, "finance.view") || canEdit;
+  const canEdit = can(user, "warehouse.edit");
+  const showMoney = can(user, "finance.view") || canEdit;
 
   const [warehouses, products, projects] = await Promise.all([
     db.warehouse.findMany({ where: { companyId: user.companyId, active: true }, orderBy: { name: "asc" } }),

@@ -47,7 +47,10 @@
     "unit": "O'lchov birligi",
     "quantity": "Miqdor",
     "open": "Ochish",
-    "phaseNotice": "Bu bo'lim {n}-bosqichda ishga tushadi"
+    "phaseNotice": "Bu bo'lim {n}-bosqichda ishga tushadi",
+    "forecast": "Prognoz",
+    "vat": "QQS",
+    "noVat": "QQSsiz"
   },
   "money": {
     "rateTitle": "Hisoblash kursi",
@@ -72,7 +75,7 @@
     "procurement": "Xaridlar",
     "warehouse": "Ombor",
     "suppliers": "Yetkazib beruvchilar",
-    "tasks": "Vazifalar",
+    "tasks": "Tasklar",
     "documents": "Hujjatlar",
     "reports": "Hisobotlar",
     "users": "Foydalanuvchilar",
@@ -80,16 +83,33 @@
     "sectionMain": "Asosiy",
     "sectionSoon": "Keyingi bosqichlar",
     "sectionAdmin": "Boshqaruv",
-    "notifications": "Bildirishnomalar"
+    "notifications": "Bildirishnomalar",
+    "contractors": "Contractorlar",
+    "me": "Mening ishlarim",
+    "employees": "Xodimlar",
+    "calendar": "Kalendar",
+    "kpi": "KPI",
+    "service": "Servis va kafolat",
+    "settings": "Sozlamalar"
   },
   "auth": {
     "title": "Tizimga kirish",
     "email": "Email",
     "password": "Parol",
     "submit": "Kirish",
-    "invalid": "Email yoki parol noto'g'ri",
+    "invalid": "Login yoki parol noto'g'ri",
     "forbiddenTitle": "Ruxsat yo'q",
-    "forbiddenText": "Bu bo'limni ko'rish uchun sizda huquq yo'q."
+    "forbiddenText": "Bu bo'limni ko'rish uchun sizda huquq yo'q.",
+    "identifier": "Telefon raqami yoki email",
+    "identifierHint": "Masalan: +998 90 123 45 67",
+    "setPasswordTitle": "O'z parolingizni o'rnating",
+    "setPasswordText": "{name}, bir martalik parol bilan kirdingiz. Davom etish uchun o'zingizning parolingizni o'rnating.",
+    "newPassword": "Yangi parol",
+    "confirmPassword": "Parolni takrorlang",
+    "passwordHint": "Kamida 8 belgi",
+    "passwordMismatch": "Parollar mos kelmadi",
+    "passwordShort": "Parol kamida 8 belgidan iborat bo'lishi kerak",
+    "savePassword": "Saqlash va davom etish"
   },
   "roles": {
     "ADMIN": "Administrator",
@@ -98,7 +118,25 @@
     "ENGINEER": "Muhandis / Loyihachi",
     "WAREHOUSE": "Ombor mudiri",
     "ACCOUNTANT": "Buxgalter",
-    "TECHNICIAN": "Montajchi / Texnik"
+    "TECHNICIAN": "Montajchi / Texnik",
+    "DIRECTOR": "Direktor",
+    "CHIEF_ENGINEER": "Bosh muhandis",
+    "FOREMAN": "Prorab",
+    "GROUP_LEADER": "Guruh lideri",
+    "INSPECTOR": "Inspektor",
+    "WORKER": "Ishchi",
+    "title": "Rollar va huquqlar",
+    "subtitle": "Har bir rol — huquqlar to'plami. Admin istalgan rolni o'zgartirishi yoki yangisini yaratishi mumkin.",
+    "manage": "Rollar va huquqlar",
+    "name": "Rol nomi",
+    "description": "Tavsif",
+    "permissions": "Huquqlar",
+    "users": "Foydalanuvchilar",
+    "system": "Tizim",
+    "custom": "Qo'shimcha",
+    "new": "Yangi rol",
+    "copyFrom": "Huquqlarni nusxalash",
+    "adminLocked": "Administrator roli doim barcha huquqlarga ega bo'ladi."
   },
   "stages": {
     "NEW_REQUEST": "Yangi murojaat",
@@ -149,14 +187,17 @@
   "costCategory": {
     "EQUIPMENT": "Uskuna",
     "MATERIAL": "Material",
-    "LABOR": "Ish haqi",
+    "LABOR": "Ichki ishchi kuchi",
     "SUBCONTRACTOR": "Subpudratchi",
     "TRANSPORT": "Transport",
     "TOOLS": "Asbob-uskunalar",
     "HOTEL": "Mehmonxona",
     "CUSTOMS": "Bojxona",
     "INSTALLATION": "Montaj",
-    "OTHER": "Boshqa"
+    "OTHER": "Boshqa",
+    "OUTSOURCING": "Outsourcing (tashqi ustalar)",
+    "WAREHOUSE": "Ombor xarajatlari",
+    "TAX": "Aylanma solig'i"
   },
   "bomKind": {
     "EQUIPMENT": "Uskuna",
@@ -219,7 +260,7 @@
     "cashProfitHint": "Kelgan to'lovlar − amaldagi xarajat",
     "margin": "Foyda marjasi",
     "plannedMargin": "Rejadagi marja",
-    "received": "Mijozdan tushgan",
+    "received": "Kelgan to'lovlar",
     "clientDebt": "Mijozlar qarzi",
     "overdueDebt": "Muddati o'tgan qarz",
     "supplierDebt": "Yetkazib beruvchilarga qarz",
@@ -237,7 +278,21 @@
     "reasonOverdueDebt": "To'lov kechikmoqda",
     "allGood": "Hammasi joyida — muammoli obyekt yo'q",
     "upcoming": "Yaqin 14 kundagi to'lovlar",
-    "count": "{n} ta"
+    "count": "{n} ta",
+    "newObjects": "Yangi va taklif",
+    "contracted": "Shartnoma imzolangan",
+    "inWork": "Ish olib borilmoqda",
+    "testing": "Test va ishga tushirish",
+    "service": "Servisda",
+    "attentionCenter": "E'tibor talab qiladi",
+    "portfolio": "Obyektlar portfeli (jami)",
+    "forecastCost": "Prognoz xarajat",
+    "ofRevenue": "daromaddan",
+    "forecastHint": "Prognoz = shartnoma − (amalda + ochiq majburiyatlar + rejaning qolgani)",
+    "contractorDebt": "Contractorlarga qarz",
+    "periodTitle": "Davr ko'rsatkichlari",
+    "netHint": "Daromad − to'g'ridan-to'g'ri xarajat − umumiy xarajat − foyda solig'i",
+    "reasonMissingDocs": "Hujjat yetishmaydi"
   },
   "projects": {
     "title": "Obyektlar",
@@ -250,7 +305,7 @@
     "contractNumber": "Shartnoma raqami",
     "contractDate": "Shartnoma sanasi",
     "manager": "Loyiha rahbari",
-    "engineer": "Muhandis",
+    "engineer": "Loyihachi muhandis",
     "installTeam": "Montaj jamoasi",
     "startDate": "Boshlanish sanasi",
     "plannedEndDate": "Rejalashtirilgan tugash",
@@ -265,7 +320,7 @@
     "noClients": "Avval mijoz qo'shing",
     "tabOverview": "Umumiy",
     "tabBom": "Smeta / BOM",
-    "tabBudget": "Xarajatlar rejasi",
+    "tabBudget": "Xarajatlar: reja va amalda",
     "tabPayments": "To'lovlar",
     "tabExpenses": "Amaldagi xarajatlar",
     "tabHistory": "Tarix",
@@ -282,7 +337,32 @@
     "contractChangeWarning": "Shartnoma summasining har bir o'zgarishi audit jurnalida saqlanadi.",
     "empty": "Hali obyekt yo'q",
     "stageHistory": "Bosqichlar tarixi",
-    "changes": "O'zgarishlar"
+    "changes": "O'zgarishlar",
+    "changeStatus": "Statusni o'zgartirish",
+    "statusGroup": "Bosqich",
+    "lifecycle": "Faollik",
+    "customer": "Buyurtmachi (gen podryatchik)",
+    "customerHint": "Biz bilan shartnoma tuzgan va to'lov qiladigan tashkilot",
+    "owner": "Obyekt egasi",
+    "ownerHint": "Masalan, bank yoki zavod; buyurtmachi bilan bir xil bo'lishi mumkin",
+    "ownerSameAsCustomer": "Buyurtmachining o'zi",
+    "legalEntity": "Bizning firma",
+    "legalEntityHint": "Shartnomani qaysi firmamiz tuzgan",
+    "objectType": "Obyekt turi",
+    "siteContactName": "Obyektdagi kontakt",
+    "siteContactPhone": "Telefon",
+    "siteContactEmail": "Email",
+    "chiefEngineer": "Bosh muhandis",
+    "foreman": "Prorab",
+    "sectionObject": "Obyekt",
+    "sectionParties": "Tomonlar va shartnoma",
+    "sectionTeam": "Mas'ul jamoa",
+    "sectionDates": "Muddatlar",
+    "warranty": "Kafolat",
+    "warrantyMonths": "Kafolat muddati (oy)",
+    "warrantyMonthsValue": "{n} oy (topshirilgandan keyin)",
+    "tabRevenue": "Daromad va to'lovlar",
+    "tabDocuments": "Hujjatlar"
   },
   "bom": {
     "title": "Materiallar va uskunalar spetsifikatsiyasi",
@@ -312,7 +392,10 @@
     "byCategory": "Toifalar bo'yicha reja va amalda",
     "bomNote": "Uskuna va material rejasi Smeta/BOM'dan olinadi.",
     "over": "Oshgan",
-    "under": "Tejalgan"
+    "under": "Tejalgan",
+    "fromSessions": "Ish sessiyalaridan",
+    "fromContractors": "Contractorlardan",
+    "fromActs": "Dalolatnomalardan"
   },
   "payments": {
     "schedule": "To'lov jadvali",
@@ -341,7 +424,8 @@
     "reference": "Hujjat raqami",
     "project": "Obyekt",
     "createdBy": "Kiritgan",
-    "attachmentSoon": "Tasdiqlovchi hujjat biriktirish 3-bosqichda qo'shiladi"
+    "attachmentSoon": "Tasdiqlovchi hujjat biriktirish 3-bosqichda qo'shiladi",
+    "approvalHint": "Chegaradan katta xarajat tasdiqlangandan keyin hisobga olinadi"
   },
   "clients": {
     "title": "Mijozlar",
@@ -360,7 +444,9 @@
     "empty": "Hali mijoz yo'q",
     "contracts": "Shartnomalar summasi",
     "paid": "To'lagan",
-    "debt": "Qarzi"
+    "debt": "Qarzi",
+    "ownedProjects": "Egasi bo'lgan obyektlar",
+    "ownedProjectsHint": "Boshqa buyurtmachi orqali bajarilayotgan obyektlar"
   },
   "catalog": {
     "title": "Uskunalar va materiallar katalogi",
@@ -385,7 +471,67 @@
     "title": "Moliya",
     "tabExpenses": "Xarajatlar",
     "tabReceivables": "Mijozlar qarzdorligi",
-    "debtByProject": "Obyektlar bo'yicha qarzdorlik"
+    "debtByProject": "Obyektlar bo'yicha qarzdorlik",
+    "tab_expenses": "Xarajatlar",
+    "tab_receivables": "Debitorlik",
+    "tab_payables": "Kreditorlik",
+    "tab_approvals": "Tasdiqlash",
+    "tab_overhead": "Umumiy xarajatlar",
+    "tab_pnl": "Kompaniya foydasi",
+    "revenue": "Daromad",
+    "costs": "Xarajatlar",
+    "profit": "Foyda",
+    "revenueActualHint": "Amalda = imzolangan dalolatnomalar",
+    "planForecastActual": "Reja / prognoz / amalda",
+    "netOfVatNote": "Umumiy soliq rejimi: summalar QQSsiz hisoblangan",
+    "turnoverNote": "Aylanma solig'i rejimi: summalar to'liq, soliq xarajatga qo'shilgan",
+    "openCommitments": "Ochiq majburiyat",
+    "contractBase": "Asosiy shartnoma",
+    "amendments": "Qo'shimcha kelishuvlar",
+    "amendmentsHint": "Qo'shimcha ishlar shartnoma summasini oshiradi; har biri alohida saqlanadi",
+    "amendmentAmount": "Summa (+/−)",
+    "amendmentPlaceholder": "Masalan: qo'shimcha 2 ta AHU avtomatikasi",
+    "addAmendment": "Kelishuv qo'shish",
+    "contractTotal": "Shartnoma (jami)",
+    "acts": "Bajarilgan ishlar dalolatnomalari",
+    "actsHint": "Oraliq va yakuniy dalolatnomalar (Forma 2/3). Imzolangani — haqiqiy daromad.",
+    "actsSigned": "Imzolangan dalolatnomalar",
+    "actNumber": "Raqami",
+    "period": "Davr",
+    "periodTo": "Davr oxiri",
+    "signedNow": "Imzolangan",
+    "addAct": "Dalolatnoma qo'shish",
+    "sign": "Imzolandi",
+    "cancelAct": "Bekor qilish",
+    "description": "Tavsif",
+    "received": "Kelgan to'lovlar",
+    "receivable": "Debitorlik (dalolatnoma bo'yicha)",
+    "receivableHint": "Debitorlik = imzolangan dalolatnomalar − kelgan to'lovlar. Muddati o'tgan = to'lov jadvali bo'yicha.",
+    "overdue": "Muddati o'tgan",
+    "forecastProfit": "Prognoz foyda",
+    "supplierPayables": "Yetkazib beruvchilarga qarz",
+    "supplierPayablesHint": "Qabul qilingan tovar − to'langan",
+    "contractorPayables": "Contractorlarga qarz",
+    "contractorPayablesHint": "Tasdiqlangan ish − to'langan",
+    "approvalsTitle": "Tasdiqlash kutayotgan xarajat va to'lovlar",
+    "approvalsHint": "Chegaradan yuqori summalar tasdiqlanmaguncha hisob-kitobga kirmaydi",
+    "nothingPending": "Tasdiqlash kutayotgan narsa yo'q",
+    "approve": "Tasdiqlash",
+    "reject": "Rad etish",
+    "rejectReason": "Sababi",
+    "paymentTo": "To'lov:",
+    "kind_expense": "Obyekt xarajati",
+    "kind_overhead": "Umumiy xarajat",
+    "kind_supplierPayment": "Yetkazib beruvchiga to'lov",
+    "kind_contractorPayment": "Contractorga to'lov",
+    "addOverhead": "Umumiy xarajat qo'shish",
+    "overheadHint": "Obyektga bog'lanmagan xarajatlar: ofis, avtomobil, aloqa va h.k.",
+    "category": "Toifa",
+    "pnlTitle": "Foyda va zarar",
+    "pnlHint": "Daromad — imzolangan dalolatnomalar; to'g'ridan-to'g'ri xarajat — obyektlar xarajatlari; foyda solig'i — umumiy rejimdagi firmalar uchun taxmin",
+    "netMargin": "Sof foyda marjasi",
+    "directByCategory": "To'g'ridan-to'g'ri xarajatlar toifalar bo'yicha",
+    "byMonth": "Oylar bo'yicha"
   },
   "users": {
     "title": "Foydalanuvchilar",
@@ -403,7 +549,18 @@
     "activate": "Faollashtirish",
     "deactivate": "O'chirish",
     "resetPassword": "Parolni almashtirish",
-    "you": "Siz"
+    "you": "Siz",
+    "subtitle": "Tizimga kirish: telefon raqami (yoki email) va parol. Yangi foydalanuvchiga bir martalik parol beriladi.",
+    "newHint": "Birinchi kirishda foydalanuvchi o'z parolini o'rnatadi",
+    "phoneHint": "Kirish uchun ishlatiladi",
+    "oneTimePassword": "Bir martalik parol",
+    "oneTimePasswordHint": "Bo'sh qoldirsangiz, avtomatik yaratiladi",
+    "autoGenerate": "Avtomatik",
+    "otpIssued": "{name} uchun bir martalik parol:",
+    "otpHint": "Parolni xodimga yetkazing. U faqat hozir ko'rinadi.",
+    "login": "Login",
+    "lastLogin": "Oxirgi kirish",
+    "mustChange": "Parol o'rnatilmagan"
   },
   "audit": {
     "title": "Audit jurnali",
@@ -428,7 +585,16 @@
     "inUse": "Bu yozuv boshqa ma'lumotlarda ishlatilgan, o'chirib bo'lmaydi",
     "unknown": "Xatolik yuz berdi",
     "linesRequired": "Kamida bitta qator kiriting",
-    "notEnough": "Omborda yoki obyektda yetarli qoldiq yo'q"
+    "notEnough": "Omborda yoki obyektda yetarli qoldiq yo'q",
+    "missingDocs": "Bu statusga o'tish uchun hujjat yetishmaydi: {docs}. Avval \"Hujjatlar\" bo'limiga yuklang.",
+    "phoneInvalid": "Telefon raqami noto'g'ri",
+    "fileEmpty": "Fayl bo'sh",
+    "fileTooLarge": "Fayl juda katta (25 MB gacha)",
+    "fileType": "Bu turdagi fayl qabul qilinmaydi (Word, Excel, PDF, rasm)",
+    "telegramToken": "Bot tokeni noto'g'ri yoki bot topilmadi",
+    "telegramNotConfigured": "Avval token va guruh ID'sini saqlang",
+    "telegramSend": "Telegram'ga yuborib bo'lmadi: {message}",
+    "backupFailed": "Zaxira nusxa olinmadi: {message}"
   },
   "poStatus": {
     "DRAFT": "Qoralama",
@@ -580,6 +746,466 @@
     "overuse": "Material ortiqcha sarflangan: {name} — {material}",
     "contractEnding": "Obyekt tugash muddati yaqin: {name}",
     "critical": "Muhim",
-    "warning": "Diqqat"
+    "warning": "Diqqat",
+    "documentMissing": "Hujjat yetishmaydi: {name}",
+    "warrantyEnding": "Kafolat muddati tugashiga oz qoldi: {name}",
+    "inspectionRequested": "Tekshiruv so'raldi: {task}",
+    "taskOverdue": "Task muddati o'tdi: {task}",
+    "taskDueToday": "Task bugun tugashi kerak: {task}",
+    "deadlineApproaching": "Task muddati yaqinlashmoqda: {task}",
+    "taskAssigned": "Sizga task biriktirildi: {task}",
+    "rework": "Qayta ishlash kerak: {task}",
+    "remarkCreated": "Kamchilik: {remark}",
+    "confirmSession": "Ish sessiyasini tasdiqlang: {task}",
+    "contractorTaskCompleted": "Contractor ishni tugatdi: {contractor} — {task}",
+    "pendingApprovals": "Tasdiqlash kutmoqda: {n} ta"
+  },
+  "permGroup": {
+    "general": "Umumiy",
+    "projects": "Obyektlar va hujjatlar",
+    "crm": "Mijozlar",
+    "estimate": "Katalog va smeta",
+    "finance": "Moliya",
+    "supply": "Xarid va ombor",
+    "workforce": "Ishchi kuchi va tasklar",
+    "contractors": "Contractorlar",
+    "kpi": "KPI",
+    "service": "Servis va kafolat",
+    "admin": "Boshqaruv"
+  },
+  "perm": {
+    "dashboard": {
+      "view": "Bosh sahifa (dashboard)"
+    },
+    "reports": {
+      "view": "Hisobotlar"
+    },
+    "notifications": {
+      "view": "Bildirishnomalar"
+    },
+    "projects": {
+      "view": "O'z obyektlarini ko'rish",
+      "viewAll": "Barcha obyektlarni ko'rish",
+      "edit": "Obyekt yaratish va tahrirlash",
+      "status": "Obyekt statusini o'zgartirish"
+    },
+    "documents": {
+      "view": "Hujjatlarni ko'rish",
+      "edit": "Hujjat yuklash"
+    },
+    "drawings": {
+      "edit": "Chizmalar va zonalar"
+    },
+    "clients": {
+      "view": "Mijozlarni ko'rish",
+      "edit": "Mijozlarni tahrirlash"
+    },
+    "catalog": {
+      "view": "Katalogni ko'rish",
+      "edit": "Katalogni tahrirlash"
+    },
+    "bom": {
+      "edit": "Smeta/BOM tahrirlash"
+    },
+    "import": {
+      "manage": "Smetani Excel'dan yuklash",
+      "approve": "Smeta importini tasdiqlash"
+    },
+    "finance": {
+      "view": "Moliyani ko'rish",
+      "approve": "Xarajat va to'lovlarni tasdiqlash"
+    },
+    "budget": {
+      "edit": "Xarajatlar rejasi"
+    },
+    "acts": {
+      "edit": "Dalolatnomalar"
+    },
+    "payments": {
+      "edit": "Mijoz to'lovlari"
+    },
+    "expenses": {
+      "edit": "Obyekt xarajatlari"
+    },
+    "overhead": {
+      "view": "Umumiy xarajatlarni ko'rish",
+      "edit": "Umumiy xarajatlarni kiritish"
+    },
+    "salaries": {
+      "view": "Maoshlarni ko'rish"
+    },
+    "payroll": {
+      "manage": "Oyni yopish (ish haqi)"
+    },
+    "suppliers": {
+      "view": "Yetkazib beruvchilarni ko'rish",
+      "edit": "Yetkazib beruvchilarni tahrirlash"
+    },
+    "supplierPayments": {
+      "edit": "Yetkazib beruvchiga to'lov"
+    },
+    "procurement": {
+      "view": "Xaridlarni ko'rish",
+      "edit": "Xarid buyurtmalari"
+    },
+    "warehouse": {
+      "view": "Omborni ko'rish",
+      "edit": "Ombor harakatlari"
+    },
+    "materials": {
+      "consume": "Material sarfini kiritish"
+    },
+    "worker": {
+      "self": "\"Mening ishlarim\" sahifasi"
+    },
+    "employees": {
+      "view": "Xodimlarni ko'rish",
+      "edit": "Xodimlarni tahrirlash"
+    },
+    "groups": {
+      "manage": "Guruhlarni boshqarish"
+    },
+    "tasks": {
+      "view": "Tasklarni ko'rish",
+      "viewAll": "Barcha tasklarni ko'rish",
+      "manage": "Task yaratish va biriktirish"
+    },
+    "sessions": {
+      "record": "Ish sessiyasini kiritish",
+      "approve": "Ish sessiyasini tasdiqlash"
+    },
+    "inspections": {
+      "perform": "Tekshiruv o'tkazish"
+    },
+    "remarks": {
+      "create": "Kamchilik qayd qilish",
+      "manage": "Kamchiliklarni boshqarish"
+    },
+    "attendance": {
+      "manage": "Ish kunlarini belgilash"
+    },
+    "contractors": {
+      "view": "Contractorlarni ko'rish",
+      "edit": "Contractorlarni tahrirlash"
+    },
+    "contractorPayments": {
+      "edit": "Contractorga to'lov"
+    },
+    "outsource": {
+      "verify": "Tashqi ishni tasdiqlash"
+    },
+    "kpi": {
+      "self": "O'z KPI'sini ko'rish",
+      "view": "Barcha KPI'larni ko'rish",
+      "manage": "KPI formulalari va hisoblash"
+    },
+    "service": {
+      "view": "Servisni ko'rish",
+      "edit": "Servis murojaatlari"
+    },
+    "users": {
+      "manage": "Foydalanuvchilar"
+    },
+    "roles": {
+      "manage": "Rollar va huquqlar"
+    },
+    "settings": {
+      "manage": "Tizim sozlamalari"
+    },
+    "audit": {
+      "view": "Audit jurnali"
+    },
+    "backups": {
+      "manage": "Zaxira nusxalar"
+    },
+    "demo": {
+      "access": "Demo ish maydoni"
+    }
+  },
+  "statusGroup": {
+    "NEW": "A · yangi",
+    "OFFER": "B · taklif",
+    "CONTRACT": "C · shartnoma",
+    "WORK": "D · ish",
+    "TESTING": "E · test",
+    "LAUNCHED": "F · ishga tushgan",
+    "DONE": "G · yakunlangan",
+    "SERVICE": "H · servis"
+  },
+  "statuses": {
+    "subtitle": "A–H guruhlari ichidagi statuslar va ularga o'tish uchun majburiy hujjatlar",
+    "groupsFixed": "A–H guruhlari tizim mantig'iga bog'langan (kechikish, yakunlanish, kafolat). Ularning nomi va rangini o'zgartirish, ichidagi statuslarni qo'shish, o'zgartirish va o'chirish mumkin.",
+    "code": "Kod",
+    "name": "Nomi",
+    "order": "Tartib",
+    "color": "Rang",
+    "groupName": "Guruh nomi",
+    "newPlaceholder": "Yangi status nomi",
+    "requiredDocs": "Majburiy hujjatlar"
+  },
+  "documents": {
+    "title": "Obyekt hujjatlari",
+    "new": "Hujjat yuklash",
+    "formats": "Word, Excel, PDF va rasm (25 MB gacha). Har bir yangi yuklash yangi versiya bo'ladi, eskilari o'chirilmaydi.",
+    "category": "Turi",
+    "titleOptional": "Nomi (ixtiyoriy)",
+    "titlePlaceholder": "Fayl nomidan olinadi",
+    "upload": "Fayl tanlash va yuklash",
+    "document": "Hujjat",
+    "versions": "Versiya",
+    "updated": "Yangilangan",
+    "empty": "Hali hujjat yuklanmagan",
+    "history": "Versiyalar tarixi",
+    "newVersion": "Yangi versiya",
+    "view": "Ko'rish",
+    "download": "Yuklab olish",
+    "required": "Talab qilinadigan hujjatlar",
+    "requiredHint": "Joriy va keyingi statuslar uchun",
+    "neededFor": "{status} uchun kerak"
+  },
+  "docCategory": {
+    "CONTRACT": "Shartnoma (loyiha)",
+    "SIGNED_CONTRACT": "Imzolangan shartnoma",
+    "ADDITIONAL_AGREEMENT": "Qo'shimcha kelishuv",
+    "COMMERCIAL_OFFER": "Tijorat taklifi (KP)",
+    "TECH_SPEC": "Texnik topshiriq",
+    "PROJECT_FILES": "Loyiha fayllari",
+    "DRAWING": "Chizma",
+    "SPECIFICATION": "Spetsifikatsiya",
+    "SMETA": "Smeta",
+    "INVOICE": "Hisob-faktura",
+    "PURCHASE_ORDER": "Xarid buyurtmasi",
+    "WAYBILL": "Nakladnoy",
+    "ACT": "Dalolatnoma (Forma 2/3)",
+    "COMPLETION_ACT": "Ishlar yakunlanganligi dalolatnomasi",
+    "HIDDEN_WORKS_ACT": "Yashirin ishlar dalolatnomasi",
+    "TEST_ACT": "Sinov dalolatnomasi",
+    "PAYMENT_PROOF": "To'lov tasdig'i",
+    "FINAL_DOCS": "Yakuniy hujjatlar",
+    "WARRANTY": "Kafolat hujjati",
+    "PASSPORT": "Pasport",
+    "CERTIFICATE": "Sertifikat",
+    "PHOTO": "Foto",
+    "CORRESPONDENCE": "Yozishmalar",
+    "SERVICE_REPORT": "Servis hisoboti",
+    "CONTRACTOR_DOC": "Contractor hujjati",
+    "OTHER": "Boshqa"
+  },
+  "taxRegime": {
+    "GENERAL": "Umumiy (QQS)",
+    "TURNOVER": "Aylanma solig'i"
+  },
+  "approval": {
+    "APPROVED": "Tasdiqlangan",
+    "PENDING": "Tasdiqlash kutilmoqda",
+    "REJECTED": "Rad etilgan"
+  },
+  "actStatus": {
+    "DRAFT": "Qoralama",
+    "SIGNED": "Imzolangan",
+    "CANCELLED": "Bekor qilingan"
+  },
+  "overheadCategory": {
+    "OFFICE_RENT": "Ofis ijarasi",
+    "OFFICE_SALARY": "Ofis xodimlari maoshi",
+    "PAYROLL_UNALLOCATED": "Taqsimlanmagan ish haqi",
+    "VEHICLE": "Avtomobillar",
+    "FUEL": "Yoqilg'i",
+    "UTILITIES": "Kommunal",
+    "COMMUNICATION": "Aloqa va internet",
+    "MARKETING": "Marketing",
+    "BANK_FEES": "Bank xizmatlari",
+    "TAXES_FEES": "Soliq va yig'imlar",
+    "TOOLS": "Asbob-uskunalar",
+    "WORKSHOP": "Sex",
+    "OTHER": "Boshqa"
+  },
+  "pnl": {
+    "revenue": "Daromad",
+    "direct": "To'g'ridan-to'g'ri xarajatlar",
+    "gross": "Yalpi foyda",
+    "overhead": "Umumiy xarajatlar",
+    "operating": "Operatsion foyda",
+    "profitTax": "Foyda solig'i (taxmin)",
+    "net": "Sof foyda",
+    "beforeTax": "Soliqqacha foyda"
+  },
+  "period": {
+    "label": "Davr",
+    "month": "Shu oy",
+    "quarter": "Shu kvartal",
+    "year": "Shu yil",
+    "all": "Butun davr",
+    "custom": "Tanlangan oraliq",
+    "from": "Dan",
+    "to": "Gacha"
+  },
+  "attention": {
+    "overdueTasks": "muddati o'tgan task",
+    "dueToday": "bugun tugashi kerak",
+    "inspections": "tekshiruv kutmoqda",
+    "remarks": "ochiq kamchilik",
+    "sessionsToApprove": "sessiya tasdiqlanmagan",
+    "unconfirmed": "ishchi tasdig'i yo'q",
+    "contractorToVerify": "contractor ishi qabul qilinmagan",
+    "materialShortage": "material kam qolgan",
+    "overduePayments": "to'lovi kechikkan obyekt",
+    "pendingApprovals": "tasdiqlash kutmoqda",
+    "missingDocs": "obyektda hujjat yetishmaydi"
+  },
+  "contractors": {
+    "name": "Contractor",
+    "agreed": "Kelishilgan",
+    "completedValue": "Qabul qilingan ish",
+    "paid": "To'langan",
+    "payable": "Qarzimiz"
+  },
+  "groupRole": {
+    "LEADER": "Lider",
+    "SENIOR": "Katta usta",
+    "WORKER": "Ishchi"
+  },
+  "contribution": {
+    "EQUAL": "Teng (ishlagan soatiga mutanosib)",
+    "LEADER": "Lider belgilaydi",
+    "RULE": "Qoida bo'yicha (rol koeffitsiyentlari)",
+    "EFFICIENCY": "Samaradorlik bo'yicha"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "company": {
+      "title": "Kompaniya sozlamalari",
+      "hint": "Soliq stavkalari, ish kuni normasi, tasdiqlash chegarasi",
+      "general": "Umumiy",
+      "name": "Kompaniya nomi",
+      "approvalThreshold": "Tasdiqlash chegarasi (so'm)",
+      "approvalThresholdHint": "Bundan katta xarajat va to'lovlarni \"Tasdiqlash\" huquqi bor odam tasdiqlaydi",
+      "overuseThreshold": "Ortiqcha sarf chegarasi (%)",
+      "overuseThresholdHint": "Material rejadan shuncha foiz oshsa ogohlantiriladi",
+      "contractorPhoneRequired": "Contractor uchun telefon majburiy",
+      "payroll": "Ish haqi va soliqlar",
+      "normWorkDays": "Oyiga norma ish kunlari",
+      "normHoursPerDay": "Kunlik norma soat",
+      "salaryInputMode": "Maosh qanday kiritiladi",
+      "salaryNet": "Qo'lga (soliqdan keyin)",
+      "salaryGross": "Hisoblangan (soliqdan oldin)",
+      "incomeTaxRate": "JShDS (%)",
+      "socialTaxRate": "Ijtimoiy soliq (%)",
+      "payrollExample": "Misol: qo'lga {salary} so'm → hisoblangan {gross} → ish beruvchi xarajati {cost} so'm/oy ≈ {daily} so'm/kun",
+      "contribution": "Ishchi hissasini hisoblash",
+      "defaultContribution": "Odatiy usul",
+      "efficiencyMinSessions": "Samaradorlik uchun minimal sessiyalar",
+      "weightHint": "\"Qoida bo'yicha\" usuldagi koeffitsiyent"
+    },
+    "firms": {
+      "title": "Bizning firmalar",
+      "hint": "Shartnoma tuzadigan yuridik shaxslar va ularning soliq rejimi"
+    },
+    "statuses": {
+      "title": "Obyekt statuslari",
+      "hint": "A–H guruhlari, statuslar va majburiy hujjatlar"
+    },
+    "users": {
+      "title": "Foydalanuvchilar",
+      "hint": "Telefon orqali kirish, bir martalik parol, rol"
+    },
+    "roles": {
+      "title": "Rollar va huquqlar",
+      "hint": "Kim nimani ko'radi va o'zgartiradi"
+    },
+    "workTypes": {
+      "title": "Ish turlari",
+      "hint": "Tasklar uchun ish turlari va o'lchov birliklari"
+    },
+    "telegram": {
+      "title": "Telegram hisobot",
+      "hint": "Kunlik faollik hisobotini guruhga yuborish"
+    },
+    "backups": {
+      "title": "Zaxira nusxalar",
+      "hint": "Kunlik avtomatik backup, qo'lda yaratish, yuklab olish"
+    },
+    "demo": {
+      "title": "Demo ish maydoni",
+      "hint": "Real ma'lumotlardan alohida namunaviy ma'lumotlar"
+    },
+    "audit": {
+      "title": "Audit jurnali",
+      "hint": "Kim, qachon, nimani o'zgartirdi"
+    }
+  },
+  "firms": {
+    "subtitle": "Mijozlar bilan shartnoma tuzadigan firmalaringiz. Soliq rejimi foyda hisobiga ta'sir qiladi.",
+    "name": "Firma nomi",
+    "tin": "STIR",
+    "director": "Rahbar",
+    "taxRegime": "Soliq rejimi",
+    "vatRate": "QQS (%)",
+    "turnoverTaxRate": "Aylanma solig'i (%)",
+    "profitTaxRate": "Foyda solig'i (%)",
+    "address": "Manzil",
+    "phone": "Telefon",
+    "bankDetails": "Bank rekvizitlari",
+    "isDefault": "Asosiy firma",
+    "default": "Asosiy",
+    "new": "Yangi firma",
+    "projectsCount": "{n} ta obyekt"
+  },
+  "workTypes": {
+    "subtitle": "Tasklarda ishlatiladigan ish turlari; samaradorlik ish turi bo'yicha solishtiriladi",
+    "name": "Ish turi",
+    "namePlaceholder": "Masalan: Ventkanal montaji"
+  },
+  "workspace": {
+    "openDemo": "Demo ma'lumotlarni ochish",
+    "backToMain": "Asosiy ish maydoniga qaytish",
+    "demoBanner": "DEMO ish maydoni — bu yerdagi ma'lumotlar namunaviy va real ma'lumotlaringizdan alohida"
+  },
+  "demo": {
+    "subtitle": "Platformani namunaviy ma'lumotlar bilan ko'rish",
+    "explain": "Demo ma'lumotlar alohida ish maydonida saqlanadi va real hisobotlaringizga ta'sir qilmaydi. Menyudagi tugma orqali istalgan payt Demo va Asosiy o'rtasida almashishingiz mumkin. Real ishni Asosiy ish maydonida yuriting.",
+    "exists": "Demo ish maydoni mavjud",
+    "missing": "Demo ish maydoni hali yaratilmagan",
+    "stats": "{projects} obyekt, {employees} xodim, {tasks} task, {contractors} contractor · yaratilgan: {date}",
+    "create": "Demo ma'lumotlarni yaratish",
+    "rebuild": "Qayta yaratish (yangilash)",
+    "delete": "Demo'ni o'chirish"
+  },
+  "backups": {
+    "subtitle": "Ma'lumotlar bazasining zaxira nusxalari",
+    "explain": "Har kuni soat 03:00 dan keyin avtomatik zaxira nusxa olinadi va alohida xotirada saqlanadi: oxirgi 30 kun va har oyning birinchi nusxasi bir yil davomida. Nusxani yuklab olib, pg_restore bilan tiklash mumkin.",
+    "history": "Zaxira nusxalar tarixi",
+    "now": "Hozir nusxa olish",
+    "empty": "Hali zaxira nusxa olinmagan",
+    "trigger": "Turi",
+    "size": "Hajmi",
+    "manual": "Qo'lda",
+    "schedule": "Avtomatik",
+    "status_SUCCESS": "Muvaffaqiyatli",
+    "status_FAILED": "Xato",
+    "status_RUNNING": "Jarayonda"
+  },
+  "telegram": {
+    "settings": "Bot va guruh",
+    "step1": "Telegram'da @BotFather orqali bot yarating va tokenni oling.",
+    "step2": "Botni hisobot boriladigan Telegram guruhga qo'shing va guruhga istalgan xabar yozing.",
+    "step3": "Tokenni shu yerga kiriting va saqlang, keyin \"Guruhlarni topish\" tugmasi bilan guruh ID'sini oling.",
+    "step4": "Guruh ID'sini kiriting — har kuni belgilangan soatda hisobot yuboriladi.",
+    "token": "Bot tokeni",
+    "tokenHint": "@BotFather bergan token",
+    "tokenSaved": "Token saqlangan. Almashtirish uchun yangisini kiriting.",
+    "chatId": "Guruh ID",
+    "chatIdHint": "Odatda -100 bilan boshlanadi",
+    "hour": "Yuborish soati (Toshkent)",
+    "hourHint": "0–23, masalan 19",
+    "connected": "Ulangan",
+    "notConnected": "Ulanmagan",
+    "disconnect": "Botni uzish",
+    "lastSent": "Oxirgi hisobot",
+    "findChats": "Guruhlarni topish",
+    "noChats": "Guruh topilmadi. Botni guruhga qo'shib, guruhga xabar yozing.",
+    "sendNow": "Hisobotni hozir yuborish",
+    "sent": "Yuborildi",
+    "preview": "Bugungi hisobot (ko'rinishi)"
   }
 }

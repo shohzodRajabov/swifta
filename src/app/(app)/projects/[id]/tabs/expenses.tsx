@@ -4,10 +4,12 @@ import { can } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { Card, CardHeader } from "@/components/ui";
 import { ExpenseForm, ExpenseTable } from "@/components/expenses";
+import { projectVatRate } from "@/server/projects/defaults";
 
 export async function ExpensesTab({ user, projectId }: { user: CurrentUser; projectId: string }) {
   const t = await getTranslations();
-  const canEdit = can(user.role, "expenses.edit");
+  const canEdit = can(user, "expenses.edit");
+  const defaultVat = await projectVatRate(projectId);
   const rows = await db.expense.findMany({
     where: { projectId },
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
@@ -18,7 +20,7 @@ export async function ExpensesTab({ user, projectId }: { user: CurrentUser; proj
       {canEdit && (
         <Card>
           <CardHeader title={t("expenses.add")} />
-          <ExpenseForm projectId={projectId} />
+          <ExpenseForm projectId={projectId} defaultVat={defaultVat} />
         </Card>
       )}
       <Card>

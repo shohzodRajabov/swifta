@@ -30,9 +30,9 @@ export default async function OrderPage({ params }: PageProps<"/procurement/[id]
   });
   if (!o) notFound();
   const t = await getTranslations();
-  const canEdit = can(user.role, "procurement.edit");
-  const canReceive = can(user.role, "warehouse.edit") && (o.status === "ORDERED" || o.status === "PARTIAL");
-  const showMoney = can(user.role, "finance.view") || can(user.role, "procurement.edit") || can(user.role, "supplierPayments.edit");
+  const canEdit = can(user, "procurement.edit");
+  const canReceive = can(user, "warehouse.edit") && (o.status === "ORDERED" || o.status === "PARTIAL");
+  const showMoney = can(user, "finance.view") || can(user, "procurement.edit") || can(user, "supplierPayments.edit");
   const received = (l: (typeof o.lines)[number]) => l.movements.reduce((s, m) => s + Number(m.qty), 0);
   const hasReceipts = o.lines.some((l) => l.movements.length > 0);
   const overdue =
@@ -212,7 +212,7 @@ export default async function OrderPage({ params }: PageProps<"/procurement/[id]
               <CardHeader
                 title={t("suppliers.payments")}
                 action={
-                  can(user.role, "supplierPayments.edit") && (
+                  can(user, "supplierPayments.edit") && (
                     <Link href={`/suppliers/${o.supplierId}`} className="text-sm text-primary hover:underline">
                       {t("suppliers.addPayment")} →
                     </Link>

@@ -1,74 +1,53 @@
 /**
- * Idempotent bootstrap: company, first admin, product categories.
- *   SEED_COMPANY_NAME, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD (generated & printed if missing)
+ * Runs on every container start after migrations. Idempotent:
+ *  - creates the company and the first administrator if the database is empty
+ *    (SEED_COMPANY_NAME, SEED_ADMIN_EMAIL, SEED_ADMIN_PHONE, SEED_ADMIN_PASSWORD — generated and printed if missing);
+ *  - ensures defaults / data upgrades for every company (roles, statuses, categories, ...).
  */
-import { PrismaClient, type BomKind } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
+import { ensureCompanyDefaults } from "../src/server/bootstrap";
+import { normalizePhone } from "../src/lib/phone";
+import { generateDemo } from "../src/server/demo/generate";
 
 const db = new PrismaClient();
 
-const CATEGORIES: [string, BomKind][] = [
-  ["AHU", "EQUIPMENT"],
-  ["FAN", "EQUIPMENT"],
-  ["SMOKE_FAN", "EQUIPMENT"],
-  ["SUPPLY_FAN", "EQUIPMENT"],
-  ["ROOFTOP", "EQUIPMENT"],
-  ["VRF_OUTDOOR", "EQUIPMENT"],
-  ["VRF_INDOOR", "EQUIPMENT"],
-  ["CHILLER", "EQUIPMENT"],
-  ["FCU", "EQUIPMENT"],
-  ["SPLIT", "EQUIPMENT"],
-  ["CASSETTE", "EQUIPMENT"],
-  ["DUCT", "MATERIAL"],
-  ["PIPE", "MATERIAL"],
-  ["INSULATION", "MATERIAL"],
-  ["GRILLE", "MATERIAL"],
-  ["DIFFUSER", "MATERIAL"],
-  ["VALVE", "MATERIAL"],
-  ["DAMPER", "MATERIAL"],
-  ["PUMP", "EQUIPMENT"],
-  ["AUTOMATION", "EQUIPMENT"],
-  ["ELECTRICAL", "MATERIAL"],
-  ["FASTENERS", "MATERIAL"],
-  ["CONSUMABLES", "MATERIAL"],
-];
-
 async function main() {
-  let company = await db.company.findFirst();
+  let company = await db.company.findFirst({ where: { isDemo: false }, orderBy: { createdAt: "asc" } });
   if (!company) {
     company = await db.company.create({ data: { name: process.env.SEED_COMPANY_NAME ?? "Swifta" } });
     console.log(`Company created: ${company.name}`);
   }
 
-  for (const [i, [key, kind]] of CATEGORIES.entries()) {
-    await db.productCategory.upsert({
-      where: { companyId_name: { companyId: company.id, name: key } },
-      create: { companyId: company.id, key, name: key, kind, sortOrder: i },
-      update: { key, kind, sortOrder: i },
-    });
+  for (const c of await db.company.findMany()) {
+    await ensureCompanyDefaults(db, c.id);
   }
 
-  if ((await db.warehouse.count({ where: { companyId: company.id } })) === 0) {
-    await db.warehouse.create({ data: { companyId: company.id, name: "Asosiy ombor" } });
-    console.log("Warehouse created: Asosiy ombor");
-  }
-
-  const admins = await db.user.count({ where: { companyId: company.id, role: "ADMIN" } });
+  const adminRole = await db.roleDef.findFirstOrThrow({ where: { companyId: company.id, key: "ADMIN" } });
+  const admins = await db.user.count({ where: { companyId: company.id, roleId: adminRole.id } });
   if (admins === 0) {
     const email = (process.env.SEED_ADMIN_EMAIL ?? "admin@swifta.uz").toLowerCase();
+    const phone = process.env.SEED_ADMIN_PHONE ? normalizePhone(process.env.SEED_ADMIN_PHONE) : null;
     const password = process.env.SEED_ADMIN_PASSWORD ?? randomBytes(9).toString("base64url");
     await db.user.create({
       data: {
         companyId: company.id,
         email,
+        phone,
         name: "Administrator",
-        role: "ADMIN",
+        roleId: adminRole.id,
         passwordHash: await bcrypt.hash(password, 10),
       },
     });
     console.log(`Admin created: ${email}`);
     if (!process.env.SEED_ADMIN_PASSWORD) console.log(`Generated password: ${password}`);
+  }
+
+  // Optional: build the separate demo workspace once (SEED_DEMO=1).
+  if (process.env.SEED_DEMO === "1" && !(await db.company.findFirst({ where: { isDemo: true } }))) {
+    const id = await generateDemo(db);
+    console.log(`Demo workspace created: ${id}`);
   }
 }
 

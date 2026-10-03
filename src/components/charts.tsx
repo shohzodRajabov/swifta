@@ -73,20 +73,21 @@ export function PlanActualChart({
   data,
   labels,
 }: {
-  data: { name: string; plan: number; actual: number }[];
-  labels: { plan: string; actual: string };
+  data: { name: string; plan: number; actual: number; forecast?: number }[];
+  labels: { plan: string; actual: string; forecast?: string };
 }) {
   const compact = useCompact();
   return (
-    <ResponsiveContainer width="100%" height={Math.max(200, data.length * 44)}>
+    <ResponsiveContainer width="100%" height={Math.max(220, data.length * 56)}>
       <BarChart data={data} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
         <CartesianGrid stroke="var(--border)" horizontal={false} />
         <XAxis type="number" {...axis} tickFormatter={compact} />
         <YAxis type="category" dataKey="name" width={150} {...axis} />
         <Tooltip {...tooltipStyle} formatter={(v) => formatUzs(Number(v))} cursor={{ fill: "var(--surface-2)" }} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="plan" name={labels.plan} fill="var(--chart-4)" radius={[0, 4, 4, 0]} maxBarSize={14} />
-        <Bar dataKey="actual" name={labels.actual} fill="var(--chart-2)" radius={[0, 4, 4, 0]} maxBarSize={14} />
+        <Bar dataKey="plan" name={labels.plan} fill="var(--chart-4)" radius={[0, 4, 4, 0]} maxBarSize={12} />
+        {labels.forecast && <Bar dataKey="forecast" name={labels.forecast} fill="var(--chart-1)" radius={[0, 4, 4, 0]} maxBarSize={12} />}
+        <Bar dataKey="actual" name={labels.actual} fill="var(--chart-2)" radius={[0, 4, 4, 0]} maxBarSize={12} />
       </BarChart>
     </ResponsiveContainer>
   );

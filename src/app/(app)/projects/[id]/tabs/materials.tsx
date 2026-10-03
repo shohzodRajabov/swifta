@@ -24,8 +24,8 @@ export async function MaterialsTab({ user, projectId }: { user: CurrentUser; pro
     }),
     db.warehouse.findMany({ where: { companyId: user.companyId, active: true }, orderBy: { name: "asc" } }),
   ]);
-  const canConsume = can(user.role, "materials.consume");
-  const canMove = can(user.role, "warehouse.edit");
+  const canConsume = can(user, "materials.consume");
+  const canMove = can(user, "warehouse.edit");
   const wh = warehouses.map((w) => ({ id: w.id, label: w.name }));
   const productRows = rows.filter((r) => r.productId);
 
@@ -35,7 +35,7 @@ export async function MaterialsTab({ user, projectId }: { user: CurrentUser; pro
         <CardHeader
           title={t("materials.title")}
           action={
-            can(user.role, "procurement.edit") && (
+            can(user, "procurement.edit") && (
               <LinkButton href={`/procurement/new?project=${projectId}`} variant="secondary" className="h-8">
                 {t("procurement.createForProject")}
               </LinkButton>

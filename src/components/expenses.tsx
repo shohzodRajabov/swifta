@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { Expense } from "@prisma/client";
-import { COST_CATEGORIES } from "@/lib/metrics";
+import { MANUAL_COST_CATEGORIES } from "@/lib/metrics";
+import { formatNumber } from "@/lib/format";
 import { recordMoney } from "@/lib/money-value";
 import { formatDate, isoDate } from "@/lib/utils";
-import { Empty, Field, Input, Notice, Select, Table, Td, Th } from "@/components/ui";
+import { Badge, Empty, Field, Input, Notice, Select, Table, Td, Th } from "@/components/ui";
 import { ActionForm, DeleteButton, SubmitButton } from "@/components/forms/action-form";
 import { MoneyInput } from "@/components/forms/money-input";
 import { Money } from "@/components/money";
@@ -51,6 +52,16 @@ export async function ExpenseTable({ rows, canEdit, showProject }: { rows: Row[]
             <Td className="text-muted">{e.createdBy?.name ?? "—"}</Td>
             <Td className="text-right">
               <Money size="sm" value={recordMoney(e)} />
+              {Number(e.vatRate) > 0 && (
+                <div className="text-[11px] text-muted">
+                  {t("common.vat")} {formatNumber(Number(e.vatRate), 0)}%
+                </div>
+              )}
+              {e.approval !== "APPROVED" && (
+                <Badge tone={e.approval === "PENDING" ? "warning" : "danger"} className="mt-1">
+                  {t(`approval.${e.approval}`)}
+                </Badge>
+              )}
             </Td>
             {canEdit && (
               <Td className="text-right">
@@ -67,9 +78,11 @@ export async function ExpenseTable({ rows, canEdit, showProject }: { rows: Row[]
 export async function ExpenseForm({
   projectId,
   projects,
+  defaultVat = 0,
 }: {
   projectId?: string;
   projects?: { id: string; code: string; name: string }[];
+  defaultVat?: number;
 }) {
   const t = await getTranslations();
   return (
@@ -96,7 +109,7 @@ export async function ExpenseForm({
         </Field>
         <Field label={t("expenses.category")} required>
           <Select name="category" defaultValue="MATERIAL">
-            {COST_CATEGORIES.map((c) => (
+            {MANUAL_COST_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {t(`costCategory.${c}`)}
               </option>
@@ -104,7 +117,7 @@ export async function ExpenseForm({
           </Select>
         </Field>
       </div>
-      <MoneyInput label={t("common.amount")} />
+      <MoneyInput label={t("common.amount")} vat defaultVat={defaultVat} />
       <Field label={t("expenses.description")} required>
         <Input name="description" required />
       </Field>
@@ -118,7 +131,7 @@ export async function ExpenseForm({
       </div>
       <div className="flex flex-wrap items-center gap-3 md:col-span-2">
         <SubmitButton>{t("expenses.add")}</SubmitButton>
-        <Notice>{t("expenses.attachmentSoon")}</Notice>
+        <Notice>{t("expenses.approvalHint")}</Notice>
       </div>
     </ActionForm>
   );

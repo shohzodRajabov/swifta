@@ -47,7 +47,10 @@
     "unit": "Unit",
     "quantity": "Quantity",
     "open": "Open",
-    "phaseNotice": "This section launches in phase {n}"
+    "phaseNotice": "This section launches in phase {n}",
+    "forecast": "Forecast",
+    "vat": "VAT",
+    "noVat": "No VAT"
   },
   "money": {
     "rateTitle": "Conversion rate",
@@ -80,16 +83,33 @@
     "sectionMain": "Main",
     "sectionSoon": "Next phases",
     "sectionAdmin": "Administration",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "contractors": "Contractors",
+    "me": "My work",
+    "employees": "Employees",
+    "calendar": "Calendar",
+    "kpi": "KPI",
+    "service": "Service & warranty",
+    "settings": "Settings"
   },
   "auth": {
     "title": "Sign in",
     "email": "Email",
     "password": "Password",
     "submit": "Sign in",
-    "invalid": "Invalid email or password",
+    "invalid": "Invalid login or password",
     "forbiddenTitle": "Access denied",
-    "forbiddenText": "You don't have permission to view this section."
+    "forbiddenText": "You don't have permission to view this section.",
+    "identifier": "Phone or email",
+    "identifierHint": "e.g. +998 90 123 45 67",
+    "setPasswordTitle": "Set your password",
+    "setPasswordText": "{name}, you signed in with a one-time password. Set your own password to continue.",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat password",
+    "passwordHint": "At least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "passwordShort": "Password must be at least 8 characters",
+    "savePassword": "Save and continue"
   },
   "roles": {
     "ADMIN": "Administrator",
@@ -98,7 +118,25 @@
     "ENGINEER": "Engineer / Designer",
     "WAREHOUSE": "Warehouse manager",
     "ACCOUNTANT": "Accountant",
-    "TECHNICIAN": "Installer / Technician"
+    "TECHNICIAN": "Installer / Technician",
+    "DIRECTOR": "Director",
+    "CHIEF_ENGINEER": "Chief engineer",
+    "FOREMAN": "Foreman",
+    "GROUP_LEADER": "Group leader",
+    "INSPECTOR": "Inspector",
+    "WORKER": "Worker",
+    "title": "Roles & permissions",
+    "subtitle": "A role is a set of permissions. The admin can change any role or create new ones.",
+    "manage": "Roles & permissions",
+    "name": "Role name",
+    "description": "Description",
+    "permissions": "Permissions",
+    "users": "Users",
+    "system": "Built-in",
+    "custom": "Custom",
+    "new": "New role",
+    "copyFrom": "Copy permissions from",
+    "adminLocked": "The administrator role always has every permission."
   },
   "stages": {
     "NEW_REQUEST": "New request",
@@ -149,14 +187,17 @@
   "costCategory": {
     "EQUIPMENT": "Equipment",
     "MATERIAL": "Materials",
-    "LABOR": "Labour",
+    "LABOR": "Internal labour",
     "SUBCONTRACTOR": "Subcontractor",
     "TRANSPORT": "Transport",
     "TOOLS": "Tools",
     "HOTEL": "Accommodation",
     "CUSTOMS": "Customs",
     "INSTALLATION": "Installation",
-    "OTHER": "Other"
+    "OTHER": "Other",
+    "OUTSOURCING": "Outsourcing",
+    "WAREHOUSE": "Warehouse",
+    "TAX": "Turnover tax"
   },
   "bomKind": {
     "EQUIPMENT": "Equipment",
@@ -219,7 +260,7 @@
     "cashProfitHint": "Payments received − actual cost",
     "margin": "Profit margin",
     "plannedMargin": "Planned margin",
-    "received": "Received from clients",
+    "received": "Payments received",
     "clientDebt": "Client receivables",
     "overdueDebt": "Overdue receivables",
     "supplierDebt": "Supplier payables",
@@ -237,7 +278,21 @@
     "reasonOverdueDebt": "Payment overdue",
     "allGood": "All good — no problem projects",
     "upcoming": "Payments due in the next 14 days",
-    "count": "{n}"
+    "count": "{n}",
+    "newObjects": "New & offers",
+    "contracted": "Contracted",
+    "inWork": "In progress",
+    "testing": "Testing & launch",
+    "service": "In service",
+    "attentionCenter": "Attention required",
+    "portfolio": "Project portfolio (totals)",
+    "forecastCost": "Forecast cost",
+    "ofRevenue": "of revenue",
+    "forecastHint": "Forecast = contract − (actual + open commitments + remaining plan)",
+    "contractorDebt": "Contractor payables",
+    "periodTitle": "Period figures",
+    "netHint": "Revenue − direct costs − overhead − profit tax",
+    "reasonMissingDocs": "Missing documents"
   },
   "projects": {
     "title": "Projects",
@@ -250,7 +305,7 @@
     "contractNumber": "Contract number",
     "contractDate": "Contract date",
     "manager": "Project manager",
-    "engineer": "Engineer",
+    "engineer": "Design engineer",
     "installTeam": "Installation team",
     "startDate": "Start date",
     "plannedEndDate": "Planned finish",
@@ -265,7 +320,7 @@
     "noClients": "Add a client first",
     "tabOverview": "Overview",
     "tabBom": "Estimate / BOM",
-    "tabBudget": "Cost plan",
+    "tabBudget": "Costs: plan vs actual",
     "tabPayments": "Payments",
     "tabExpenses": "Actual costs",
     "tabHistory": "History",
@@ -282,7 +337,32 @@
     "contractChangeWarning": "Every change to the contract value is recorded in the audit log.",
     "empty": "No projects yet",
     "stageHistory": "Stage history",
-    "changes": "Changes"
+    "changes": "Changes",
+    "changeStatus": "Change status",
+    "statusGroup": "Stage",
+    "lifecycle": "Lifecycle",
+    "customer": "Customer (general contractor)",
+    "customerHint": "Signs the contract with us and pays",
+    "owner": "Object owner",
+    "ownerHint": "e.g. a bank or plant; may be the same as the customer",
+    "ownerSameAsCustomer": "Same as customer",
+    "legalEntity": "Our company",
+    "legalEntityHint": "Which of our firms signs the contract",
+    "objectType": "Object type",
+    "siteContactName": "Site contact",
+    "siteContactPhone": "Phone",
+    "siteContactEmail": "Email",
+    "chiefEngineer": "Chief engineer",
+    "foreman": "Foreman",
+    "sectionObject": "Object",
+    "sectionParties": "Parties & contract",
+    "sectionTeam": "Team",
+    "sectionDates": "Dates",
+    "warranty": "Warranty",
+    "warrantyMonths": "Warranty (months)",
+    "warrantyMonthsValue": "{n} months (after handover)",
+    "tabRevenue": "Revenue & payments",
+    "tabDocuments": "Documents"
   },
   "bom": {
     "title": "Equipment and materials specification",
@@ -312,7 +392,10 @@
     "byCategory": "Plan vs actual by category",
     "bomNote": "Equipment and material plan comes from the Estimate/BOM.",
     "over": "Over",
-    "under": "Saved"
+    "under": "Saved",
+    "fromSessions": "From work sessions",
+    "fromContractors": "From contractors",
+    "fromActs": "From acts"
   },
   "payments": {
     "schedule": "Payment schedule",
@@ -341,7 +424,8 @@
     "reference": "Document number",
     "project": "Project",
     "createdBy": "Entered by",
-    "attachmentSoon": "Supporting documents can be attached in phase 3"
+    "attachmentSoon": "Supporting documents can be attached in phase 3",
+    "approvalHint": "Expenses above the threshold count after approval"
   },
   "clients": {
     "title": "Clients",
@@ -360,7 +444,9 @@
     "empty": "No clients yet",
     "contracts": "Contracts total",
     "paid": "Paid",
-    "debt": "Owes"
+    "debt": "Owes",
+    "ownedProjects": "Owned objects",
+    "ownedProjectsHint": "Projects contracted through another customer"
   },
   "catalog": {
     "title": "Equipment and materials catalog",
@@ -385,7 +471,67 @@
     "title": "Finance",
     "tabExpenses": "Expenses",
     "tabReceivables": "Client receivables",
-    "debtByProject": "Receivables by project"
+    "debtByProject": "Receivables by project",
+    "tab_expenses": "Expenses",
+    "tab_receivables": "Receivables",
+    "tab_payables": "Payables",
+    "tab_approvals": "Approvals",
+    "tab_overhead": "Overhead",
+    "tab_pnl": "Company P&L",
+    "revenue": "Revenue",
+    "costs": "Costs",
+    "profit": "Profit",
+    "revenueActualHint": "Actual = signed acts",
+    "planForecastActual": "Plan / forecast / actual",
+    "netOfVatNote": "General tax regime: amounts net of VAT",
+    "turnoverNote": "Turnover tax regime: gross amounts, the tax is included in costs",
+    "openCommitments": "Open commitments",
+    "contractBase": "Base contract",
+    "amendments": "Additional agreements",
+    "amendmentsHint": "Extra works increase the contract value; each is kept separately",
+    "amendmentAmount": "Amount (+/−)",
+    "amendmentPlaceholder": "e.g. automation for 2 extra AHUs",
+    "addAmendment": "Add agreement",
+    "contractTotal": "Contract total",
+    "acts": "Acts of completed works",
+    "actsHint": "Interim and final acts (Form 2/3). Signed acts are actual revenue.",
+    "actsSigned": "Signed acts",
+    "actNumber": "Number",
+    "period": "Period",
+    "periodTo": "Period end",
+    "signedNow": "Signed",
+    "addAct": "Add act",
+    "sign": "Mark signed",
+    "cancelAct": "Cancel",
+    "description": "Description",
+    "received": "Received",
+    "receivable": "Receivable (by acts)",
+    "receivableHint": "Receivable = signed acts − payments. Overdue follows the payment schedule.",
+    "overdue": "Overdue",
+    "forecastProfit": "Forecast profit",
+    "supplierPayables": "Supplier payables",
+    "supplierPayablesHint": "Goods received − paid",
+    "contractorPayables": "Contractor payables",
+    "contractorPayablesHint": "Verified work − paid",
+    "approvalsTitle": "Expenses and payments awaiting approval",
+    "approvalsHint": "Amounts above the threshold are not counted until approved",
+    "nothingPending": "Nothing waiting for approval",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectReason": "Reason",
+    "paymentTo": "Payment to",
+    "kind_expense": "Project expense",
+    "kind_overhead": "Overhead",
+    "kind_supplierPayment": "Supplier payment",
+    "kind_contractorPayment": "Contractor payment",
+    "addOverhead": "Add overhead",
+    "overheadHint": "Costs not tied to a project: office, vehicles, communication, ...",
+    "category": "Category",
+    "pnlTitle": "Profit & loss",
+    "pnlHint": "Revenue = signed acts; direct costs = project costs; profit tax = estimate for general-regime firms",
+    "netMargin": "Net margin",
+    "directByCategory": "Direct costs by category",
+    "byMonth": "By month"
   },
   "users": {
     "title": "Users",
@@ -403,7 +549,18 @@
     "activate": "Enable",
     "deactivate": "Disable",
     "resetPassword": "Change password",
-    "you": "You"
+    "you": "You",
+    "subtitle": "Sign-in: phone (or email) and password. New users receive a one-time password.",
+    "newHint": "The user sets their own password at first sign-in",
+    "phoneHint": "Used to sign in",
+    "oneTimePassword": "One-time password",
+    "oneTimePasswordHint": "Leave empty to generate",
+    "autoGenerate": "Automatic",
+    "otpIssued": "One-time password for {name}:",
+    "otpHint": "Give this password to the employee. It is shown only now.",
+    "login": "Login",
+    "lastLogin": "Last sign-in",
+    "mustChange": "Password not set"
   },
   "audit": {
     "title": "Audit log",
@@ -428,7 +585,16 @@
     "inUse": "This record is used elsewhere and cannot be deleted",
     "unknown": "Something went wrong",
     "linesRequired": "Add at least one line",
-    "notEnough": "Not enough stock"
+    "notEnough": "Not enough stock",
+    "missingDocs": "This status requires documents: {docs}. Upload them in Documents first.",
+    "phoneInvalid": "Invalid phone number",
+    "fileEmpty": "The file is empty",
+    "fileTooLarge": "File too large (max 25 MB)",
+    "fileType": "Unsupported file type (Word, Excel, PDF, images)",
+    "telegramToken": "Invalid bot token",
+    "telegramNotConfigured": "Save the token and group ID first",
+    "telegramSend": "Could not send to Telegram: {message}",
+    "backupFailed": "Backup failed: {message}"
   },
   "poStatus": {
     "DRAFT": "Draft",
@@ -580,6 +746,466 @@
     "overuse": "Material overuse: {name} — {material}",
     "contractEnding": "Finish date approaching: {name}",
     "critical": "Critical",
-    "warning": "Warning"
+    "warning": "Warning",
+    "documentMissing": "Missing documents: {name}",
+    "warrantyEnding": "Warranty ending soon: {name}",
+    "inspectionRequested": "Inspection requested: {task}",
+    "taskOverdue": "Task overdue: {task}",
+    "taskDueToday": "Task due today: {task}",
+    "deadlineApproaching": "Deadline approaching: {task}",
+    "taskAssigned": "Task assigned to you: {task}",
+    "rework": "Rework required: {task}",
+    "remarkCreated": "Remark: {remark}",
+    "confirmSession": "Confirm work session: {task}",
+    "contractorTaskCompleted": "Contractor finished: {contractor} — {task}",
+    "pendingApprovals": "Waiting for approval: {n}"
+  },
+  "permGroup": {
+    "general": "General",
+    "projects": "Projects & documents",
+    "crm": "Clients",
+    "estimate": "Catalog & estimate",
+    "finance": "Finance",
+    "supply": "Procurement & warehouse",
+    "workforce": "Workforce & tasks",
+    "contractors": "Contractors",
+    "kpi": "KPI",
+    "service": "Service & warranty",
+    "admin": "Administration"
+  },
+  "perm": {
+    "dashboard": {
+      "view": "Dashboard"
+    },
+    "reports": {
+      "view": "Reports"
+    },
+    "notifications": {
+      "view": "Notifications"
+    },
+    "projects": {
+      "view": "View own projects",
+      "viewAll": "View all projects",
+      "edit": "Create and edit projects",
+      "status": "Change project status"
+    },
+    "documents": {
+      "view": "View documents",
+      "edit": "Upload documents"
+    },
+    "drawings": {
+      "edit": "Drawings & zones"
+    },
+    "clients": {
+      "view": "View clients",
+      "edit": "Edit clients"
+    },
+    "catalog": {
+      "view": "View catalog",
+      "edit": "Edit catalog"
+    },
+    "bom": {
+      "edit": "Edit estimate/BOM"
+    },
+    "import": {
+      "manage": "Upload estimates from Excel",
+      "approve": "Approve estimate imports"
+    },
+    "finance": {
+      "view": "View finance",
+      "approve": "Approve expenses and payments"
+    },
+    "budget": {
+      "edit": "Cost plan"
+    },
+    "acts": {
+      "edit": "Acts of completed works"
+    },
+    "payments": {
+      "edit": "Client payments"
+    },
+    "expenses": {
+      "edit": "Project expenses"
+    },
+    "overhead": {
+      "view": "View overhead",
+      "edit": "Enter overhead"
+    },
+    "salaries": {
+      "view": "View salaries"
+    },
+    "payroll": {
+      "manage": "Close payroll month"
+    },
+    "suppliers": {
+      "view": "View suppliers",
+      "edit": "Edit suppliers"
+    },
+    "supplierPayments": {
+      "edit": "Supplier payments"
+    },
+    "procurement": {
+      "view": "View procurement",
+      "edit": "Purchase orders"
+    },
+    "warehouse": {
+      "view": "View warehouse",
+      "edit": "Warehouse operations"
+    },
+    "materials": {
+      "consume": "Record material usage"
+    },
+    "worker": {
+      "self": "\"My work\" page"
+    },
+    "employees": {
+      "view": "View employees",
+      "edit": "Edit employees"
+    },
+    "groups": {
+      "manage": "Manage groups"
+    },
+    "tasks": {
+      "view": "View tasks",
+      "viewAll": "View all tasks",
+      "manage": "Create and assign tasks"
+    },
+    "sessions": {
+      "record": "Record work sessions",
+      "approve": "Approve work sessions"
+    },
+    "inspections": {
+      "perform": "Perform inspections"
+    },
+    "remarks": {
+      "create": "Create remarks",
+      "manage": "Manage remarks"
+    },
+    "attendance": {
+      "manage": "Attendance"
+    },
+    "contractors": {
+      "view": "View contractors",
+      "edit": "Edit contractors"
+    },
+    "contractorPayments": {
+      "edit": "Contractor payments"
+    },
+    "outsource": {
+      "verify": "Verify contractor work"
+    },
+    "kpi": {
+      "self": "Own KPI",
+      "view": "View all KPIs",
+      "manage": "KPI rules and calculation"
+    },
+    "service": {
+      "view": "View service",
+      "edit": "Service tickets"
+    },
+    "users": {
+      "manage": "Users"
+    },
+    "roles": {
+      "manage": "Roles & permissions"
+    },
+    "settings": {
+      "manage": "System settings"
+    },
+    "audit": {
+      "view": "Audit log"
+    },
+    "backups": {
+      "manage": "Backups"
+    },
+    "demo": {
+      "access": "Demo workspace"
+    }
+  },
+  "statusGroup": {
+    "NEW": "A · new",
+    "OFFER": "B · offer",
+    "CONTRACT": "C · contract",
+    "WORK": "D · work",
+    "TESTING": "E · testing",
+    "LAUNCHED": "F · launched",
+    "DONE": "G · done",
+    "SERVICE": "H · service"
+  },
+  "statuses": {
+    "subtitle": "Statuses inside groups A–H and documents required to enter them",
+    "groupsFixed": "Groups A–H drive system logic (delays, completion, warranty). You can rename/recolour them and add, edit or remove statuses inside.",
+    "code": "Code",
+    "name": "Name",
+    "order": "Order",
+    "color": "Colour",
+    "groupName": "Group name",
+    "newPlaceholder": "New status name",
+    "requiredDocs": "Required documents"
+  },
+  "documents": {
+    "title": "Project documents",
+    "new": "Upload a document",
+    "formats": "Word, Excel, PDF and images (up to 25 MB). Each upload is a new version; old versions are kept.",
+    "category": "Category",
+    "titleOptional": "Title (optional)",
+    "titlePlaceholder": "Taken from the file name",
+    "upload": "Choose & upload",
+    "document": "Document",
+    "versions": "Version",
+    "updated": "Updated",
+    "empty": "No documents yet",
+    "history": "Version history",
+    "newVersion": "New version",
+    "view": "View",
+    "download": "Download",
+    "required": "Required documents",
+    "requiredHint": "For the current and upcoming statuses",
+    "neededFor": "Needed for {status}"
+  },
+  "docCategory": {
+    "CONTRACT": "Contract (draft)",
+    "SIGNED_CONTRACT": "Signed contract",
+    "ADDITIONAL_AGREEMENT": "Additional agreement",
+    "COMMERCIAL_OFFER": "Commercial offer",
+    "TECH_SPEC": "Technical brief",
+    "PROJECT_FILES": "Project files",
+    "DRAWING": "Drawing",
+    "SPECIFICATION": "Specification",
+    "SMETA": "Estimate",
+    "INVOICE": "Invoice",
+    "PURCHASE_ORDER": "Purchase order",
+    "WAYBILL": "Waybill",
+    "ACT": "Act (Form 2/3)",
+    "COMPLETION_ACT": "Work completion act",
+    "HIDDEN_WORKS_ACT": "Hidden works act",
+    "TEST_ACT": "Test act",
+    "PAYMENT_PROOF": "Payment proof",
+    "FINAL_DOCS": "Final documents",
+    "WARRANTY": "Warranty document",
+    "PASSPORT": "Passport",
+    "CERTIFICATE": "Certificate",
+    "PHOTO": "Photo",
+    "CORRESPONDENCE": "Correspondence",
+    "SERVICE_REPORT": "Service report",
+    "CONTRACTOR_DOC": "Contractor document",
+    "OTHER": "Other"
+  },
+  "taxRegime": {
+    "GENERAL": "General (VAT)",
+    "TURNOVER": "Turnover tax"
+  },
+  "approval": {
+    "APPROVED": "Approved",
+    "PENDING": "Pending approval",
+    "REJECTED": "Rejected"
+  },
+  "actStatus": {
+    "DRAFT": "Draft",
+    "SIGNED": "Signed",
+    "CANCELLED": "Cancelled"
+  },
+  "overheadCategory": {
+    "OFFICE_RENT": "Office rent",
+    "OFFICE_SALARY": "Office salaries",
+    "PAYROLL_UNALLOCATED": "Unallocated payroll",
+    "VEHICLE": "Vehicles",
+    "FUEL": "Fuel",
+    "UTILITIES": "Utilities",
+    "COMMUNICATION": "Communication",
+    "MARKETING": "Marketing",
+    "BANK_FEES": "Bank fees",
+    "TAXES_FEES": "Taxes & fees",
+    "TOOLS": "Tools",
+    "WORKSHOP": "Workshop",
+    "OTHER": "Other"
+  },
+  "pnl": {
+    "revenue": "Revenue",
+    "direct": "Direct costs",
+    "gross": "Gross profit",
+    "overhead": "Overhead",
+    "operating": "Operating profit",
+    "profitTax": "Profit tax (estimate)",
+    "net": "Net profit",
+    "beforeTax": "Profit before tax"
+  },
+  "period": {
+    "label": "Period",
+    "month": "This month",
+    "quarter": "This quarter",
+    "year": "This year",
+    "all": "All time",
+    "custom": "Custom range",
+    "from": "From",
+    "to": "To"
+  },
+  "attention": {
+    "overdueTasks": "overdue tasks",
+    "dueToday": "due today",
+    "inspections": "waiting for inspection",
+    "remarks": "open remarks",
+    "sessionsToApprove": "sessions to approve",
+    "unconfirmed": "unconfirmed by workers",
+    "contractorToVerify": "contractor jobs to verify",
+    "materialShortage": "low-stock materials",
+    "overduePayments": "projects with overdue payments",
+    "pendingApprovals": "pending approvals",
+    "missingDocs": "projects missing documents"
+  },
+  "contractors": {
+    "name": "Contractor",
+    "agreed": "Agreed",
+    "completedValue": "Verified work",
+    "paid": "Paid",
+    "payable": "We owe"
+  },
+  "groupRole": {
+    "LEADER": "Leader",
+    "SENIOR": "Senior",
+    "WORKER": "Worker"
+  },
+  "contribution": {
+    "EQUAL": "Equal (by hours worked)",
+    "LEADER": "Set by leader",
+    "RULE": "By rule (role weights)",
+    "EFFICIENCY": "By efficiency"
+  },
+  "settings": {
+    "title": "Settings",
+    "company": {
+      "title": "Company settings",
+      "hint": "Taxes, working-day norm, approval threshold",
+      "general": "General",
+      "name": "Company name",
+      "approvalThreshold": "Approval threshold (UZS)",
+      "approvalThresholdHint": "Expenses and payments above this need approval",
+      "overuseThreshold": "Overuse threshold (%)",
+      "overuseThresholdHint": "Warn when usage exceeds the plan by this percent",
+      "contractorPhoneRequired": "Contractor phone required",
+      "payroll": "Payroll & taxes",
+      "normWorkDays": "Norm working days per month",
+      "normHoursPerDay": "Norm hours per day",
+      "salaryInputMode": "Salary entered as",
+      "salaryNet": "Net (after tax)",
+      "salaryGross": "Gross (before tax)",
+      "incomeTaxRate": "Income tax (%)",
+      "socialTaxRate": "Social tax (%)",
+      "payrollExample": "Example: net {salary} → gross {gross} → employer cost {cost}/month ≈ {daily}/day",
+      "contribution": "Worker contribution",
+      "defaultContribution": "Default method",
+      "efficiencyMinSessions": "Min sessions for efficiency",
+      "weightHint": "Weight for the rule-based method"
+    },
+    "firms": {
+      "title": "Our companies",
+      "hint": "Legal entities that sign contracts and their tax regime"
+    },
+    "statuses": {
+      "title": "Project statuses",
+      "hint": "Groups A–H, statuses and required documents"
+    },
+    "users": {
+      "title": "Users",
+      "hint": "Phone sign-in, one-time password, role"
+    },
+    "roles": {
+      "title": "Roles & permissions",
+      "hint": "Who sees and changes what"
+    },
+    "workTypes": {
+      "title": "Work types",
+      "hint": "Work types and units for tasks"
+    },
+    "telegram": {
+      "title": "Telegram digest",
+      "hint": "Daily activity digest to a group"
+    },
+    "backups": {
+      "title": "Backups",
+      "hint": "Daily automatic backup, manual run, download"
+    },
+    "demo": {
+      "title": "Demo workspace",
+      "hint": "Sample data kept apart from real data"
+    },
+    "audit": {
+      "title": "Audit log",
+      "hint": "Who changed what and when"
+    }
+  },
+  "firms": {
+    "subtitle": "Your firms that sign contracts. The tax regime affects profit calculation.",
+    "name": "Name",
+    "tin": "TIN",
+    "director": "Director",
+    "taxRegime": "Tax regime",
+    "vatRate": "VAT (%)",
+    "turnoverTaxRate": "Turnover tax (%)",
+    "profitTaxRate": "Profit tax (%)",
+    "address": "Address",
+    "phone": "Phone",
+    "bankDetails": "Bank details",
+    "isDefault": "Default",
+    "default": "Default",
+    "new": "New company",
+    "projectsCount": "{n} projects"
+  },
+  "workTypes": {
+    "subtitle": "Work types used in tasks; efficiency is compared per work type",
+    "name": "Work type",
+    "namePlaceholder": "e.g. Duct installation"
+  },
+  "workspace": {
+    "openDemo": "Open demo data",
+    "backToMain": "Back to real data",
+    "demoBanner": "DEMO workspace — sample data, separate from your real data"
+  },
+  "demo": {
+    "subtitle": "Explore the platform with sample data",
+    "explain": "Demo data lives in a separate workspace and never affects your real reports. Switch any time from the menu. Do real work in the main workspace.",
+    "exists": "Demo workspace exists",
+    "missing": "No demo workspace yet",
+    "stats": "{projects} projects, {employees} employees, {tasks} tasks, {contractors} contractors · created {date}",
+    "create": "Create demo data",
+    "rebuild": "Rebuild",
+    "delete": "Delete demo"
+  },
+  "backups": {
+    "subtitle": "Database backups",
+    "explain": "A backup is taken every day after 03:00 and stored separately: the last 30 days plus the first backup of each month for a year. Restore with pg_restore.",
+    "history": "Backup history",
+    "now": "Back up now",
+    "empty": "No backups yet",
+    "trigger": "Trigger",
+    "size": "Size",
+    "manual": "Manual",
+    "schedule": "Scheduled",
+    "status_SUCCESS": "Success",
+    "status_FAILED": "Failed",
+    "status_RUNNING": "Running"
+  },
+  "telegram": {
+    "settings": "Bot & group",
+    "step1": "Create a bot with @BotFather and copy its token.",
+    "step2": "Add the bot to the group and post any message there.",
+    "step3": "Save the token, then use \"Find groups\" to get the group ID.",
+    "step4": "Enter the group ID — the digest is sent daily at the chosen hour.",
+    "token": "Bot token",
+    "tokenHint": "Token from @BotFather",
+    "tokenSaved": "Token saved. Enter a new one to replace it.",
+    "chatId": "Group ID",
+    "chatIdHint": "Usually starts with -100",
+    "hour": "Send hour (Tashkent)",
+    "hourHint": "0–23, e.g. 19",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "disconnect": "Disconnect bot",
+    "lastSent": "Last digest",
+    "findChats": "Find groups",
+    "noChats": "No groups found. Add the bot to a group and post a message.",
+    "sendNow": "Send digest now",
+    "sent": "Sent",
+    "preview": "Today's digest (preview)"
   }
 }

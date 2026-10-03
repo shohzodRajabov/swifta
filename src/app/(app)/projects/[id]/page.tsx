@@ -2,26 +2,28 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Pencil } from "lucide-react";
-import type { ProjectStage } from "@prisma/client";
 import { requirePermission } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { computeMetrics } from "@/lib/metrics";
 import { cn } from "@/lib/utils";
 import { Card, LinkButton, PageHeader } from "@/components/ui";
-import { DelayedBadge, PriorityBadge, StageBadge, StatusBadge } from "@/components/project-bits";
-import { StageTimeline } from "./stage-timeline";
-import { StageForm } from "./stage-form";
-import { changeStage } from "../actions";
+import { DelayedBadge, LifecycleBadge, PriorityBadge, StatusBadge } from "@/components/project-bits";
+import { projectWhere } from "@/server/projects/access";
+import { getStatusCatalog } from "@/server/projects/status";
+import { StatusTimeline } from "./stage-timeline";
+import { StatusForm } from "./stage-form";
+import { changeStatus } from "../actions";
 import { OverviewTab } from "./tabs/overview";
 import { BomTab } from "./tabs/bom";
 import { BudgetTab } from "./tabs/budget";
-import { PaymentsTab } from "./tabs/payments";
+import { RevenueTab } from "./tabs/revenue";
 import { ExpensesTab } from "./tabs/expenses";
 import { HistoryTab } from "./tabs/history";
 import { MaterialsTab } from "./tabs/materials";
+import { DocumentsTab } from "./tabs/documents";
 
-const TABS = ["overview", "bom", "materials", "budget", "payments", "expenses", "history"] as const;
+const TABS = ["overview", "revenue", "budget", "expenses", "bom", "materials", "documents", "history"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function ProjectPage({ params, searchParams }: PageProps<"/projects/[id]">) {
@@ -29,41 +31,55 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const { tab: rawTab } = (await searchParams) as { tab?: string };
   const user = await requirePermission("projects.view");
   const project = await db.project.findFirst({
-    where: { id, companyId: user.companyId },
+    where: { AND: [{ id }, projectWhere(user)] },
     include: {
       client: true,
+      owner: true,
+      legalEntity: true,
       manager: { select: { name: true } },
       engineer: { select: { name: true } },
-      stageEvents: { orderBy: { enteredAt: "asc" } },
+      chiefEngineer: { select: { name: true } },
+      foreman: { select: { name: true } },
+      statusDef: { include: { group: true } },
+      stageEvents: { orderBy: { enteredAt: "asc" }, include: { statusDef: true } },
     },
   });
   if (!project) notFound();
   const t = await getTranslations();
-  const m = (await computeMetrics([project])).get(project.id)!;
+  const [m, catalog] = await Promise.all([
+    computeMetrics([project]).then((r) => r.get(project.id)!),
+    getStatusCatalog(user.companyId),
+  ]);
 
-  const finance = can(user.role, "finance.view");
+  const finance = can(user, "finance.view");
   const visible: Record<Tab, boolean> = {
     overview: true,
+    revenue: finance || can(user, "payments.edit") || can(user, "acts.edit"),
+    budget: finance,
+    expenses: finance || can(user, "expenses.edit"),
     bom: true,
     materials: true,
-    budget: finance,
-    payments: finance || can(user.role, "payments.edit"),
-    expenses: finance || can(user.role, "expenses.edit"),
-    history: can(user.role, "audit.view") || can(user.role, "projects.edit"),
+    documents: can(user, "documents.view"),
+    history: can(user, "audit.view") || can(user, "projects.edit"),
   };
   const tab: Tab = TABS.includes(rawTab as Tab) && visible[rawTab as Tab] ? (rawTab as Tab) : "overview";
   const tabLabel: Record<Tab, string> = {
     overview: t("projects.tabOverview"),
+    revenue: t("projects.tabRevenue"),
+    budget: t("projects.tabBudget"),
+    expenses: t("projects.tabExpenses"),
     bom: t("projects.tabBom"),
     materials: t("materials.tab"),
-    budget: t("projects.tabBudget"),
-    payments: t("projects.tabPayments"),
-    expenses: t("projects.tabExpenses"),
+    documents: t("projects.tabDocuments"),
     history: t("projects.tabHistory"),
   };
 
-  const reached = new Map<ProjectStage, Date>();
-  for (const e of project.stageEvents) reached.set(e.stage, e.enteredAt);
+  // First date each status group was entered.
+  const reached = new Map<string, Date>();
+  for (const e of project.stageEvents) {
+    const groupId = e.statusDef?.groupId;
+    if (groupId && !reached.has(groupId)) reached.set(groupId, e.enteredAt);
+  }
 
   return (
     <>
@@ -77,14 +93,14 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
             <Link href={`/clients/${project.clientId}`} className="hover:text-primary">
               {project.client.name}
             </Link>
-            <StageBadge stage={project.stage} />
-            <StatusBadge status={project.status} />
+            <StatusBadge status={project.statusDef} />
+            {project.status !== "ACTIVE" && <LifecycleBadge status={project.status} />}
             {project.priority !== "MEDIUM" && <PriorityBadge priority={project.priority} />}
             {m.delayed && <DelayedBadge />}
           </div>
         }
         actions={
-          can(user.role, "projects.edit") && (
+          can(user, "projects.edit") && (
             <LinkButton href={`/projects/${project.id}/edit`} variant="secondary">
               <Pencil className="size-4" aria-hidden />
               {t("common.edit")}
@@ -94,10 +110,19 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       />
 
       <Card className="mb-6 p-4">
-        <StageTimeline stage={project.stage} reached={reached} />
-        {can(user.role, "projects.stage") && (
+        <StatusTimeline catalog={catalog} currentStatusId={project.statusId} reached={reached} />
+        {can(user, "projects.status") && (
           <div className="mt-3 border-t border-border pt-3">
-            <StageForm action={changeStage.bind(null, project.id)} stage={project.stage} />
+            <StatusForm
+              action={changeStatus.bind(null, project.id)}
+              catalog={catalog.map((g) => ({
+                id: g.id,
+                letter: g.letter,
+                name: g.name,
+                statuses: g.statuses.map((s) => ({ id: s.id, code: s.code, name: s.name, active: s.active })),
+              }))}
+              currentStatusId={project.statusId}
+            />
           </div>
         )}
       </Card>
@@ -118,11 +143,12 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       </nav>
 
       {tab === "overview" && <OverviewTab project={project} metrics={m} showFinance={finance} />}
+      {tab === "revenue" && <RevenueTab user={user} project={project} metrics={m} />}
+      {tab === "budget" && <BudgetTab user={user} projectId={project.id} metrics={m} />}
+      {tab === "expenses" && <ExpensesTab user={user} projectId={project.id} />}
       {tab === "bom" && <BomTab user={user} projectId={project.id} />}
       {tab === "materials" && <MaterialsTab user={user} projectId={project.id} />}
-      {tab === "budget" && <BudgetTab user={user} projectId={project.id} metrics={m} />}
-      {tab === "payments" && <PaymentsTab user={user} projectId={project.id} metrics={m} />}
-      {tab === "expenses" && <ExpensesTab user={user} projectId={project.id} />}
+      {tab === "documents" && <DocumentsTab user={user} projectId={project.id} catalog={catalog} />}
       {tab === "history" && <HistoryTab projectId={project.id} companyId={user.companyId} />}
     </>
   );

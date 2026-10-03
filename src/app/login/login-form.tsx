@@ -15,8 +15,8 @@ export function LoginForm() {
           {t("invalid")}
         </div>
       )}
-      <Field label={t("email")}>
-        <Input name="email" type="email" autoComplete="username" required autoFocus />
+      <Field label={t("identifier")} hint={t("identifierHint")}>
+        <Input name="identifier" autoComplete="username" required autoFocus placeholder="+998 90 123 45 67" />
       </Field>
       <Field label={t("password")}>
         <Input name="password" type="password" autoComplete="current-password" required />

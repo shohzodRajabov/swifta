@@ -20,8 +20,8 @@ export default async function ProcurementPage({ searchParams }: PageProps<"/proc
   const sp = (await searchParams) as { tab?: string; status?: string; supplier?: string; project?: string; product?: string };
   const tab: Tab = sp.tab === "needs" || sp.tab === "prices" ? sp.tab : "orders";
   const t = await getTranslations();
-  const canEdit = can(user.role, "procurement.edit");
-  const showMoney = can(user.role, "finance.view") || canEdit || can(user.role, "supplierPayments.edit");
+  const canEdit = can(user, "procurement.edit");
+  const showMoney = can(user, "finance.view") || canEdit || can(user, "supplierPayments.edit");
 
   const tabs = (
     <nav className="mb-5 flex gap-1 overflow-x-auto border-b border-border">

@@ -17,6 +17,8 @@
     "local": "./scripts/local.sh"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@aws-sdk/s3-request-presigner": "^3.1146.0",
     "@prisma/client": "6",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

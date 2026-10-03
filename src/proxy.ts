@@ -12,5 +12,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!login|api/health|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|svg|ico)$).*)"],
+  // Upload/download routes authenticate themselves (and must not be buffered by the proxy).
+  matcher: ["/((?!login|api/health|api/upload|api/files|api/backups|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|svg|ico)$).*)"],
 };

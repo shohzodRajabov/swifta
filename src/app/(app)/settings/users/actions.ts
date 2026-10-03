@@ -5,39 +5,51 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { ROLES } from "@/lib/permissions";
+import { normalizePhone } from "@/lib/phone";
+import { generateOneTimePassword } from "@/lib/password";
 import { fail, formObject, runAction, zOptText, zText, type ActionState } from "@/lib/action";
+import type { CurrentUser } from "@/lib/auth";
 
-const zRole = z.enum(ROLES as [string, ...string[]]);
+async function ownRole(user: CurrentUser, roleId: string) {
+  const role = await db.roleDef.findFirst({ where: { id: roleId, companyId: user.companyId } });
+  if (!role) fail("invalid");
+  return role;
+}
 
+/** Admin creates a login: phone (and/or email), role and a one-time password shown once. */
 export async function createUser(_: ActionState, formData: FormData): Promise<ActionState> {
   const res = await runAction("users.manage", async (user) => {
     const data = z
-      .object({
-        name: zText,
-        email: zText.pipe(z.string().email()),
-        role: zRole,
-        position: zOptText,
-        phone: zOptText,
-        password: z.string().min(8),
-      })
+      .object({ name: zText, phone: zOptText, email: zOptText, position: zOptText, roleId: zText, password: zOptText })
       .parse(formObject(formData));
-    const created = await db.$transaction(async (tx) => {
+    const phone = data.phone ? normalizePhone(data.phone) : null;
+    if (data.phone && !phone) fail("phoneInvalid");
+    const email = data.email?.toLowerCase() ?? null;
+    if (!phone && !email) fail("required");
+    await ownRole(user, data.roleId);
+    const password = data.password ?? generateOneTimePassword();
+    if (password.length < 6) fail("invalid");
+    await db.$transaction(async (tx) => {
       const u = await tx.user.create({
         data: {
           companyId: user.companyId,
           name: data.name,
-          email: data.email.toLowerCase(),
-          role: data.role as (typeof ROLES)[number],
+          phone,
+          email,
           position: data.position,
-          phone: data.phone,
-          passwordHash: await bcrypt.hash(data.password, 10),
+          roleId: data.roleId,
+          passwordHash: await bcrypt.hash(password, 10),
+          mustChangePassword: true,
         },
       });
-      await audit(tx, { companyId: user.companyId, userId: user.id }, "User", u.id, "create", null, u);
-      return u;
+      await audit(tx, { companyId: user.companyId, userId: user.id }, "User", u.id, "create", null, {
+        name: u.name,
+        phone: u.phone,
+        email: u.email,
+        roleId: u.roleId,
+      });
     });
-    void created;
+    return { password, name: data.name };
   });
   if (res?.ok) revalidatePath("/settings/users");
   return res;
@@ -47,34 +59,52 @@ export async function updateUser(id: string, _: ActionState, formData: FormData)
   const res = await runAction("users.manage", async (user) => {
     const data = z
       .object({
-        role: zRole,
+        roleId: zText,
+        phone: zOptText,
+        email: zOptText,
         active: z.preprocess((v) => v === "on", z.boolean()),
-        password: z.preprocess((v) => (v === "" ? null : v), z.string().min(8).nullable()),
       })
       .parse({ active: formData.get("active") ?? "", ...formObject(formData) });
-    const before = await db.user.findFirst({ where: { id, companyId: user.companyId } });
+    const before = await db.user.findFirst({ where: { id, companyId: user.companyId }, include: { roleDef: true } });
     if (!before) fail("invalid");
+    const role = await ownRole(user, data.roleId);
     // An admin cannot lock themselves out.
-    if (id === user.id && (!data.active || data.role !== "ADMIN")) fail("forbidden");
+    if (id === user.id && (!data.active || role.key !== "ADMIN")) fail("forbidden");
+    const phone = data.phone ? normalizePhone(data.phone) : null;
+    if (data.phone && !phone) fail("phoneInvalid");
+    const email = data.email?.toLowerCase() ?? null;
+    if (!phone && !email) fail("required");
     await db.$transaction(async (tx) => {
-      const after = await tx.user.update({
-        where: { id },
-        data: {
-          role: data.role as (typeof ROLES)[number],
-          active: data.active,
-          ...(data.password ? { passwordHash: await bcrypt.hash(data.password, 10) } : {}),
-        },
-      });
+      const after = await tx.user.update({ where: { id }, data: { roleId: role.id, active: data.active, phone, email } });
       await audit(
         tx,
         { companyId: user.companyId, userId: user.id },
         "User",
         id,
         "update",
-        { role: before.role, active: before.active },
-        { role: after.role, active: after.active, ...(data.password ? { password: "changed" } : {}) },
+        { roleId: before.roleId, active: before.active, phone: before.phone, email: before.email },
+        { roleId: after.roleId, active: after.active, phone: after.phone, email: after.email },
       );
     });
+  });
+  if (res?.ok) revalidatePath("/settings/users");
+  return res;
+}
+
+/** Issue a new one-time password; the user must set their own on next login. */
+export async function resetPassword(id: string, _: ActionState): Promise<ActionState> {
+  const res = await runAction("users.manage", async (user) => {
+    const target = await db.user.findFirst({ where: { id, companyId: user.companyId } });
+    if (!target) fail("invalid");
+    const password = generateOneTimePassword();
+    await db.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: { passwordHash: await bcrypt.hash(password, 10), mustChangePassword: true },
+      });
+      await audit(tx, { companyId: user.companyId, userId: user.id }, "User", id, "update", null, { password: "reset" });
+    });
+    return { password, name: target.name };
   });
   if (res?.ok) revalidatePath("/settings/users");
   return res;

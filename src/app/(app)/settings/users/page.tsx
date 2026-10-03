@@ -1,28 +1,78 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requirePermission } from "@/lib/auth";
-import { ROLES } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { formatPhone } from "@/lib/phone";
+import { roleLabel } from "@/lib/roles";
+import { formatDateTime } from "@/lib/utils";
 import { Badge, Card, CardHeader, Field, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
-import { createUser, updateUser } from "./actions";
+import { CreateUserForm, ResetPasswordButton } from "./otp-forms";
+import { createUser, resetPassword, updateUser } from "./actions";
 
 export default async function UsersPage() {
   const me = await requirePermission("users.manage");
   const t = await getTranslations();
-  const users = await db.user.findMany({ where: { companyId: me.companyId }, orderBy: [{ active: "desc" }, { name: "asc" }] });
+  const [users, roles] = await Promise.all([
+    db.user.findMany({
+      where: { companyId: me.companyId },
+      include: { roleDef: true },
+      orderBy: [{ active: "desc" }, { name: "asc" }],
+    }),
+    db.roleDef.findMany({ where: { companyId: me.companyId }, orderBy: { sortOrder: "asc" } }),
+  ]);
+  const roleOptions = roles.map((r) => (
+    <option key={r.id} value={r.id}>
+      {roleLabel(t, r)}
+    </option>
+  ));
 
   return (
     <>
-      <PageHeader title={t("users.title")} />
+      <PageHeader
+        title={t("users.title")}
+        subtitle={t("users.subtitle")}
+        actions={
+          <Link href="/settings/roles" className="text-sm text-primary hover:underline">
+            {t("roles.manage")} →
+          </Link>
+        }
+      />
       <div className="flex flex-col gap-6">
+        <Card>
+          <CardHeader title={t("users.new")} subtitle={t("users.newHint")} />
+          <CreateUserForm action={createUser}>
+            <Field label={t("users.name")} required>
+              <Input name="name" required />
+            </Field>
+            <Field label={t("users.phone")} hint={t("users.phoneHint")}>
+              <Input name="phone" type="tel" placeholder="+998 90 123 45 67" />
+            </Field>
+            <Field label={t("users.email")}>
+              <Input name="email" type="email" autoComplete="off" />
+            </Field>
+            <Field label={t("users.position")}>
+              <Input name="position" />
+            </Field>
+            <Field label={t("users.role")} required>
+              <Select name="roleId" required defaultValue={roles.find((r) => r.key === "WORKER")?.id}>
+                {roleOptions}
+              </Select>
+            </Field>
+            <Field label={t("users.oneTimePassword")} hint={t("users.oneTimePasswordHint")}>
+              <Input name="password" autoComplete="off" placeholder={t("users.autoGenerate")} />
+            </Field>
+          </CreateUserForm>
+        </Card>
+
         <Card>
           <Table>
             <thead>
               <tr>
                 <Th>{t("users.name")}</Th>
-                <Th>{t("users.email")}</Th>
-                <Th>{t("users.role")}</Th>
-                <Th>{t("common.status")}</Th>
+                <Th>{t("users.login")}</Th>
+                <Th>{t("users.lastLogin")}</Th>
+                <Th>{t("common.actions")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -32,69 +82,35 @@ export default async function UsersPage() {
                     <div className="font-medium">
                       {u.name} {u.id === me.id && <Badge tone="primary">{t("users.you")}</Badge>}
                     </div>
-                    {u.position && <div className="text-xs text-muted">{u.position}</div>}
+                    <div className="text-xs text-muted">{roleLabel(t, u.roleDef)}</div>
+                    {u.mustChangePassword && <Badge tone="warning">{t("users.mustChange")}</Badge>}
                   </Td>
-                  <Td>{u.email}</Td>
-                  <Td colSpan={2}>
+                  <Td className="text-xs">
+                    <div className="num">{formatPhone(u.phone)}</div>
+                    <div className="text-muted">{u.email ?? ""}</div>
+                  </Td>
+                  <Td className="num text-xs">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "—"}</Td>
+                  <Td>
                     <ActionForm action={updateUser.bind(null, u.id)} className="flex flex-wrap items-center gap-2">
-                      <Select name="role" defaultValue={u.role} className="w-52">
-                        {ROLES.map((r) => (
-                          <option key={r} value={r}>
-                            {t(`roles.${r}`)}
-                          </option>
-                        ))}
+                      <Input name="phone" defaultValue={u.phone ?? ""} placeholder={t("users.phone")} className="w-40" />
+                      <Input name="email" defaultValue={u.email ?? ""} placeholder={t("users.email")} className="w-44" />
+                      <Select name="roleId" defaultValue={u.roleId ?? ""} className="w-48">
+                        {roleOptions}
                       </Select>
                       <label className="flex items-center gap-1.5 text-sm">
                         <input type="checkbox" name="active" defaultChecked={u.active} className="size-4" />
                         {t("users.active")}
                       </label>
-                      <Input
-                        name="password"
-                        type="password"
-                        placeholder={t("users.newPassword")}
-                        autoComplete="new-password"
-                        className="w-40"
-                      />
                       <SubmitButton variant="secondary">{t("common.save")}</SubmitButton>
                     </ActionForm>
+                    <div className="mt-1">
+                      <ResetPasswordButton action={resetPassword.bind(null, u.id)} />
+                    </div>
                   </Td>
                 </tr>
               ))}
             </tbody>
           </Table>
-        </Card>
-
-        <Card>
-          <CardHeader title={t("users.new")} />
-          <ActionForm action={createUser} resetOnSuccess className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
-            <Field label={t("users.name")} required>
-              <Input name="name" required />
-            </Field>
-            <Field label={t("users.email")} required>
-              <Input name="email" type="email" required autoComplete="off" />
-            </Field>
-            <Field label={t("users.role")} required>
-              <Select name="role" defaultValue="PROJECT_MANAGER">
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {t(`roles.${r}`)}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label={t("users.position")}>
-              <Input name="position" />
-            </Field>
-            <Field label={t("users.phone")}>
-              <Input name="phone" type="tel" placeholder="+998" />
-            </Field>
-            <Field label={t("users.password")} hint={t("users.passwordHint")} required>
-              <Input name="password" type="password" minLength={8} required autoComplete="new-password" />
-            </Field>
-            <div className="sm:col-span-2 lg:col-span-3">
-              <SubmitButton>{t("common.create")}</SubmitButton>
-            </div>
-          </ActionForm>
         </Card>
       </div>
     </>

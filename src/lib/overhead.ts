@@ -1,0 +1,15 @@
+export const OVERHEAD_CATEGORIES = [
+  "OFFICE_RENT",
+  "OFFICE_SALARY",
+  "PAYROLL_UNALLOCATED",
+  "VEHICLE",
+  "FUEL",
+  "UTILITIES",
+  "COMMUNICATION",
+  "MARKETING",
+  "BANK_FEES",
+  "TAXES_FEES",
+  "TOOLS",
+  "WORKSHOP",
+  "OTHER",
+] as const;

@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui";
 
-type State = { ok?: boolean; error?: string; at?: number } | null;
+type State = { ok?: boolean; error?: string; errorParams?: Record<string, string>; at?: number } | null;
 type Action = (state: State, formData: FormData) => Promise<State>;
 
 /** Form bound to a server action; shows translated errors and optionally resets on success. */
@@ -38,7 +38,7 @@ export function ActionForm({
     <form ref={ref} action={formAction} className={className}>
       {state?.error && (
         <div role="alert" className="mb-3 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
-          {t(state.error)}
+          {t(state.error, state.errorParams ?? {})}
         </div>
       )}
       {children}

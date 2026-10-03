@@ -10,7 +10,7 @@ export async function HistoryTab({ projectId, companyId }: { projectId: string; 
     db.projectStageEvent.findMany({
       where: { projectId },
       orderBy: { enteredAt: "desc" },
-      include: { user: { select: { name: true } } },
+      include: { user: { select: { name: true } }, statusDef: true },
     }),
     db.auditLog.findMany({
       where: {
@@ -37,7 +37,9 @@ export async function HistoryTab({ projectId, companyId }: { projectId: string; 
           <ol className="divide-y divide-border">
             {events.map((e) => (
               <li key={e.id} className="px-5 py-3 text-sm">
-                <div className="font-medium">{t(`stages.${e.stage}`)}</div>
+                <div className="font-medium">
+                  {e.statusDef ? `${e.statusDef.code} · ${e.statusDef.name}` : e.stage ? t(`stages.${e.stage}`) : "—"}
+                </div>
                 <div className="num text-xs text-muted">
                   {formatDateTime(e.enteredAt)} · {e.user?.name ?? "—"}
                 </div>

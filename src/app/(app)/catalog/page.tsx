@@ -12,8 +12,8 @@ export default async function CatalogPage({ searchParams }: PageProps<"/catalog"
   const user = await requirePermission("catalog.view");
   const sp = (await searchParams) as { q?: string; category?: string };
   const t = await getTranslations();
-  const canEdit = can(user.role, "catalog.edit");
-  const showPrices = canEdit || can(user.role, "finance.view") || can(user.role, "bom.edit");
+  const canEdit = can(user, "catalog.edit");
+  const showPrices = canEdit || can(user, "finance.view") || can(user, "bom.edit");
 
   const categories = await db.productCategory.findMany({
     where: { companyId: user.companyId },

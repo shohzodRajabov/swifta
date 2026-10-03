@@ -5,28 +5,43 @@ import { getCurrentUser, type CurrentUser } from "./auth";
 import { can, type Permission } from "./permissions";
 
 /** Result of a form server action; `error` is a key in the `errors` message namespace. */
-export type ActionState = { ok?: boolean; error?: string; at?: number } | null;
+export type ActionState = {
+  ok?: boolean;
+  error?: string;
+  /** Interpolation values for the error message. */
+  errorParams?: Record<string, string>;
+  at?: number;
+  data?: Record<string, string>;
+} | null;
 
-export class ActionError extends Error {}
+export class ActionError extends Error {
+  constructor(
+    key: string,
+    public params?: Record<string, string>,
+  ) {
+    super(key);
+  }
+}
 
-export function fail(key: string): never {
-  throw new ActionError(key);
+export function fail(key: string, params?: Record<string, string>): never {
+  throw new ActionError(key, params);
 }
 
 /**
  * Wraps a server action: authenticates, checks the permission, maps known errors to message keys.
  */
 export async function runAction(
-  permission: Permission,
-  fn: (user: CurrentUser) => Promise<void>,
+  permission: Permission | Permission[],
+  fn: (user: CurrentUser) => Promise<void | Record<string, string>>,
 ): Promise<ActionState> {
   const user = await getCurrentUser();
-  if (!user || !can(user.role, permission)) return { error: "forbidden" };
+  const allowed = Array.isArray(permission) ? permission.some((p) => can(user, p)) : can(user, permission);
+  if (!user || !allowed) return { error: "forbidden" };
   try {
-    await fn(user);
-    return { ok: true, at: Date.now() };
+    const data = await fn(user);
+    return { ok: true, at: Date.now(), ...(data ? { data } : {}) };
   } catch (e) {
-    if (e instanceof ActionError) return { error: e.message };
+    if (e instanceof ActionError) return { error: e.message, errorParams: e.params };
     if (e instanceof z.ZodError) return { error: "invalid" };
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2002") return { error: "duplicate" };
@@ -70,6 +85,11 @@ export const zOptDate = z.preprocess(
   z.date().nullable(),
 );
 export const zOptId = z.preprocess(emptyToNull, z.string().nullable());
+/** VAT percent (0 = no VAT). */
+export const zVat = z.preprocess(
+  (v) => (v === undefined || v === null || v === "" ? 0 : Number(String(v).replace(",", "."))),
+  z.number().min(0).max(100),
+);
 
 export function formObject(formData: FormData): Record<string, FormDataEntryValue> {
   return Object.fromEntries(formData.entries());
