@@ -1,6 +1,6 @@
 # Swifta — konsept va kelishilgan qarorlar
 
-Holat: **muhokamada** (2026-10-03). Bu hujjat foydalanuvchi bilan kelishilgan arxitektura qarorlarini qayd etadi.
+Holat: **kelishilgan** (2026-10-03). Bu hujjat foydalanuvchi bilan kelishilgan arxitektura qarorlarini qayd etadi.
 Yangi modul yozishdan oldin shu hujjatni o'qing. Asos: foydalanuvchining to'liq texnik topshirig'i (108 band).
 
 ## 1. Asosiy zanjirlar
@@ -136,22 +136,27 @@ alohida hisoblanadi va hech qachon hajmni xodimlar soniga ko'paytirmaydi.
 | 6 | Servis va kafolat: shartnoma, SLA, murojaatlar | |
 | 7 | Hisobotlar, rollarga mos bosh sahifalar, eksport | |
 
-## 14. Ochiq savollar (foydalanuvchi javobi kutilmoqda; javob bo'lmasa tavsiya qo'llanadi)
+## 14. Foydalanuvchi javoblari (2026-10-03)
 
-**Server joylashuvi.** Xodimlar va contractorlarning shaxsiy ma'lumotlari saqlanadi; qonun bo'yicha (Shaxsiy ma'lumotlar
-to'g'risida, 27¹-modda) O'zbekiston fuqarolarining shaxsiy ma'lumotlari O'zbekistondagi serverda saqlanishi talab qilinadi.
-Tavsiya: real xodim ma'lumotlarini kiritishdan oldin bazani O'zbekistondagi serverga ko'chirish (yurist bilan tasdiqlash).
-
-1. QQS — firmalar QQS to'lovchimi? *Tavsiya:* firmaga "QQS to'lovchi" belgisi; summalar QQS bilan, foyda QQSsiz.
-2. Oraliq dalolatnomalar (Forma 2/3) ish davomida ham tuziladimi? *Tavsiya:* dalolatnoma — bajarilgan ish, to'lov — kelgan pul; ikkalasi yuritiladi.
-3. Umumiy (obyektga bog'lanmagan) xarajatlar? *Tavsiya:* alohida bo'lim; sof foyda = obyektlar foydasi − umumiy xarajatlar.
-4. Xarajat/to'lovni tasdiqlash? *Tavsiya:* sozlanadigan chegara (masalan, 10 mln so'mdan yuqorisini direktor tasdiqlaydi).
-5. Oddiy ishchi tizimga kiradimi? *Tavsiya:* login ixtiyoriy; faqat o'z tasklari va KPI'sini ko'radi.
-6. Sessiyani tasdiqlash? *Tavsiya:* progressda darhol; prorab/PM tasdiqlagach KPI va ish haqi xarajatiga.
-7. Obyektdan tashqari ish kunlari (ombor, yo'l, ofis)? *Tavsiya:* tasksiz "umumiy ish" sessiyasi.
-8. Material sarfini kim kiritadi? *Tavsiya:* lider sessiyada (ixtiyoriy) yoki prorab; task va sessiyaga bog'lanadi.
-9. Obyekt progressi? *Tavsiya:* tasklarning smetadagi qiymati bo'yicha; qiymati yo'q taskka qo'lda og'irlik.
-10. Smetani Excel'dan import qilib, tasklar va BOM yaratish? *Tavsiya:* ha.
-11. Rollar? *Tavsiya:* admin sozlaydi; PM faqat o'z obyektlarini ko'radi; maoshni faqat admin, direktor, buxgalter ko'radi.
-12. Telefon raqami bilan kirish? *Tavsiya:* telefon yoki email + parol; parolni admin tiklaydi.
-13. Telegram? *Tavsiya:* bildirishnomalar Telegram bot orqali ham; keyinroq sessiyani bot orqali kiritish.
+- **Server:** hozircha Railway'da qoladi (MVP, real shaxslar hali kiritilmaydi; xavfni foydalanuvchi o'z zimmasiga oldi).
+- **Backup:** majburiy — har kuni avtomatik (pg_dump → Railway Bucket), admin sahifasidan yuklab olish va qo'lda yaratish.
+- **Soliqlar hisobga olinadi:** har bir firmaning soliq rejimi — umumiy (QQS 12% + foyda solig'i 15%) yoki aylanma solig'i (masalan 4%).
+  Summalar QQS bilan kiritiladi; foyda QQSsiz hisoblanadi. Ish haqida: maosh "qo'lga" kiritiladi, JShDS (12%) va ijtimoiy soliq (12%)
+  qo'shilib ish beruvchi xarajati hisoblanadi. Barcha stavkalar sozlamada.
+- **Oraliq dalolatnomalar va to'lov jadvali — ikkalasi ham yuritiladi.** Haqiqiy daromad = imzolangan dalolatnomalar;
+  pul tushumi = to'lovlar.
+- **Umumiy xarajatlar** alohida bo'lim; kompaniya sof foydasi = obyektlar foydasi − umumiy xarajatlar − foyda solig'i.
+- **Xarajat/to'lov tasdiqlash:** sozlanadigan chegara (standart 10 mln so'm); undan yuqorisini "Tasdiqlash" huquqi bor odam tasdiqlaydi.
+- **Oddiy ishchi tizimga kiradi:** "Boshladim", "necha foiz bajarildi", "Tugatdim", muammo, foto, izoh; lider kiritgan sessiyani tasdiqlaydi.
+- **Ish kuni:** obyektdan tashqari kunlar ham ish kuni — sex, safar (yo'l), material yo'qligi, buyurtmachi sababli to'xtash va boshqa
+  ishchiga bog'liq bo'lmagan sabablar. Faqat sababsiz kelmaslik, ta'til, kasallik ish kuni emas.
+- **Material sarfini** guruh lideri kiritadi (task va sessiyaga bog'lanadi).
+- **Sessiyani tasdiqlash:** progressda darhol; prorab/PM tasdiqlagach KPI va ish haqi xarajatiga.
+- **Progress:** tasklarning smetadagi qiymati bo'yicha; qiymati yo'q taskka qo'lda og'irlik.
+- **Smeta Excel'dan:** avtomatik import → admin tekshirib tasdiqlaydi → tasklar va BOM yaratiladi.
+- **Rollar va huquqlarni admin o'zi sozlaydi.** PM — faqat o'z obyektlari; maoshni faqat ruxsati borlar ko'radi.
+- **Kirish telefon raqami bilan:** admin telefon, bir martalik parol va rol beradi; birinchi kirishda xodim o'z parolini o'rnatadi.
+- **Telegram bot:** Telegram guruhga qisqa hisobot — kim platformaga kirdi, nima qildi; masalan, "A guruhdagi B, C ishchilar X ishni
+  tasdiqladi, D tasdiqlamadi".
+- **Demo:** alohida "Demo" ish maydoni; real ma'lumot bilan aralashmaydi.
+- **Saytga chiqarish:** foydalanuvchi ruxsat berdi — har bir tayyor bosqichdan keyin git + Railway.
