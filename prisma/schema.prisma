@@ -1,0 +1,414 @@
+// Swifta — HVAC ERP + PM + CRM
+//
+// Multi-tenant ready: every top-level business record carries `companyId`.
+// Child records (BOM lines, payments, ...) inherit the tenant from their project.
+//
+// Money convention: every monetary record stores the original `amount` + `currency`,
+// the exchange rate used (`fxRate` = UZS per 1 USD), the rate's date and source,
+// and both normalized values `amountUzs` / `amountUsd`. Base currency is UZS.
+//
+// Plan / Commitment / Actual are never mixed:
+//   PLAN       -> BomItem, BudgetLine, PaymentMilestone
+//   COMMITMENT -> (phase 2) PurchaseOrder lines
+//   ACTUAL     -> Expense, ClientPayment, (phase 2) stock movements
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PROJECT_MANAGER
+  SALES
+  ENGINEER
+  WAREHOUSE
+  ACCOUNTANT
+  TECHNICIAN
+}
+
+enum Currency {
+  UZS
+  USD
+}
+
+enum ProjectStage {
+  NEW_REQUEST
+  SITE_VISIT
+  TECH_SPEC
+  ESTIMATION
+  DESIGN
+  PROPOSAL
+  CONTRACT
+  PROCUREMENT
+  WAREHOUSE
+  DELIVERY
+  INSTALLATION
+  COMMISSIONING
+  TESTING
+  HANDOVER
+  FINAL_PAYMENT
+  WARRANTY
+  SERVICE
+  COMPLETED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  CLOSED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ClientType {
+  COMPANY
+  GOVERNMENT
+  INDIVIDUAL
+  CONTRACTOR
+}
+
+enum CostCategory {
+  EQUIPMENT
+  MATERIAL
+  LABOR
+  SUBCONTRACTOR
+  TRANSPORT
+  TOOLS
+  HOTEL
+  CUSTOMS
+  INSTALLATION
+  OTHER
+}
+
+enum BomKind {
+  EQUIPMENT
+  MATERIAL
+}
+
+enum PaymentMethod {
+  BANK
+  CASH
+  CARD
+  OTHER
+}
+
+model Company {
+  id           String   @id @default(cuid())
+  name         String
+  baseCurrency Currency @default(UZS)
+  createdAt    DateTime @default(now())
+
+  users      User[]
+  clients    Client[]
+  projects   Project[]
+  categories ProductCategory[]
+  products   Product[]
+  auditLogs  AuditLog[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id])
+  email        String
+  name         String
+  position     String?
+  phone        String?
+  passwordHash String
+  role         Role
+  locale       String   @default("uz")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  managedProjects  Project[]           @relation("ProjectManager")
+  engineerProjects Project[]           @relation("ProjectEngineer")
+  stageEvents      ProjectStageEvent[]
+  expenses         Expense[]
+  auditLogs        AuditLog[]
+
+  @@unique([companyId, email])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  entity    String
+  entityId  String
+  action    String // create | update | delete
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  @@index([companyId, entity, entityId])
+  @@index([companyId, createdAt])
+}
+
+/// Official CBU rates cache: UZS per 1 unit of `currency`.
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  currency  Currency
+  date      DateTime @db.Date
+  rate      Decimal  @db.Decimal(14, 4)
+  source    String   @default("CBU")
+  createdAt DateTime @default(now())
+
+  @@unique([currency, date])
+}
+
+model Client {
+  id            String     @id @default(cuid())
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id])
+  name          String
+  type          ClientType @default(COMPANY)
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  tin           String? // STIR
+  bankDetails   String?
+  note          String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  projects Project[]
+
+  @@index([companyId, name])
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  companyId      String
+  company        Company       @relation(fields: [companyId], references: [id])
+  code           String
+  name           String
+  clientId       String
+  client         Client        @relation(fields: [clientId], references: [id])
+  address        String?
+  contractNumber String?
+  contractDate   DateTime?     @db.Date
+  managerId      String?
+  manager        User?         @relation("ProjectManager", fields: [managerId], references: [id])
+  engineerId     String?
+  engineer       User?         @relation("ProjectEngineer", fields: [engineerId], references: [id])
+  installTeam    String?
+  startDate      DateTime?     @db.Date
+  plannedEndDate DateTime?     @db.Date
+  actualEndDate  DateTime?     @db.Date
+  stage          ProjectStage  @default(NEW_REQUEST)
+  status         ProjectStatus @default(ACTIVE)
+  priority       Priority      @default(MEDIUM)
+  note           String?
+
+  // Contract value (planned revenue)
+  contractAmount    Decimal  @default(0) @db.Decimal(18, 2)
+  contractCurrency  Currency @default(UZS)
+  contractFxRate    Decimal  @default(1) @db.Decimal(14, 4)
+  contractFxDate    DateTime @default(now()) @db.Date
+  contractFxSource  String   @default("CBU")
+  contractAmountUzs Decimal  @default(0) @db.Decimal(18, 2)
+  contractAmountUsd Decimal  @default(0) @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stageEvents ProjectStageEvent[]
+  bomItems    BomItem[]
+  budgetLines BudgetLine[]
+  milestones  PaymentMilestone[]
+  payments    ClientPayment[]
+  expenses    Expense[]
+
+  @@unique([companyId, code])
+  @@index([companyId, stage])
+}
+
+model ProjectStageEvent {
+  id        String       @id @default(cuid())
+  projectId String
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stage     ProjectStage
+  enteredAt DateTime     @default(now())
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id])
+  note      String?
+
+  @@index([projectId, enteredAt])
+}
+
+model ProductCategory {
+  id        String    @id @default(cuid())
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id])
+  key       String? // system category key, translated in UI
+  name      String
+  kind      BomKind   @default(MATERIAL)
+  sortOrder Int       @default(0)
+  products  Product[]
+
+  @@unique([companyId, name])
+}
+
+model Product {
+  id               String          @id @default(cuid())
+  companyId        String
+  company          Company         @relation(fields: [companyId], references: [id])
+  sku              String
+  name             String
+  manufacturer     String?
+  model            String?
+  categoryId       String
+  category         ProductCategory @relation(fields: [categoryId], references: [id])
+  unit             String
+  purchasePrice    Decimal         @default(0) @db.Decimal(18, 2)
+  purchaseCurrency Currency        @default(UZS)
+  salePrice        Decimal         @default(0) @db.Decimal(18, 2)
+  saleCurrency     Currency        @default(UZS)
+  supplier         String?
+  minStock         Decimal         @default(0) @db.Decimal(14, 3)
+  description      String?
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  bomItems BomItem[]
+
+  @@unique([companyId, sku])
+  @@index([companyId, name])
+}
+
+/// PLAN: material/equipment specification line of a project.
+model BomItem {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id])
+  kind       BomKind  @default(MATERIAL)
+  name       String
+  unit       String
+  plannedQty Decimal  @db.Decimal(14, 3)
+  sortOrder  Int      @default(0)
+
+  unitPrice     Decimal  @db.Decimal(18, 2)
+  currency      Currency @default(UZS)
+  fxRate        Decimal  @db.Decimal(14, 4)
+  fxDate        DateTime @db.Date
+  fxSource      String   @default("CBU")
+  unitPriceUzs  Decimal  @db.Decimal(18, 2)
+  plannedCostUzs Decimal @db.Decimal(18, 2)
+  plannedCostUsd Decimal @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+/// PLAN: non-BOM planned costs (labour, transport, hotel, ...).
+model BudgetLine {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category    CostCategory
+  description String?
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+/// PLAN: client payment schedule.
+model PaymentMilestone {
+  id        String    @id @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  percent   Decimal   @db.Decimal(6, 2)
+  dueDate   DateTime? @db.Date
+  sortOrder Int       @default(0)
+
+  amountUzs Decimal @db.Decimal(18, 2)
+  amountUsd Decimal @db.Decimal(18, 2)
+
+  payments ClientPayment[]
+
+  @@index([projectId])
+}
+
+/// ACTUAL: money received from the client.
+model ClientPayment {
+  id          String            @id @default(cuid())
+  projectId   String
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestoneId String?
+  milestone   PaymentMilestone? @relation(fields: [milestoneId], references: [id])
+  date        DateTime          @db.Date
+  method      PaymentMethod     @default(BANK)
+  reference   String?
+  note        String?
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId, date])
+}
+
+/// ACTUAL: money spent. Always bound to a project.
+model Expense {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  category    CostCategory
+  date        DateTime     @db.Date
+  description String
+  supplier    String?
+  reference   String?
+  createdById String?
+  createdBy   User?        @relation(fields: [createdById], references: [id])
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, date])
+  @@index([category])
+}

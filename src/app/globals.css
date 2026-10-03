@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f0f3f7;
+  --border: #e2e7ee;
+  --text: #0f1b2d;
+  --muted: #5b6b80;
+  --primary: #0b6bcb;
+  --primary-hover: #0958a8;
+  --primary-soft: #e6f0fb;
+  --primary-fg: #ffffff;
+  --success: #12805c;
+  --success-soft: #e3f4ec;
+  --warning: #b25e09;
+  --warning-soft: #fdf1e1;
+  --danger: #c4322f;
+  --danger-soft: #fbe9e8;
+  --chart-1: #0b6bcb;
+  --chart-2: #e8833a;
+  --chart-3: #12805c;
+  --chart-4: #7c5cc4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c1220;
+    --surface: #131b2c;
+    --surface-2: #1a2438;
+    --border: #26324a;
+    --text: #e6ecf5;
+    --muted: #93a3ba;
+    --primary: #4a9df0;
+    --primary-hover: #6aaff3;
+    --primary-soft: #16304f;
+    --primary-fg: #08111f;
+    --success: #3cc28f;
+    --success-soft: #11342a;
+    --warning: #f0a54a;
+    --warning-soft: #3a2a14;
+    --danger: #f06b67;
+    --danger-soft: #3d1a1c;
+    --chart-1: #4a9df0;
+    --chart-2: #f0a054;
+    --chart-3: #3cc28f;
+    --chart-4: #a48bea;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-fg: var(--primary-fg);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: var(--font-inter);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: "tnum" 1, "cv11" 1;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
