@@ -14,6 +14,8 @@ import { Badge, Button, Card, CardHeader, Input, PageHeader, Select } from "@/co
 import { Money, type MoneyValue } from "@/components/money";
 import { MonthlyChart, PlanActualChart, StageChart } from "@/components/charts";
 import { StageBadge } from "@/components/project-bits";
+import { supplierBalances } from "@/lib/suppliers";
+import { averageCost, stockLevels } from "@/lib/stock";
 
 const GROUPS: StageGroup[] = ["PRESALE", "DESIGN", "PROCUREMENT", "INSTALLATION", "CLOSING", "COMPLETED"];
 
@@ -64,6 +66,52 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
   const contract = total("contract");
   const expected = total("expectedProfit");
   const planned = total("plannedProfit");
+
+  const zeroAmount = { uzs: 0, usd: 0, count: 0 };
+  let supplierDebt = zeroAmount;
+  if (finance) {
+    const balances = await supplierBalances(user.companyId);
+    supplierDebt = [...balances.values()].reduce(
+      (a, b) => ({ uzs: a.uzs + Math.max(0, b.debt.uzs), usd: a.usd + Math.max(0, b.debt.usd), count: a.count + b.debt.count }),
+      zeroAmount,
+    );
+  }
+
+  // Warehouse overview (company-wide)
+  let warehouse: { value: MoneyValue; low: number; incoming: MoneyValue; onSite: MoneyValue } | null = null;
+  if (finance && can(user.role, "warehouse.view")) {
+    const [levels, products, openLines, siteMoves] = await Promise.all([
+      stockLevels(user.companyId),
+      db.product.findMany({ where: { companyId: user.companyId, active: true }, select: { id: true, minStock: true } }),
+      db.purchaseOrderLine.findMany({
+        where: { order: { companyId: user.companyId, status: { in: ["ORDERED", "PARTIAL"] } } },
+        select: { qty: true, amountUzs: true, amountUsd: true, movements: { where: { type: "RECEIPT" }, select: { qty: true } } },
+      }),
+      db.stockMovement.findMany({
+        where: { companyId: user.companyId, type: { in: ["ISSUE", "RETURN", "CONSUMPTION"] }, project: { status: "ACTIVE" } },
+        select: { type: true, qty: true, unitCostUzs: true, unitCostUsd: true, productId: true },
+      }),
+    ]);
+    const avg = await averageCost(user.companyId, products.map((p) => p.id));
+    const value = levels.reduce(
+      (a, l) => ({ uzs: a.uzs + l.qty * (avg.get(l.productId)?.uzs ?? 0), usd: a.usd + l.qty * (avg.get(l.productId)?.usd ?? 0), count: a.count + 1 }),
+      zeroAmount,
+    );
+    const low = products.filter(
+      (p) => Number(p.minStock) > 0 && levels.filter((l) => l.productId === p.id).reduce((s, l) => s + l.qty, 0) < Number(p.minStock),
+    ).length;
+    const incoming = openLines.reduce((a, l) => {
+      const ratio = Math.max(0, 1 - l.movements.reduce((s, m) => s + Number(m.qty), 0) / Number(l.qty));
+      return { uzs: a.uzs + Number(l.amountUzs) * ratio, usd: a.usd + Number(l.amountUsd) * ratio, count: a.count + 1 };
+    }, zeroAmount);
+    const onSite = siteMoves.reduce((a, m) => {
+      const sign = m.type === "ISSUE" ? 1 : -1;
+      const cost = m.type === "CONSUMPTION" ? avg.get(m.productId ?? "") ?? { uzs: 0, usd: 0 } : { uzs: Number(m.unitCostUzs), usd: Number(m.unitCostUsd) };
+      const q = Number(m.qty) * sign;
+      return { uzs: a.uzs + q * cost.uzs, usd: a.usd + q * cost.usd, count: a.count + 1 };
+    }, zeroAmount);
+    warehouse = { value, low, incoming, onSite };
+  }
 
   // Monthly cash flow for the selected period
   let monthly: { month: string; revenue: number; expense: number; profit: number }[] = [];
@@ -227,13 +275,24 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
                 {t("dashboard.overdueDebt")}: <Money value={total("overdueDebt")} size="sm" compact align="left" />
               </>
             ))}
+            {kpi(t("dashboard.supplierDebt"), supplierDebt)}
+          </div>
+        </section>
+      )}
+
+      {warehouse && (
+        <section className="mb-6">
+          <h2 className="mb-3 text-sm font-semibold text-muted">{t("dashboard.warehouseTitle")}</h2>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {kpi(t("warehouse.totalValue"), warehouse.value)}
             <Card className="p-4">
-              <div className="mb-1 text-xs text-muted">{t("dashboard.supplierDebt")}</div>
-              <div className="text-sm text-muted">{t("common.phaseNotice", { n: 2 })}</div>
-              <div className="mt-3 border-t border-border pt-2 text-xs text-muted">
-                {t("dashboard.warehouseTitle")}: {t("common.phaseNotice", { n: 2 })}
-              </div>
+              <div className="mb-1 text-xs text-muted">{t("warehouse.lowCount")}</div>
+              <Link href="/warehouse?low=1" className={`num text-2xl font-semibold ${warehouse.low > 0 ? "text-danger" : ""}`}>
+                {warehouse.low}
+              </Link>
             </Card>
+            {kpi(t("warehouse.incoming"), warehouse.incoming)}
+            {kpi(t("warehouse.onSite"), warehouse.onSite)}
           </div>
         </section>
       )}

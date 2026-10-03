@@ -27,7 +27,7 @@ export const COST_CATEGORIES: CostCategory[] = [
 export type ProjectMetrics = {
   contract: Amount & { rate: number; fxDate: Date; source: string; currency: string; original: number };
   plannedCost: Amount;
-  committedCost: Amount; // phase 2: purchase orders
+  committedCost: Amount; // purchase orders placed for the project
   actualCost: Amount;
   received: Amount;
   scheduled: Amount;
@@ -65,7 +65,7 @@ export async function computeMetrics(projects: ProjectLite[]): Promise<Map<strin
   const ids = projects.map((p) => p.id);
   const today = toDateOnly(new Date());
 
-  const [bom, budget, expenses, payments, milestones] = await Promise.all([
+  const [bom, budget, expenses, payments, milestones, orders, issued] = await Promise.all([
     db.bomItem.groupBy({
       by: ["projectId", "kind"],
       where: { projectId: { in: ids } },
@@ -93,6 +93,25 @@ export async function computeMetrics(projects: ProjectLite[]): Promise<Map<strin
     db.paymentMilestone.findMany({
       where: { projectId: { in: ids } },
       select: { projectId: true, dueDate: true, amountUzs: true, amountUsd: true },
+    }),
+    db.purchaseOrder.groupBy({
+      by: ["projectId"],
+      where: { projectId: { in: ids }, status: { in: ["ORDERED", "PARTIAL", "RECEIVED"] } },
+      _sum: { totalUzs: true, totalUsd: true },
+      _count: true,
+    }),
+    // Materials issued to (minus returned from) a project are its actual material cost.
+    db.stockMovement.findMany({
+      where: { projectId: { in: ids }, type: { in: ["ISSUE", "RETURN"] } },
+      select: {
+        projectId: true,
+        type: true,
+        qty: true,
+        unitCostUzs: true,
+        unitCostUsd: true,
+        product: { select: { category: { select: { kind: true } } } },
+        bomItem: { select: { kind: true } },
+      },
     }),
   ]);
 
@@ -125,6 +144,21 @@ export async function computeMetrics(projects: ProjectLite[]): Promise<Map<strin
         count: row._count,
       });
     }
+
+    for (const mv of issued.filter((r) => r.projectId === p.id)) {
+      const kind = mv.product?.category.kind ?? mv.bomItem?.kind ?? "MATERIAL";
+      const cat: CostCategory = kind === "EQUIPMENT" ? "EQUIPMENT" : "MATERIAL";
+      const sign = mv.type === "RETURN" ? -1 : 1;
+      const q = Number(mv.qty) * sign;
+      byCategory[cat].actual = add(byCategory[cat].actual, {
+        uzs: q * Number(mv.unitCostUzs),
+        usd: q * Number(mv.unitCostUsd),
+        count: 1,
+      });
+    }
+
+    const po = orders.find((r) => r.projectId === p.id);
+    const committedCost: Amount = { uzs: n(po?._sum.totalUzs), usd: n(po?._sum.totalUsd), count: po?._count ?? 0 };
 
     let plannedCost = zero();
     let actualCost = zero();
@@ -175,7 +209,7 @@ export async function computeMetrics(projects: ProjectLite[]): Promise<Map<strin
     result.set(p.id, {
       contract,
       plannedCost,
-      committedCost: zero(),
+      committedCost,
       actualCost,
       received,
       scheduled,

@@ -9,8 +9,10 @@
 //
 // Plan / Commitment / Actual are never mixed:
 //   PLAN       -> BomItem, BudgetLine, PaymentMilestone
-//   COMMITMENT -> (phase 2) PurchaseOrder lines
-//   ACTUAL     -> Expense, ClientPayment, (phase 2) stock movements
+//   COMMITMENT -> PurchaseOrder lines (not cancelled)
+//   ACTUAL     -> Expense, ClientPayment, materials issued to the project (StockMovement)
+//
+// Material flow: BOM (plan) -> PO line (ordered) -> RECEIPT -> ISSUE to project -> CONSUMPTION (used)
 
 generator client {
   provider = "prisma-client-js"
@@ -96,6 +98,23 @@ enum BomKind {
   MATERIAL
 }
 
+enum PurchaseOrderStatus {
+  DRAFT
+  ORDERED
+  PARTIAL
+  RECEIVED
+  CANCELLED
+}
+
+enum MovementType {
+  RECEIPT // into a warehouse (from a PO or manual)
+  ISSUE // warehouse -> project
+  RETURN // project -> warehouse
+  TRANSFER // warehouse -> warehouse
+  ADJUSTMENT // inventory count correction (+/-)
+  CONSUMPTION // used on site (does not touch warehouse stock)
+}
+
 enum PaymentMethod {
   BANK
   CASH
@@ -104,17 +123,23 @@ enum PaymentMethod {
 }
 
 model Company {
-  id           String   @id @default(cuid())
-  name         String
-  baseCurrency Currency @default(UZS)
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  name             String
+  baseCurrency     Currency @default(UZS)
+  /// Notify when material usage exceeds plan by more than this percent.
+  overuseThreshold Decimal  @default(5) @db.Decimal(5, 2)
+  createdAt        DateTime @default(now())
 
-  users      User[]
-  clients    Client[]
-  projects   Project[]
-  categories ProductCategory[]
-  products   Product[]
-  auditLogs  AuditLog[]
+  users          User[]
+  clients        Client[]
+  projects       Project[]
+  categories     ProductCategory[]
+  products       Product[]
+  auditLogs      AuditLog[]
+  suppliers      Supplier[]
+  warehouses     Warehouse[]
+  purchaseOrders PurchaseOrder[]
+  movements      StockMovement[]
 }
 
 model User {
@@ -137,6 +162,8 @@ model User {
   stageEvents      ProjectStageEvent[]
   expenses         Expense[]
   auditLogs        AuditLog[]
+  movements        StockMovement[]     @relation("MovementCreatedBy")
+  purchaseOrders   PurchaseOrder[]
 
   @@unique([companyId, email])
 }
@@ -227,12 +254,14 @@ model Project {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  stageEvents ProjectStageEvent[]
-  bomItems    BomItem[]
-  budgetLines BudgetLine[]
-  milestones  PaymentMilestone[]
-  payments    ClientPayment[]
-  expenses    Expense[]
+  stageEvents    ProjectStageEvent[]
+  bomItems       BomItem[]
+  budgetLines    BudgetLine[]
+  milestones     PaymentMilestone[]
+  payments       ClientPayment[]
+  expenses       Expense[]
+  purchaseOrders PurchaseOrder[]
+  movements      StockMovement[]
 
   @@unique([companyId, code])
   @@index([companyId, stage])
@@ -286,7 +315,10 @@ model Product {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
-  bomItems BomItem[]
+  bomItems  BomItem[]
+  prices    SupplierPrice[]
+  poLines   PurchaseOrderLine[]
+  movements StockMovement[]
 
   @@unique([companyId, sku])
   @@index([companyId, name])
@@ -305,17 +337,20 @@ model BomItem {
   plannedQty Decimal  @db.Decimal(14, 3)
   sortOrder  Int      @default(0)
 
-  unitPrice     Decimal  @db.Decimal(18, 2)
-  currency      Currency @default(UZS)
-  fxRate        Decimal  @db.Decimal(14, 4)
-  fxDate        DateTime @db.Date
-  fxSource      String   @default("CBU")
-  unitPriceUzs  Decimal  @db.Decimal(18, 2)
-  plannedCostUzs Decimal @db.Decimal(18, 2)
-  plannedCostUsd Decimal @db.Decimal(18, 2)
+  unitPrice      Decimal  @db.Decimal(18, 2)
+  currency       Currency @default(UZS)
+  fxRate         Decimal  @db.Decimal(14, 4)
+  fxDate         DateTime @db.Date
+  fxSource       String   @default("CBU")
+  unitPriceUzs   Decimal  @db.Decimal(18, 2)
+  plannedCostUzs Decimal  @db.Decimal(18, 2)
+  plannedCostUsd Decimal  @db.Decimal(18, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  poLines   PurchaseOrderLine[]
+  movements StockMovement[]
 
   @@index([projectId])
 }
@@ -411,4 +446,192 @@ model Expense {
 
   @@index([projectId, date])
   @@index([category])
+}
+
+model Supplier {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  name          String
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  tin           String?
+  bankDetails   String?
+  paymentTerms  String?
+  leadTimeDays  Int?
+  note          String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  prices         SupplierPrice[]
+  purchaseOrders PurchaseOrder[]
+  payments       SupplierPayment[]
+
+  @@index([companyId, name])
+}
+
+/// Supplier quote / price list entry, used for price comparison.
+model SupplierPrice {
+  id           String   @id @default(cuid())
+  supplierId   String
+  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price        Decimal  @db.Decimal(18, 2)
+  currency     Currency @default(UZS)
+  priceUzs     Decimal  @db.Decimal(18, 2)
+  priceUsd     Decimal  @db.Decimal(18, 2)
+  fxRate       Decimal  @db.Decimal(14, 4)
+  date         DateTime @db.Date
+  leadTimeDays Int?
+  note         String?
+  createdAt    DateTime @default(now())
+
+  @@index([productId])
+  @@index([supplierId])
+}
+
+model Warehouse {
+  id        String  @id @default(cuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+  name      String
+  address   String?
+  active    Boolean @default(true)
+
+  purchaseOrders PurchaseOrder[]
+  movementsFrom  StockMovement[] @relation("MovementFrom")
+  movementsTo    StockMovement[] @relation("MovementTo")
+
+  @@unique([companyId, name])
+}
+
+/// COMMITMENT: an order placed with a supplier.
+model PurchaseOrder {
+  id             String              @id @default(cuid())
+  companyId      String
+  company        Company             @relation(fields: [companyId], references: [id])
+  number         String
+  supplierId     String
+  supplier       Supplier            @relation(fields: [supplierId], references: [id])
+  projectId      String?
+  project        Project?            @relation(fields: [projectId], references: [id])
+  warehouseId    String
+  warehouse      Warehouse           @relation(fields: [warehouseId], references: [id])
+  status         PurchaseOrderStatus @default(DRAFT)
+  orderDate      DateTime            @db.Date
+  expectedDate   DateTime?           @db.Date
+  paymentDueDate DateTime?           @db.Date
+  invoiceNumber  String?
+  note           String?
+  createdById    String?
+  createdBy      User?               @relation(fields: [createdById], references: [id])
+
+  // Order-level currency and rate; line amounts use the same rate.
+  currency    Currency @default(UZS)
+  fxRate      Decimal  @db.Decimal(14, 4)
+  fxDate      DateTime @db.Date
+  fxSource    String   @default("CBU")
+  totalAmount Decimal  @default(0) @db.Decimal(18, 2)
+  totalUzs    Decimal  @default(0) @db.Decimal(18, 2)
+  totalUsd    Decimal  @default(0) @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines    PurchaseOrderLine[]
+  payments SupplierPayment[]
+
+  @@unique([companyId, number])
+  @@index([companyId, status])
+  @@index([projectId])
+}
+
+model PurchaseOrderLine {
+  id        String        @id @default(cuid())
+  orderId   String
+  order     PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product?      @relation(fields: [productId], references: [id])
+  bomItemId String?
+  bomItem   BomItem?      @relation(fields: [bomItemId], references: [id], onDelete: SetNull)
+  name      String
+  unit      String
+  qty       Decimal       @db.Decimal(14, 3)
+  unitPrice Decimal       @db.Decimal(18, 2)
+  amount    Decimal       @db.Decimal(18, 2)
+  amountUzs Decimal       @db.Decimal(18, 2)
+  amountUsd Decimal       @db.Decimal(18, 2)
+  sortOrder Int           @default(0)
+
+  movements StockMovement[]
+
+  @@index([orderId])
+}
+
+/// Every warehouse / material event. Quantities are always positive; the type gives the direction
+/// (ADJUSTMENT uses a signed qty).
+model StockMovement {
+  id            String             @id @default(cuid())
+  companyId     String
+  company       Company            @relation(fields: [companyId], references: [id])
+  type          MovementType
+  date          DateTime           @db.Date
+  productId     String?
+  product       Product?           @relation(fields: [productId], references: [id])
+  bomItemId     String?
+  bomItem       BomItem?           @relation(fields: [bomItemId], references: [id], onDelete: SetNull)
+  name          String
+  unit          String
+  qty           Decimal            @db.Decimal(14, 3)
+  warehouseId   String?
+  warehouse     Warehouse?         @relation("MovementFrom", fields: [warehouseId], references: [id])
+  toWarehouseId String?
+  toWarehouse   Warehouse?         @relation("MovementTo", fields: [toWarehouseId], references: [id])
+  projectId     String?
+  project       Project?           @relation(fields: [projectId], references: [id])
+  poLineId      String?
+  poLine        PurchaseOrderLine? @relation(fields: [poLineId], references: [id])
+  /// Cost per unit at the time of the movement (for valuation and project actual cost).
+  unitCostUzs   Decimal            @default(0) @db.Decimal(18, 2)
+  unitCostUsd   Decimal            @default(0) @db.Decimal(18, 4)
+  responsible   String?
+  document      String?
+  note          String?
+  createdById   String?
+  createdBy     User?              @relation("MovementCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime           @default(now())
+
+  @@index([companyId, type, date])
+  @@index([projectId])
+  @@index([productId])
+  @@index([warehouseId])
+}
+
+/// Money paid to a supplier (reduces payables).
+model SupplierPayment {
+  id         String         @id @default(cuid())
+  supplierId String
+  supplier   Supplier       @relation(fields: [supplierId], references: [id])
+  orderId    String?
+  order      PurchaseOrder? @relation(fields: [orderId], references: [id])
+  date       DateTime       @db.Date
+  method     PaymentMethod  @default(BANK)
+  reference  String?
+  note       String?
+
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  fxRate    Decimal  @db.Decimal(14, 4)
+  fxDate    DateTime @db.Date
+  fxSource  String   @default("CBU")
+  amountUzs Decimal  @db.Decimal(18, 2)
+  amountUsd Decimal  @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([supplierId, date])
 }

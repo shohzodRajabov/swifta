@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
+  Bell,
   Boxes,
   Building2,
   ClipboardList,
@@ -39,7 +40,8 @@ type NavKey =
   | "documents"
   | "reports"
   | "users"
-  | "audit";
+  | "audit"
+  | "notifications";
 
 const ICONS: Record<NavKey, typeof Boxes> = {
   dashboard: LayoutDashboard,
@@ -55,9 +57,10 @@ const ICONS: Record<NavKey, typeof Boxes> = {
   reports: PieChart,
   users: Users,
   audit: ScrollText,
+  notifications: Bell,
 };
 
-export type NavItem = { key: NavKey; href: string; phase?: number };
+export type NavItem = { key: NavKey; href: string; phase?: number; badge?: number };
 export type NavSection = { key: "sectionMain" | "sectionSoon" | "sectionAdmin"; items: NavItem[] };
 
 export function AppShell({
@@ -108,7 +111,10 @@ export function AppShell({
                     )}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden />
-                    <span className="truncate">{t(`nav.${item.key}`)}</span>
+                    <span className="flex-1 truncate">{t(`nav.${item.key}`)}</span>
+                    {!!item.badge && (
+                      <span className="num rounded-full bg-danger px-1.5 text-[11px] font-semibold text-white">{item.badge}</span>
+                    )}
                   </Link>
                 </li>
               );

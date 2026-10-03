@@ -49,6 +49,11 @@ async function main() {
     });
   }
 
+  if ((await db.warehouse.count({ where: { companyId: company.id } })) === 0) {
+    await db.warehouse.create({ data: { companyId: company.id, name: "Asosiy ombor" } });
+    console.log("Warehouse created: Asosiy ombor");
+  }
+
   const admins = await db.user.count({ where: { companyId: company.id, role: "ADMIN" } });
   if (admins === 0) {
     const email = (process.env.SEED_ADMIN_EMAIL ?? "admin@swifta.uz").toLowerCase();

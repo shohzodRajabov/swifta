@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { AppShell, type NavSection } from "@/components/app-shell";
+import { getNotifications } from "@/lib/notifications";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
@@ -14,15 +15,17 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   if (allow("clients.view")) main.push({ key: "clients", href: "/clients" });
   if (allow("catalog.view")) main.push({ key: "catalog", href: "/catalog" });
   if (allow("finance.view")) main.push({ key: "finance", href: "/finance" });
+  if (allow("procurement.view")) main.push({ key: "procurement", href: "/procurement" });
+  if (allow("warehouse.view")) main.push({ key: "warehouse", href: "/warehouse" });
+  if (allow("suppliers.view")) main.push({ key: "suppliers", href: "/suppliers" });
+  const notificationCount = allow("notifications.view") ? (await getNotifications(user)).length : null;
+  if (notificationCount !== null) main.push({ key: "notifications", href: "/notifications", badge: notificationCount });
 
   const sections: NavSection[] = [
     { key: "sectionMain", items: main },
     {
       key: "sectionSoon",
       items: [
-        { key: "procurement", href: "#", phase: 2 },
-        { key: "warehouse", href: "#", phase: 2 },
-        { key: "suppliers", href: "#", phase: 2 },
         { key: "tasks", href: "#", phase: 3 },
         { key: "documents", href: "#", phase: 3 },
         { key: "reports", href: "#", phase: 4 },

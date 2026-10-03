@@ -74,7 +74,8 @@ async function main() {
   }
 
   if (await db.project.count({ where: { companyId: cid } })) {
-    console.log("Projects already exist, skipping.");
+    console.log("Projects already exist, skipping phase 1 demo.");
+    await phase2(cid);
     return;
   }
 
@@ -131,8 +132,6 @@ async function main() {
         ["EQUIPMENT", "AHU 2 dona — Systemair", 37000, "USD", "2026-05-12"],
         ["EQUIPMENT", "VRF tashqi bloklar — LG", 39200, "USD", "2026-05-20"],
         ["EQUIPMENT", "VRF ichki bloklar — LG", 34200, "USD", "2026-06-02"],
-        ["MATERIAL", "Havo kanallari 140 m", 25_900_000, "UZS", "2026-06-15"],
-        ["MATERIAL", "Mis quvur 700 m", 43_400_000, "UZS", "2026-06-18"],
         ["LABOR", "Montaj brigadasi — iyul", 62_000_000, "UZS", "2026-07-31"],
         ["LABOR", "Montaj brigadasi — avgust", 65_000_000, "UZS", "2026-08-31"],
         ["LABOR", "Montaj brigadasi — sentyabr", 68_000_000, "UZS", "2026-09-30"],
@@ -306,6 +305,102 @@ async function main() {
     }
   }
   console.log("Demo data created. Demo users password: demo12345");
+  await phase2(cid);
+}
+
+/** Suppliers, prices, purchase orders, receipts, issues and site usage for the BRB project. */
+async function phase2(cid: string) {
+  if (await db.supplier.count({ where: { companyId: cid } })) return;
+  const wh = await db.warehouse.findFirstOrThrow({ where: { companyId: cid } });
+  const sup = async (name: string, contactPerson: string, phone: string, paymentTerms: string, leadTimeDays: number) =>
+    db.supplier.create({ data: { companyId: cid, name, contactPerson, phone, paymentTerms, leadTimeDays } });
+  const s1 = await sup("Climat Trade MCHJ", "Akmal Usmonov", "+998 90 111 22 33", "50% avans, 50% yetkazilganda", 14);
+  const s2 = await sup("Ventmontaj Servis", "Rustam Qodirov", "+998 93 444 55 66", "100% yetkazilgandan keyin 10 kun", 5);
+  const s3 = await sup("Euro Duct Group", "Anvar Sobirov", "+998 97 777 88 99", "30% avans", 7);
+
+  const product = (sku: string) => db.product.findFirstOrThrow({ where: { companyId: cid, sku } });
+  const duct = await product("DUCT-500x300");
+  const pipe = await product("PIPE-CU-12");
+  const ins = await product("INS-K-19");
+  const date = D("2026-09-01");
+  for (const [s, p, price] of [
+    [s2, duct, 185000],
+    [s3, duct, 176000],
+    [s1, duct, 192000],
+    [s1, pipe, 62000],
+    [s2, pipe, 64500],
+    [s2, ins, 48000],
+    [s3, ins, 45500],
+  ] as const) {
+    const m = money(price, "UZS", date);
+    await db.supplierPrice.create({
+      data: { supplierId: s.id, productId: p.id, price: m.amount, currency: "UZS", priceUzs: m.amountUzs, priceUsd: m.amountUsd, fxRate: m.fxRate, date },
+    });
+  }
+
+  const brb = await db.project.findFirst({ where: { companyId: cid, code: "OB-2026-001" } });
+  if (!brb) return;
+  const mkOrder = async (
+    number: string,
+    supplierId: string,
+    status: "ORDERED" | "RECEIVED" | "PARTIAL",
+    orderDate: string,
+    expectedDate: string,
+    lines: { p: { id: string; name: string; unit: string }; qty: number; price: number }[],
+  ) => {
+    const prepared = lines.map((l, i) => {
+      const m = money(l.qty * l.price, "UZS", D(orderDate));
+      return { productId: l.p.id, name: l.p.name, unit: l.p.unit, qty: l.qty, unitPrice: l.price, amount: m.amount, amountUzs: m.amountUzs, amountUsd: m.amountUsd, sortOrder: i };
+    });
+    const total = prepared.reduce((s, l) => s + Number(l.amountUzs), 0);
+    const t = money(total, "UZS", D(orderDate));
+    return db.purchaseOrder.create({
+      data: {
+        companyId: cid,
+        number,
+        supplierId,
+        projectId: brb.id,
+        warehouseId: wh.id,
+        status,
+        orderDate: D(orderDate),
+        expectedDate: D(expectedDate),
+        paymentDueDate: D(expectedDate),
+        currency: "UZS",
+        fxRate: t.fxRate,
+        fxDate: t.fxDate,
+        totalAmount: t.amount,
+        totalUzs: t.amountUzs,
+        totalUsd: t.amountUsd,
+        lines: { create: prepared },
+      },
+      include: { lines: true },
+    });
+  };
+  const o1 = await mkOrder("PO-2026-001", s3.id, "RECEIVED", "2026-06-10", "2026-06-17", [
+    { p: duct, qty: 140, price: 176000 },
+    { p: ins, qty: 300, price: 45500 },
+  ]);
+  const o2 = await mkOrder("PO-2026-002", s1.id, "PARTIAL", "2026-06-12", "2026-09-20", [{ p: pipe, qty: 640, price: 62000 }]);
+
+  const move = (data: Record<string, unknown>) => db.stockMovement.create({ data: { companyId: cid, ...data } as never });
+  for (const l of o1.lines) {
+    const base = { productId: l.productId, name: l.name, unit: l.unit, qty: l.qty, unitCostUzs: l.amountUzs.div(l.qty), unitCostUsd: l.amountUsd.div(l.qty) };
+    await move({ ...base, type: "RECEIPT", date: D("2026-06-17"), warehouseId: wh.id, poLineId: l.id, projectId: brb.id, document: "Nakladnoy 117" });
+    await move({ ...base, type: "ISSUE", date: D("2026-06-18"), warehouseId: wh.id, projectId: brb.id });
+  }
+  const pl = o2.lines[0];
+  const pipeBase = { productId: pl.productId, name: pl.name, unit: pl.unit, unitCostUzs: pl.amountUzs.div(pl.qty), unitCostUsd: pl.amountUsd.div(pl.qty) };
+  await move({ ...pipeBase, qty: 400, type: "RECEIPT", date: D("2026-07-01"), warehouseId: wh.id, poLineId: pl.id, projectId: brb.id, document: "Nakladnoy 204" });
+  await move({ ...pipeBase, qty: 380, type: "ISSUE", date: D("2026-07-02"), warehouseId: wh.id, projectId: brb.id });
+
+  // Site usage: duct 138 m vs plan 120 m -> +18 m overuse (the example from the brief).
+  await move({ productId: duct.id, name: duct.name, unit: duct.unit, qty: 138, type: "CONSUMPTION", date: D("2026-09-25"), projectId: brb.id, responsible: "Montaj brigadasi" });
+  await move({ productId: pipe.id, name: pipe.name, unit: pipe.unit, qty: 350, type: "CONSUMPTION", date: D("2026-09-25"), projectId: brb.id, responsible: "Montaj brigadasi" });
+  await move({ productId: ins.id, name: ins.name, unit: ins.unit, qty: 260, type: "CONSUMPTION", date: D("2026-09-25"), projectId: brb.id, responsible: "Montaj brigadasi" });
+
+  const pay = money(20_000_000, "UZS", D("2026-06-20"));
+  await db.supplierPayment.create({ data: { supplierId: s3.id, orderId: o1.id, date: D("2026-06-20"), ...pay } });
+  console.log("Phase 2 demo data created.");
 }
 
 main()

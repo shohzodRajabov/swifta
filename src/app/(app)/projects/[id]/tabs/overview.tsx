@@ -61,8 +61,8 @@ export async function OverviewTab({
                   <td className="px-4 py-3 text-right">
                     <Money value={m.plannedCost} />
                   </td>
-                  <td className="px-4 py-3 text-right text-xs text-muted" title={t("projects.commitmentSoon")}>
-                    {t("common.phase", { n: 2 })}
+                  <td className="px-4 py-3 text-right">
+                    <Money value={m.committedCost} />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Money value={m.actualCost} />

@@ -19,8 +19,9 @@ import { BudgetTab } from "./tabs/budget";
 import { PaymentsTab } from "./tabs/payments";
 import { ExpensesTab } from "./tabs/expenses";
 import { HistoryTab } from "./tabs/history";
+import { MaterialsTab } from "./tabs/materials";
 
-const TABS = ["overview", "bom", "budget", "payments", "expenses", "history"] as const;
+const TABS = ["overview", "bom", "materials", "budget", "payments", "expenses", "history"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function ProjectPage({ params, searchParams }: PageProps<"/projects/[id]">) {
@@ -44,6 +45,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const visible: Record<Tab, boolean> = {
     overview: true,
     bom: true,
+    materials: true,
     budget: finance,
     payments: finance || can(user.role, "payments.edit"),
     expenses: finance || can(user.role, "expenses.edit"),
@@ -53,6 +55,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const tabLabel: Record<Tab, string> = {
     overview: t("projects.tabOverview"),
     bom: t("projects.tabBom"),
+    materials: t("materials.tab"),
     budget: t("projects.tabBudget"),
     payments: t("projects.tabPayments"),
     expenses: t("projects.tabExpenses"),
@@ -116,6 +119,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
 
       {tab === "overview" && <OverviewTab project={project} metrics={m} showFinance={finance} />}
       {tab === "bom" && <BomTab user={user} projectId={project.id} />}
+      {tab === "materials" && <MaterialsTab user={user} projectId={project.id} />}
       {tab === "budget" && <BudgetTab user={user} projectId={project.id} metrics={m} />}
       {tab === "payments" && <PaymentsTab user={user} projectId={project.id} metrics={m} />}
       {tab === "expenses" && <ExpensesTab user={user} projectId={project.id} />}

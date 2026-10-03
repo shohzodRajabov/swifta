@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { formatQty } from "@/lib/format";
 import { recordMoney } from "@/lib/money-value";
 import { sumAmounts } from "@/lib/metrics";
-import { Badge, Card, CardHeader, Empty, Field, Input, Notice, Select, Table, Td, Th } from "@/components/ui";
+import { projectMaterials } from "@/lib/materials";
+import { Badge, Card, CardHeader, Empty, Field, Input, Select, Table, Td, Th } from "@/components/ui";
 import { ActionForm, DeleteButton, SubmitButton } from "@/components/forms/action-form";
 import { MoneyInput } from "@/components/forms/money-input";
 import { Money } from "@/components/money";
@@ -26,6 +27,13 @@ export async function BomTab({ user, projectId }: { user: CurrentUser; projectId
       : Promise.resolve([]),
   ]);
 
+  const materials = await projectMaterials(projectId);
+  // Flow numbers are aggregated per catalog product; show them on the first BOM line of each product.
+  const flowFor = (bomId: string) => {
+    const row = materials.find((r) => r.bomItemIds.includes(bomId));
+    return row && row.bomItemIds[0] === bomId ? row : null;
+  };
+
   const total = (kind: "EQUIPMENT" | "MATERIAL") =>
     sumAmounts(
       items
@@ -37,9 +45,6 @@ export async function BomTab({ user, projectId }: { user: CurrentUser; projectId
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader title={t("bom.title")} />
-        <div className="p-4 pb-0">
-          <Notice>{t("bom.flowNotice")}</Notice>
-        </div>
         {items.length === 0 ? (
           <Empty>{t("bom.empty")}</Empty>
         ) : (
@@ -59,7 +64,10 @@ export async function BomTab({ user, projectId }: { user: CurrentUser; projectId
               </tr>
             </thead>
             <tbody>
-              {items.map((i) => (
+              {items.map((i) => {
+                const f = flowFor(i.id);
+                const cell = (v: number | undefined) => (f ? formatQty(v ?? 0) : "↑");
+                return (
                 <tr key={i.id}>
                   <Td className="font-medium">{i.name}</Td>
                   <Td>
@@ -68,10 +76,10 @@ export async function BomTab({ user, projectId }: { user: CurrentUser; projectId
                   <Td className="num text-right">
                     {formatQty(Number(i.plannedQty))} <span className="text-muted">{i.unit}</span>
                   </Td>
-                  <Td className="text-right text-muted">—</Td>
-                  <Td className="text-right text-muted">—</Td>
-                  <Td className="text-right text-muted">—</Td>
-                  <Td className="text-right text-muted">—</Td>
+                  <Td className="num text-right">{cell(f?.ordered)}</Td>
+                  <Td className="num text-right">{cell(f?.received)}</Td>
+                  <Td className="num text-right">{cell(f?.issued)}</Td>
+                  <Td className={f?.overuse ? "num text-right font-semibold text-danger" : "num text-right"}>{cell(f?.used)}</Td>
                   {showPrice && (
                     <Td className="text-right">
                       <Money
@@ -99,7 +107,8 @@ export async function BomTab({ user, projectId }: { user: CurrentUser; projectId
                     </Td>
                   )}
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
             {showPrice && (
               <tfoot>
