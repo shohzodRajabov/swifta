@@ -13,9 +13,6 @@ Mijoz → Obyekt → Tijorat taklifi → Shartnoma → Loyiha → Smeta/BOM → 
 - Shartnoma summasi va budjet faqat Change Request orqali o'zgaradi; barcha muhim o'zgarishlar audit logga yoziladi.
 - 7 ta rol: Administrator, Loyiha rahbari, Sotuv menejeri, Muhandis, Ombor mudiri, Buxgalter, Montajchi.
 
-## Holat
-- Texnologiyalar va bosqichlar hali tasdiqlanmagan (taklif berilgan, foydalanuvchi javobi kutilmoqda).
-- Interfeys tili: o'zbek (lotin).
 
 ## Qarorlar (2026-10-03)
 - Stack: Next.js 16 (App Router, `src/proxy.ts`), TypeScript, Prisma 6 + PostgreSQL, Tailwind v4, next-intl (cookie, URL prefiksisiz).
@@ -26,5 +23,16 @@ Mijoz → Obyekt → Tijorat taklifi → Shartnoma → Loyiha → Smeta/BOM → 
 - Lokal DB: docker `swifta-db`, port 5435.
 
 ## 1-bosqich holati
-Tayyor: Prisma sxema + migratsiya, auth/rollar, FX (CBU), audit, metrics, i18n (4 til), UI primitivlar, Money komponenti, app shell, login, mijozlar moduli.
-Qolgan: obyektlar (ro'yxat, yaratish, karta: timeline/BOM/budjet/to'lovlar/xarajatlar/tarix), katalog, moliya, foydalanuvchilar, audit sahifasi, dashboard, seed (admin + kategoriyalar), `money.bn/mn` tarjima kalitlari, typecheck/build, Railway deploy, swifta.uz DNS.
+Tayyor: sxema, auth/rollar, FX (CBU), audit, 4 til, dashboard, obyektlar (timeline, BOM, budjet, to'lov jadvali, to'lovlar, xarajatlar, tarix), mijozlar, katalog, moliya, foydalanuvchilar, audit sahifasi, seed, Dockerfile/railway.json.
+Lokal: `pnpm dev --port 3100`; `pnpm db:seed`, `pnpm db:demo` (faqat lokal demo ma'lumot, demo parol demo12345).
+Konteyner start: `prisma migrate deploy` → idempotent seed → `next start`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -74,7 +74,7 @@ export default async function ClientPage({ params }: PageProps<"/clients/[id]">)
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Card>
           <CardHeader title={t("clients.projects")} />
           {client.projects.length === 0 ? (

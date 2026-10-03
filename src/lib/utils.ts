@@ -22,3 +22,18 @@ export function formatDate(d: Date | null | undefined): string {
   const [y, m, day] = iso.split("-");
   return `${day}.${m}.${y}`;
 }
+
+/** dd.mm.yyyy hh:mm in the company's time zone (Tashkent). */
+export function formatDateTime(d: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Tashkent",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("day")}.${get("month")}.${get("year")} ${get("hour")}:${get("minute")}`;
+}

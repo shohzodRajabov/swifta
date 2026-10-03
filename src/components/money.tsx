@@ -50,7 +50,7 @@ export function Money({
   }, [open]);
 
   const negative = value.uzs < 0;
-  const main = compact ? formatUzsCompact(value.uzs, { bn: "mlrd", mn: "mln" }) : formatUzs(value.uzs);
+  const main = compact ? formatUzsCompact(value.uzs, { bn: t("bn"), mn: t("mn") }) : formatUzs(value.uzs);
   const isAggregate = value.rate === undefined;
   const avgRate = value.usd !== 0 ? value.uzs / value.usd : 0;
 

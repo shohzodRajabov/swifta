@@ -4,9 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:demo": "tsx scripts/demo-data.ts",
+    "i18n:cyrl": "tsx scripts/translit-uz.ts",
+    "i18n:check": "tsx scripts/check-i18n.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "6",
@@ -39,5 +46,8 @@
     "tsx": "^4.23.15",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@9.12.0"
+  "packageManager": "pnpm@9.12.0",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
 }

@@ -59,7 +59,9 @@
     "sourceMANUAL": "Qo'lda kiritilgan",
     "aggregate": "{count} ta yozuv yig'indisi. Har bir yozuv o'z sanasidagi kurs bo'yicha hisoblangan.",
     "avgRate": "O'rtacha kurs: 1 USD = {rate} so'm",
-    "sum": "so'm"
+    "sum": "so'm",
+    "bn": "mlrd",
+    "mn": "mln"
   },
   "nav": {
     "dashboard": "Bosh sahifa",

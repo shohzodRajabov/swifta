@@ -59,7 +59,9 @@
     "sourceMANUAL": "Entered manually",
     "aggregate": "Sum of {count} records. Each record is converted at the rate of its own date.",
     "avgRate": "Average rate: 1 USD = {rate} UZS",
-    "sum": "UZS"
+    "sum": "UZS",
+    "bn": "bn",
+    "mn": "mn"
   },
   "nav": {
     "dashboard": "Dashboard",
