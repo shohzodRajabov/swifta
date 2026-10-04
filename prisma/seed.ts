@@ -9,7 +9,7 @@ import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import { ensureCompanyDefaults } from "../src/server/bootstrap";
 import { normalizePhone } from "../src/lib/phone";
-import { generateDemo } from "../src/server/demo/generate";
+import { DEMO_VERSION, generateDemo } from "../src/server/demo/generate";
 
 const db = new PrismaClient();
 
@@ -45,9 +45,10 @@ async function main() {
   }
 
   // Optional: build the separate demo workspace once (SEED_DEMO=1).
-  if (process.env.SEED_DEMO === "1" && !(await db.company.findFirst({ where: { isDemo: true } }))) {
+  const demo = await db.company.findFirst({ where: { isDemo: true } });
+  if (process.env.SEED_DEMO === "1" && (!demo || demo.demoVersion < DEMO_VERSION)) {
     const id = await generateDemo(db);
-    console.log(`Demo workspace created: ${id}`);
+    console.log(`Demo workspace ${demo ? "rebuilt" : "created"} (v${DEMO_VERSION}): ${id}`);
   }
 }
 

@@ -14,7 +14,8 @@
     "i18n:cyrl": "tsx scripts/translit-uz.ts",
     "i18n:check": "tsx scripts/check-i18n.ts",
     "postinstall": "prisma generate",
-    "local": "./scripts/local.sh"
+    "local": "./scripts/local.sh",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1146.0",
@@ -47,7 +48,8 @@
     "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.3"
   },
   "packageManager": "pnpm@9.12.0",
   "prisma": {

@@ -393,6 +393,8 @@ model Company {
   overuseThreshold Decimal  @default(5) @db.Decimal(5, 2)
   /// Demo workspace: never mixed with real data.
   isDemo           Boolean  @default(false)
+  /// Version of the generated demo data; the demo is rebuilt when the code ships a newer version.
+  demoVersion      Int      @default(0)
 
   // Payroll & taxes
   normWorkDays    Int             @default(22)

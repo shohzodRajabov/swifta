@@ -11,10 +11,18 @@ export const getCurrentUser = cache(async () => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const session = await verifySession(token);
   if (!session) return null;
-  const user = await db.user.findUnique({
-    where: { id: session.userId },
-    include: { roleDef: true, company: { select: { id: true, name: true, isDemo: true } }, employee: { select: { id: true } } },
-  });
+  const load = (id: string) =>
+    db.user.findUnique({
+      where: { id },
+      include: { roleDef: true, company: { select: { id: true, name: true, isDemo: true } }, employee: { select: { id: true } } },
+    });
+  const user = await load(session.userId);
+  if (!user && session.homeUserId) {
+    // The demo workspace was rebuilt while being viewed: fall back to the user's own account.
+    const home = await load(session.homeUserId);
+    if (!home || !home.active || home.company.isDemo) return null;
+    return { ...home, perms: home.roleDef?.permissions ?? [], homeUserId: null };
+  }
   if (!user || !user.active || user.companyId !== session.companyId) return null;
   return { ...user, perms: user.roleDef?.permissions ?? [], homeUserId: session.homeUserId ?? null };
 });

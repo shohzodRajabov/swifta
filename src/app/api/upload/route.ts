@@ -6,6 +6,7 @@ import { can } from "@/lib/permissions";
 import { projectWhere } from "@/server/projects/access";
 import { projectOfAttachment } from "@/server/files/access";
 import { storeUpload } from "@/server/files/files";
+import { parseSmeta } from "@/server/import/smeta";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,31 @@ export async function POST(request: Request) {
       data: { companyId: user.companyId, fileId: stored.id, entityType: data.data.entityType, entityId: data.data.entityId },
     });
     return json({ ok: true, id: att.id, fileId: stored.id });
+  }
+
+  if (fields.purpose === "smeta") {
+    const projectId = typeof fields.projectId === "string" ? fields.projectId : "";
+    if (!can(user, "import.manage")) return json({ error: "forbidden" }, 403);
+    const project = await db.project.findFirst({ where: { AND: [{ id: projectId }, projectWhere(user)] } });
+    if (!project) return json({ error: "forbidden" }, 403);
+    if (!/\.xlsx$/i.test(file.name)) return json({ error: "importXlsxOnly" }, 400);
+    const buf = Buffer.from(await file.arrayBuffer());
+    const parsed = await parseSmeta(buf);
+    if ("error" in parsed) return json({ error: parsed.error }, 400);
+    const stored = await storeUpload(user.companyId, user.id, file);
+    if ("error" in stored) return json({ error: stored.error }, 400);
+    const imp = await db.smetaImport.create({
+      data: {
+        companyId: user.companyId,
+        projectId: project.id,
+        fileId: stored.id,
+        rows: parsed.rows,
+        vatRate: project.contractVatRate,
+        createdById: user.id,
+      },
+    });
+    await audit(db, { companyId: user.companyId, userId: user.id }, "SmetaImport", imp.id, "create", null, { fileName: stored.fileName, rows: parsed.rows.length });
+    return json({ ok: true, id: imp.id });
   }
 
   return json({ error: "invalid" }, 400);

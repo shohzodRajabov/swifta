@@ -27,7 +27,8 @@ Kelishilgan arxitektura va ochiq savollar: [docs/KONSEPT.md](docs/KONSEPT.md). Y
 Saytga (`railway up`) faqat foydalanuvchi aniq ruxsat bergandan keyin chiqariladi.
 
 ## Holat
-Saytda (swifta.uz): obyektlar, mijozlar, katalog, moliya, xarid, ombor, yetkazib beruvchilar, material nazorati, bildirishnomalar.
+Saytda (swifta.uz): obyektlar, mijozlar, katalog, moliya, xarid, ombor, yetkazib beruvchilar, material nazorati, bildirishnomalar; 1-bosqich (asos) va 2-bosqich (xodimlar, guruhlar, vazifalar, sessiyalar, kamchiliklar, davomat, oylik, smeta importi, /me).
+Keyingi: 3-bosqich (contractorlar), keyin KPI, chizmalar, servis, hisobotlar (docs/KONSEPT.md §13).
 Lokal: `pnpm local` (yoki `pnpm dev --port 3100`); `pnpm db:seed`, `pnpm db:demo` (faqat lokal demo, parol demo12345).
 Konteyner start: `prisma migrate deploy` → idempotent seed → `next start`.
 

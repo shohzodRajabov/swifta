@@ -111,6 +111,7 @@ alohida hisoblanadi va hech qachon hajmni xodimlar soniga ko'paytirmaydi.
 
 - Alohida **"Demo" ish maydoni** (alohida kompaniya), menyuda "Demo ↔ Asosiy" almashtirgich.
 - Real ma'lumot bilan aralashmaydi, hisobotlarga ta'sir qilmaydi; bitta tugma bilan o'chiriladi.
+- `DEMO_VERSION` (src/server/demo/generate.ts) oshirilsa, sayt ishga tushganda demo qayta yaratiladi (real ma'lumotga tegilmaydi).
 
 ## 11. Kiritilmaydi
 
@@ -128,8 +129,8 @@ alohida hisoblanadi va hech qachon hajmni xodimlar soniga ko'paytirmaydi.
 | # | Nima kiradi | Holat |
 |---|---|---|
 | 0 | Xarid, ombor, yetkazib beruvchilar, material nazorati | Saytda |
-| 1 | Asos: firmalar, obyekt egasi / buyurtmachi, A–H statuslar va majburiy hujjatlar, hujjatlar va versiyalar, reja/prognoz/amalda, davr filtrlari, rollar, demo ish maydoni, backup, testlar | Kutilmoqda |
-| 2 | Ishchi kuchi: xodimlar, maosh, guruhlar va tarix, ish turlari, joylashuvlar, tasklar, sessiyalar, ulush, samaradorlik, kamchiliklar, Kanban, kalendar | |
+| 1 | Asos: firmalar, obyekt egasi / buyurtmachi, A–H statuslar va majburiy hujjatlar, hujjatlar va versiyalar, reja/prognoz/amalda, davr filtrlari, rollar, demo ish maydoni, backup, testlar | Saytda |
+| 2 | Ishchi kuchi: xodimlar, maosh, guruhlar va tarix, ish turlari, joylashuvlar, tasklar, sessiyalar, ulush, samaradorlik, kamchiliklar, Kanban, kalendar, davomat, oylik hisob, smeta importi (admin tasdig'i bilan), ishchi kabineti `/me` | Saytda |
 | 3 | Contractorlar: baza, tashqi tasklar, tasdiqlash, to'lov, rating, reliability | |
 | 4 | KPI: formulalar, oylik natijalar, ochib ko'rish | |
 | 5 | Chizmalar: PDF, zonalar, taskga bog'lash, vizual progress, chizmadagi kamchiliklar | |

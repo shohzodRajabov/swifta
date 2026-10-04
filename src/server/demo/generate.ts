@@ -12,6 +12,8 @@ import { wipeCompany } from "./wipe";
 import { seedWorkforce } from "./workforce";
 
 export const DEMO_RATE = new Prisma.Decimal("11772.95");
+/** Bump when the demo data changes: deployed instances rebuild the demo workspace on start. */
+export const DEMO_VERSION = 2;
 const DAY = 86400000;
 
 export type DemoCtx = {
@@ -46,7 +48,7 @@ export async function generateDemo(db: PrismaClient): Promise<string> {
   let company = await findDemoCompany(db);
   if (company) await wipeCompany(db, company.id);
   else company = await db.company.create({ data: { name: "Demo HVAC", isDemo: true } });
-  await db.company.update({ where: { id: company.id }, data: { name: "Demo HVAC", isDemo: true } });
+  await db.company.update({ where: { id: company.id }, data: { name: "Demo HVAC", isDemo: true, demoVersion: DEMO_VERSION } });
   await ensureCompanyDefaults(db, company.id);
   // Demo uses its own legal entities.
   await db.project.updateMany({ where: { companyId: company.id }, data: { legalEntityId: null } });
@@ -159,17 +161,17 @@ async function seedCore(ctx: DemoCtx) {
   // ---- catalog ----
   const cat = async (key: string) => (await db.productCategory.findFirstOrThrow({ where: { companyId: cid, key } })).id;
   const products: [string, string, string, string | null, string, string, number, Currency, number][] = [
-    ["AHU-001", "Havo ishlov berish qurilmasi 10000 m³/h", "Systemair", "Topvex SR11", "AHU", "dona", 18500, "USD", 1],
-    ["VRF-OUT-01", "VRF tashqi blok 28 kW", "LG", "ARUM100LTE6", "VRF_OUTDOOR", "dona", 9800, "USD", 1],
+    ["AHU-001", "Havo ishlov berish qurilmasi 10000 m³/h", "Systemair", "Topvex SR11", "AHU", "dona", 18500, "USD", 0],
+    ["VRF-OUT-01", "VRF tashqi blok 28 kW", "LG", "ARUM100LTE6", "VRF_OUTDOOR", "dona", 9800, "USD", 0],
     ["VRF-IN-01", "VRF kasseta ichki blok 5.6 kW", "LG", "ARNU18GTRD4", "VRF_INDOOR", "dona", 950, "USD", 4],
-    ["DUCT-500x300", "Havo kanali 500×300, 0.7 mm", "Mahalliy", null, "DUCT", "m", 185000, "UZS", 100],
-    ["PIPE-CU-12", "Mis quvur 12.7 mm", "Halcor", null, "PIPE", "m", 62000, "UZS", 200],
-    ["INS-K-19", "Kauchuk izolyatsiya 19 mm", "K-Flex", "ST", "INSULATION", "m²", 48000, "UZS", 100],
-    ["DIF-600", "Shift diffuzori 600×600", "Arktos", "4APN", "DIFFUSER", "dona", 320000, "UZS", 20],
+    ["DUCT-500x300", "Havo kanali 500×300, 0.7 mm", "Mahalliy", null, "DUCT", "m", 185000, "UZS", 0],
+    ["PIPE-CU-12", "Mis quvur 12.7 mm", "Halcor", null, "PIPE", "m", 62000, "UZS", 0],
+    ["INS-K-19", "Kauchuk izolyatsiya 19 mm", "K-Flex", "ST", "INSULATION", "m²", 48000, "UZS", 0],
+    ["DIF-600", "Shift diffuzori 600×600", "Arktos", "4APN", "DIFFUSER", "dona", 320000, "UZS", 0],
     ["GRL-400", "Panjara 400×200", "Arktos", "AMN", "GRILLE", "dona", 145000, "UZS", 20],
     ["DMP-315", "Havo klapani d315", "Systemair", "SPI 315", "DAMPER", "dona", 410000, "UZS", 10],
     ["CH-350", "Chiller 350 kW", "Carrier", "30RB-352", "CHILLER", "dona", 96000, "USD", 0],
-    ["FCU-4T", "Fankoyl 4 trubali 3.5 kW", "Daikin", "FWB04", "FCU", "dona", 780, "USD", 4],
+    ["FCU-4T", "Fankoyl 4 trubali 3.5 kW", "Daikin", "FWB04", "FCU", "dona", 780, "USD", 0],
   ];
   for (const [sku, name, manufacturer, model, key, unit, price, currency, minStock] of products) {
     const p = await db.product.create({
