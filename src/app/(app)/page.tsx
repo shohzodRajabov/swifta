@@ -224,11 +224,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
             <option value="">
               {t("projects.statusGroup")}: {t("common.all")}
             </option>
-            {catalog.map((g) => (
-              <option key={g.id} value={g.code}>
-                {g.letter}. {g.name}
-              </option>
-            ))}
+            {/* Pre-contract stages (A, B, C) are not offered in the dashboard filter. */}
+            {catalog
+              .filter((g) => !["NEW", "OFFER", "CONTRACT"].includes(g.code))
+              .map((g) => (
+                <option key={g.id} value={g.code}>
+                  {g.letter}. {g.name}
+                </option>
+              ))}
           </Select>
           <Select name="status" defaultValue={sp.status ?? ""} className="w-44" aria-label={t("projects.lifecycle")}>
             <option value="">
