@@ -6,10 +6,10 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { resolveMoney } from "@/lib/fx";
-import { availableQty, averageCost } from "@/lib/stock";
+import { availableQty, averageCost, unitCosts } from "@/lib/stock";
 import { projectMaterials } from "@/lib/materials";
 import { toDateOnly } from "@/lib/utils";
-import { fail, formObject, runAction, zDate, zOptId, zOptNumber, zOptText, type ActionState } from "@/lib/action";
+import { fail, formObject, runAction, zDate, zOptId, zOptNumber, zOptText, zVat, type ActionState } from "@/lib/action";
 import type { Permission } from "@/lib/permissions";
 
 type Type = "RECEIPT" | "ISSUE" | "RETURN" | "TRANSFER" | "ADJUSTMENT" | "CONSUMPTION";
@@ -28,6 +28,7 @@ const schema = z.object({
   amount: zOptNumber,
   currency: z.enum(["UZS", "USD"]).default("UZS"),
   rate: zOptNumber,
+  vatRate: zVat,
 });
 
 /** Records a stock / material movement. Used by the warehouse page and the project materials tab. */
@@ -99,19 +100,22 @@ export async function recordMovement(type: Type, _: ActionState, formData: FormD
       if (onSite + 1e-9 < qty) fail("notEnough");
     }
 
-    // Unit cost: purchase price for manual receipts, weighted average otherwise.
-    let unitCostUzs = new Prisma.Decimal(0);
-    let unitCostUsd = new Prisma.Decimal(0);
+    // Unit cost (gross and net of VAT): purchase price for manual receipts, weighted average otherwise.
+    let costs = unitCosts(0, 0, 0);
     if (type === "RECEIPT") {
       if (d.amount === null || d.amount < 0) fail("required");
       const m = await resolveMoney({ amount: d.amount, currency: d.currency, date, manualRate: d.rate });
-      unitCostUzs = m.amountUzs;
-      unitCostUsd = m.amountUsd;
+      costs = unitCosts(m.amountUzs, m.amountUsd, d.vatRate);
     } else if (productId) {
       const avg = (await averageCost(companyId, [productId])).get(productId);
       if (avg) {
-        unitCostUzs = new Prisma.Decimal(avg.uzs.toFixed(2));
-        unitCostUsd = new Prisma.Decimal(avg.usd.toFixed(4));
+        costs = {
+          unitCostUzs: new Prisma.Decimal(avg.uzs.toFixed(2)),
+          unitCostUsd: new Prisma.Decimal(avg.usd.toFixed(4)),
+          unitCostNetUzs: new Prisma.Decimal(avg.netUzs.toFixed(2)),
+          unitCostNetUsd: new Prisma.Decimal(avg.netUsd.toFixed(4)),
+          vatRate: new Prisma.Decimal(avg.uzs > 0 ? Math.max(0, Math.round((avg.uzs / avg.netUzs - 1) * 10000) / 100) : 0),
+        };
       }
     }
 
@@ -129,8 +133,7 @@ export async function recordMovement(type: Type, _: ActionState, formData: FormD
           warehouseId: needsWarehouse ? d.warehouseId : null,
           toWarehouseId: type === "TRANSFER" ? d.toWarehouseId : null,
           projectId: needsProject ? d.projectId : null,
-          unitCostUzs,
-          unitCostUsd,
+          ...costs,
           responsible: d.responsible,
           document: d.document,
           note: d.note,

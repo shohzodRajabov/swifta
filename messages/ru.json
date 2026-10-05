@@ -294,7 +294,19 @@
     "contractorDebt": "Долг подрядчикам",
     "periodTitle": "Показатели периода",
     "netHint": "Доход − прямые затраты − общие расходы − налог на прибыль",
-    "reasonMissingDocs": "Не хватает документов"
+    "reasonMissingDocs": "Не хватает документов",
+    "brigade": "Бригада",
+    "employee": "Сотрудник",
+    "contractor": "Подрядчик",
+    "payStatus": "Статус оплаты",
+    "pay_overdue": "Есть просроченный долг",
+    "pay_debt": "Есть дебиторка",
+    "pay_paid": "Полностью оплачено",
+    "deadlineFilter": "Срок",
+    "due_delayed": "Просрочено",
+    "due_soon": "Заканчивается в 30 дней",
+    "onlyProblematic": "Только проблемные",
+    "onlyMine": "Только мои объекты"
   },
   "projects": {
     "title": "Объекты",
@@ -1609,7 +1621,14 @@
     "openTask": "Подробнее",
     "myRemarks": "Мои замечания",
     "messageLabel": "Комментарий или проблема",
-    "messagePlaceholder": "Например: не хватает материала"
+    "messagePlaceholder": "Например: не хватает материала",
+    "section_overdue": "Просрочено",
+    "section_today": "Сегодня",
+    "section_next": "Следующие",
+    "pause": "Приостановил",
+    "photo": "Фото",
+    "myObjects": "Мои объекты",
+    "tasksN": "{n} задач"
   },
   "calendar": {
     "title": "Календарь",
@@ -2136,6 +2155,19 @@
     "kpiGroups": "Среднее по группам",
     "payroll": "Зарплата",
     "payrollMonth": "Месяц {month}",
-    "payrollOpen": "не закрыт"
+    "payrollOpen": "не закрыт",
+    "management": "Управленческие показатели",
+    "tileKpi": "KPI сотрудников · {month}",
+    "tileKpiSub": "Ниже 70%: {n}",
+    "tileContractors": "Средний рейтинг подрядчиков",
+    "tileReliability": "надёжность {pct}%",
+    "tileWarranty": "Объекты на гарантии",
+    "tileWarrantySoon": "Истекает за 60 дн.: {n}",
+    "tileService": "Открытые сервисные заявки",
+    "tileSla": "SLA нарушен: {n}"
+  },
+  "voice": {
+    "start": "Голосовая заметка (говорите)",
+    "stop": "Остановить запись"
   }
 }

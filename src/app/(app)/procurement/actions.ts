@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { getUsdRate } from "@/lib/fx";
+import { unitCosts } from "@/lib/stock";
 import { toDateOnly } from "@/lib/utils";
 import { fail, formObject, runAction, zDate, zOptDate, zOptId, zOptNumber, zOptText, zText, type ActionState } from "@/lib/action";
 import type { CurrentUser } from "@/lib/auth";
@@ -213,8 +214,7 @@ export async function receiveOrder(id: string, _: ActionState, formData: FormDat
     await db.$transaction(async (tx) => {
       for (const { line, qty } of moves) {
         const q = new Prisma.Decimal(qty);
-        const unitCostUzs = line.amountUzs.div(line.qty).toDecimalPlaces(2);
-        const unitCostUsd = line.amountUsd.div(line.qty).toDecimalPlaces(4);
+        const costs = unitCosts(line.amountUzs.div(line.qty), line.amountUsd.div(line.qty), Number(o.vatRate));
         const base = {
           companyId: user.companyId,
           date: toDateOnly(date),
@@ -223,8 +223,7 @@ export async function receiveOrder(id: string, _: ActionState, formData: FormDat
           name: line.name,
           unit: line.unit,
           qty: q,
-          unitCostUzs,
-          unitCostUsd,
+          ...costs,
           document,
           note,
           responsible,

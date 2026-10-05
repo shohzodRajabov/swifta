@@ -294,7 +294,19 @@
     "contractorDebt": "Contractorlarga qarz",
     "periodTitle": "Davr ko'rsatkichlari",
     "netHint": "Daromad − to'g'ridan-to'g'ri xarajat − umumiy xarajat − foyda solig'i",
-    "reasonMissingDocs": "Hujjat yetishmaydi"
+    "reasonMissingDocs": "Hujjat yetishmaydi",
+    "brigade": "Brigada",
+    "employee": "Xodim",
+    "contractor": "Contractor",
+    "payStatus": "To'lov holati",
+    "pay_overdue": "Muddati o'tgan qarz bor",
+    "pay_debt": "Debitorlik bor",
+    "pay_paid": "To'liq to'langan",
+    "deadlineFilter": "Muddat",
+    "due_delayed": "Kechikayotgan",
+    "due_soon": "30 kunda tugaydi",
+    "onlyProblematic": "Faqat muammoli",
+    "onlyMine": "Faqat mening obyektlarim"
   },
   "projects": {
     "title": "Obyektlar",
@@ -1609,7 +1621,14 @@
     "openTask": "Batafsil",
     "myRemarks": "Menga biriktirilgan kamchiliklar",
     "messageLabel": "Izoh yoki muammo",
-    "messagePlaceholder": "Masalan: material yetmayapti"
+    "messagePlaceholder": "Masalan: material yetmayapti",
+    "section_overdue": "Kechikkan",
+    "section_today": "Bugun",
+    "section_next": "Keyingi",
+    "pause": "To'xtatdim",
+    "photo": "Foto",
+    "myObjects": "Mening obyektlarim",
+    "tasksN": "{n} vazifa"
   },
   "calendar": {
     "title": "Kalendar",
@@ -2136,6 +2155,19 @@
     "kpiGroups": "Guruhlar o'rtachasi",
     "payroll": "Ish haqi",
     "payrollMonth": "{month} oyi",
-    "payrollOpen": "yopilmagan"
+    "payrollOpen": "yopilmagan",
+    "management": "Boshqaruv ko'rsatkichlari",
+    "tileKpi": "Xodimlar KPI · {month}",
+    "tileKpiSub": "70% dan pastlar: {n}",
+    "tileContractors": "Contractorlar o'rtacha ratingi",
+    "tileReliability": "ishonchlilik {pct}%",
+    "tileWarranty": "Kafolatdagi obyektlar",
+    "tileWarrantySoon": "60 kunda tugaydi: {n}",
+    "tileService": "Ochiq servis murojaatlari",
+    "tileSla": "SLA buzilgan: {n}"
+  },
+  "voice": {
+    "start": "Ovozli izoh (gapiring)",
+    "stop": "Yozishni to'xtatish"
   }
 }

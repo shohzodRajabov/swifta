@@ -25,7 +25,7 @@ import { contractorBalances } from "@/server/contractors/balances";
 import { missingDocsByProject } from "@/server/projects/missing-docs";
 import { attentionCounts } from "@/server/attention";
 import type { Permission } from "@/lib/permissions";
-import { HomeWidgets } from "./home-widgets";
+import { HomeWidgets, ManagementTiles } from "./home-widgets";
 
 export default async function DashboardPage({ searchParams }: PageProps<"/">) {
   const user = await requireUser();
@@ -47,6 +47,13 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
     foreman?: string;
     group?: string;
     status?: string;
+    brigade?: string;
+    employee?: string;
+    contractor?: string;
+    pay?: string;
+    due?: string;
+    problem?: string;
+    mine?: string;
     period?: string;
     from?: string;
     to?: string;
@@ -64,8 +71,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
     and.push({ statusDef: { group: { code: sp.group as StatusGroupCode } } });
   if (sp.status && sp.status !== "ALL") and.push({ status: sp.status as Prisma.EnumProjectStatusFilter["equals"] });
   if (!sp.status) and.push({ status: { in: ["ACTIVE", "ON_HOLD"] } });
+  // Extra filters (§4): brigade, employee, contractor working on the object; "my objects" (§84).
+  if (sp.brigade) and.push({ tasks: { some: { assignments: { some: { groupId: sp.brigade } } } } });
+  if (sp.employee)
+    and.push({
+      tasks: { some: { assignments: { some: { OR: [{ employeeId: sp.employee }, { group: { members: { some: { employeeId: sp.employee, toDate: null } } } }] } } } },
+    });
+  if (sp.contractor) and.push({ tasks: { some: { assignments: { some: { contractorId: sp.contractor } } } } });
+  if (sp.mine === "1") and.push({ OR: [{ managerId: user.id }, { foremanId: user.id }, { chiefEngineerId: user.id }, { engineerId: user.id }] });
 
-  const [projects, clients, people, catalog] = await Promise.all([
+  const [allProjects, clients, people, catalog, brigades, employees, contractors] = await Promise.all([
     db.project.findMany({
       where: { AND: and },
       include: { client: { select: { name: true } }, statusDef: { include: { group: true } } },
@@ -73,13 +88,24 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
     db.client.findMany({ where: { companyId: user.companyId }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     db.user.findMany({ where: { companyId: user.companyId, active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     getStatusCatalog(user.companyId),
+    db.workGroup.findMany({ where: { companyId: user.companyId, active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.employee.findMany({ where: { companyId: user.companyId, active: true }, orderBy: { fullName: "asc" }, select: { id: true, fullName: true } }),
+    db.contractor.findMany({ where: { companyId: user.companyId, active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
+  const [metrics, missingDocs] = await Promise.all([computeMetrics(allProjects), missingDocsByProject(user.companyId, allProjects.map((p) => p.id))]);
+  // Filters that need computed figures: payment status, deadline, problematic objects.
+  const projects = allProjects.filter((p) => {
+    const m = metrics.get(p.id)!;
+    if (sp.pay === "overdue" && !(m.overdueDebt.uzs > 0.5)) return false;
+    if (sp.pay === "debt" && !(m.receivable.uzs > 0.5)) return false;
+    if (sp.pay === "paid" && !(m.actsGross.uzs > 0 && m.receivable.uzs <= 0.5)) return false;
+    if (sp.due === "delayed" && !m.delayed) return false;
+    if (sp.due === "soon" && !(p.plannedEndDate && !m.finished && p.plannedEndDate >= today && p.plannedEndDate.getTime() - today.getTime() <= 30 * 86400000)) return false;
+    if (sp.problem === "1" && !(m.delayed || m.overBudget || m.marginDrop || m.overdueDebt.uzs > 0.5 || missingDocs.has(p.id))) return false;
+    return true;
+  });
   const ids = projects.map((p) => p.id);
-  const [metrics, missingDocs, attention] = await Promise.all([
-    computeMetrics(projects),
-    missingDocsByProject(user.companyId, ids),
-    attentionCounts(user, ids),
-  ]);
+  const attention = await attentionCounts(user, ids);
   const ms = projects.map((p) => metrics.get(p.id)!);
 
   const groupCount = (codes: StatusGroupCode[]) => projects.filter((p) => p.statusDef && codes.includes(p.statusDef.group.code)).length;
@@ -258,6 +284,61 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
               </option>
             ))}
           </Select>
+          <Select name="brigade" defaultValue={sp.brigade ?? ""} className="w-44" aria-label={t("dashboard.brigade")}>
+            <option value="">
+              {t("dashboard.brigade")}: {t("common.all")}
+            </option>
+            {brigades.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </Select>
+          <Select name="employee" defaultValue={sp.employee ?? ""} className="w-44" aria-label={t("dashboard.employee")}>
+            <option value="">
+              {t("dashboard.employee")}: {t("common.all")}
+            </option>
+            {employees.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.fullName}
+              </option>
+            ))}
+          </Select>
+          <Select name="contractor" defaultValue={sp.contractor ?? ""} className="w-44" aria-label={t("dashboard.contractor")}>
+            <option value="">
+              {t("dashboard.contractor")}: {t("common.all")}
+            </option>
+            {contractors.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+          {finance && (
+            <Select name="pay" defaultValue={sp.pay ?? ""} className="w-44" aria-label={t("dashboard.payStatus")}>
+              <option value="">
+                {t("dashboard.payStatus")}: {t("common.all")}
+              </option>
+              {(["overdue", "debt", "paid"] as const).map((k) => (
+                <option key={k} value={k}>
+                  {t(`dashboard.pay_${k}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+          <Select name="due" defaultValue={sp.due ?? ""} className="w-44" aria-label={t("dashboard.deadlineFilter")}>
+            <option value="">
+              {t("dashboard.deadlineFilter")}: {t("common.all")}
+            </option>
+            <option value="delayed">{t("dashboard.due_delayed")}</option>
+            <option value="soon">{t("dashboard.due_soon")}</option>
+          </Select>
+          <label className="flex h-9 items-center gap-1.5 text-sm text-muted">
+            <input type="checkbox" name="problem" value="1" defaultChecked={sp.problem === "1"} /> {t("dashboard.onlyProblematic")}
+          </label>
+          <label className="flex h-9 items-center gap-1.5 text-sm text-muted">
+            <input type="checkbox" name="mine" value="1" defaultChecked={sp.mine === "1"} /> {t("dashboard.onlyMine")}
+          </label>
           {finance && <PeriodFields period={period} />}
           <Button type="submit" variant="secondary">
             {t("common.filter")}
@@ -304,6 +385,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
           </div>
         </section>
       )}
+
+      <ManagementTiles user={user} />
 
       {finance && (
         <section className="mb-6">

@@ -71,26 +71,43 @@ export async function availableQty(companyId: string, productId: string, warehou
   return levels.find((l) => l.productId === productId && l.warehouseId === warehouseId)?.qty ?? 0;
 }
 
-/** Weighted average purchase cost of a product (UZS and USD per unit) from all receipts. */
+/** Weighted average purchase cost of a product per unit (gross and net of VAT, UZS and USD) from all receipts. */
 export async function averageCost(
   companyId: string,
   productIds: string[],
   tx: Tx = db,
-): Promise<Map<string, { uzs: number; usd: number }>> {
+): Promise<Map<string, { uzs: number; usd: number; netUzs: number; netUsd: number }>> {
   const receipts = await tx.stockMovement.findMany({
     where: { companyId, type: "RECEIPT", productId: { in: productIds } },
-    select: { productId: true, qty: true, unitCostUzs: true, unitCostUsd: true },
+    select: { productId: true, qty: true, unitCostUzs: true, unitCostUsd: true, unitCostNetUzs: true, unitCostNetUsd: true },
   });
-  const acc = new Map<string, { q: number; uzs: number; usd: number }>();
+  const acc = new Map<string, { q: number; uzs: number; usd: number; netUzs: number; netUsd: number }>();
   for (const r of receipts) {
-    const a = acc.get(r.productId!) ?? { q: 0, uzs: 0, usd: 0 };
+    const a = acc.get(r.productId!) ?? { q: 0, uzs: 0, usd: 0, netUzs: 0, netUsd: 0 };
     const q = Number(r.qty);
     a.q += q;
     a.uzs += q * Number(r.unitCostUzs);
     a.usd += q * Number(r.unitCostUsd);
+    // Older rows may lack the net cost: treat them as VAT-free rather than as zero cost.
+    a.netUzs += q * Number(Number(r.unitCostNetUzs) > 0 ? r.unitCostNetUzs : r.unitCostUzs);
+    a.netUsd += q * Number(Number(r.unitCostNetUsd) > 0 ? r.unitCostNetUsd : r.unitCostUsd);
     acc.set(r.productId!, a);
   }
-  const out = new Map<string, { uzs: number; usd: number }>();
-  for (const [k, a] of acc) out.set(k, { uzs: a.q ? a.uzs / a.q : 0, usd: a.q ? a.usd / a.q : 0 });
+  const out = new Map<string, { uzs: number; usd: number; netUzs: number; netUsd: number }>();
+  for (const [k, a] of acc) out.set(k, a.q ? { uzs: a.uzs / a.q, usd: a.usd / a.q, netUzs: a.netUzs / a.q, netUsd: a.netUsd / a.q } : { uzs: 0, usd: 0, netUzs: 0, netUsd: 0 });
   return out;
+}
+
+/** Unit cost columns of a movement from a gross unit cost and its VAT rate. */
+export function unitCosts(grossUzs: Prisma.Decimal | number, grossUsd: Prisma.Decimal | number, vatRate: number) {
+  const k = new Prisma.Decimal(100).div(100 + (vatRate || 0));
+  const uzs = new Prisma.Decimal(grossUzs);
+  const usd = new Prisma.Decimal(grossUsd);
+  return {
+    unitCostUzs: uzs.toDecimalPlaces(2),
+    unitCostUsd: usd.toDecimalPlaces(4),
+    unitCostNetUzs: uzs.mul(k).toDecimalPlaces(2),
+    unitCostNetUsd: usd.mul(k).toDecimalPlaces(4),
+    vatRate: new Prisma.Decimal(vatRate || 0),
+  };
 }

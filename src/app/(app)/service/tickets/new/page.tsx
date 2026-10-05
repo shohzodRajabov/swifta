@@ -2,10 +2,11 @@ import { getTranslations } from "next-intl/server";
 import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { toDateOnly } from "@/lib/utils";
-import { Card, Field, Input, Notice, PageHeader, Select, Textarea } from "@/components/ui";
+import { Card, Field, Input, Notice, PageHeader, Select } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { DEFAULT_SLA } from "@/lib/sla";
 import { createTicket } from "../../actions";
+import { VoiceField } from "@/components/voice-input";
 
 export default async function NewTicketPage({ searchParams }: PageProps<"/service/tickets/new">) {
   const user = await requirePermission("service.edit");
@@ -90,7 +91,7 @@ export default async function NewTicketPage({ searchParams }: PageProps<"/servic
             <Input name="siteAddress" placeholder={t("service.siteAddressHint")} />
           </Field>
           <Field label={t("service.problem")} required className="sm:col-span-2 lg:col-span-3">
-            <Textarea name="problem" required />
+            <VoiceField name="problem" required multiline />
           </Field>
           <div className="sm:col-span-2 lg:col-span-3">
             <SubmitButton>{t("common.create")}</SubmitButton>

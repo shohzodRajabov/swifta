@@ -7,12 +7,13 @@ import { can } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { formatNumber, formatQty } from "@/lib/format";
 import { formatDate, formatDateTime, isoDate, toDateOnly } from "@/lib/utils";
-import { Badge, Button, Card, CardHeader, Empty, Field, Input, PageHeader, Select, Table, Td, Textarea } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, Empty, Field, Input, PageHeader, Select, Table, Td } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { ConfirmForm } from "@/components/forms/confirm-form";
 import { PriorityBadge, ProgressBar } from "@/components/project-bits";
 import { DeadlineBadge, RemarkStatusBadge, TaskStatusBadge } from "@/components/task-bits";
 import { Attachments } from "@/components/attachments";
+import { VoiceField } from "@/components/voice-input";
 import { taskWhere } from "@/server/workforce/access";
 import { TRANSITIONS, deadlineState, isPerformer } from "@/server/workforce/tasks";
 import { canRecordSession } from "@/server/workforce/sessions";
@@ -177,7 +178,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                 {(performer || manager) && (
                   <ActionForm action={workerAct.bind(null, task.id)} resetOnSuccess className="flex flex-wrap items-end gap-2">
                     <Field label={t("me.messageLabel")} className="min-w-48 flex-1">
-                      <Input name="note" required placeholder={t("me.messagePlaceholder")} />
+                      <VoiceField name="note" required placeholder={t("me.messagePlaceholder")} />
                     </Field>
                     <Select name="type" className="w-40" defaultValue="COMMENT">
                       <option value="COMMENT">{t("taskEvent.COMMENT")}</option>
@@ -327,7 +328,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                 <input type="hidden" name="taskId" value={task.id} />
                 {task.locationId && <input type="hidden" name="locationId" value={task.locationId} />}
                 <Field label={t("remarks.description")} required className="sm:col-span-4">
-                  <Textarea name="description" required className="min-h-14" />
+                  <VoiceField name="description" required multiline />
                 </Field>
                 <Field label={t("remarks.responsible")}>
                   <Select name="responsibleUserId" defaultValue={task.responsibleId ?? ""}>

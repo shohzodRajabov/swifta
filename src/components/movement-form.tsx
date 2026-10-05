@@ -97,7 +97,7 @@ export async function MovementForm({
       )}
       {type === "RECEIPT" && (
         <div className="md:col-span-2">
-          <MoneyInput label={t("warehouse.unitCost")} />
+          <MoneyInput label={t("warehouse.unitCost")} vat defaultVat={12} />
         </div>
       )}
       <Field label={t("warehouse.responsible")}>

@@ -167,3 +167,60 @@ export async function HomeWidgets({ user, compact = false }: { user: CurrentUser
   );
 }
 
+
+/** Director's management overview (§83): employee KPI, contractor performance, warranty and service. */
+export async function ManagementTiles({ user }: { user: CurrentUser }) {
+  const t = await getTranslations("home");
+  const today = toDateOnly(new Date());
+  const tiles: { label: string; value: React.ReactNode; sub?: React.ReactNode; href: string }[] = [];
+  if (can(user, "kpi.view")) {
+    const d = new Date();
+    const month = isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
+    const emp = await kpiTable(user.companyId, "EMPLOYEE", month);
+    const ok = emp.rows.filter((r) => coverage(r.components) >= MIN_COVERAGE && r.score !== null);
+    const avg = ok.length ? ok.reduce((s, r) => s + r.score!, 0) / ok.length : null;
+    tiles.push({ label: t("tileKpi", { month }), value: <KpiScore value={avg} />, sub: t("tileKpiSub", { n: String(ok.filter((r) => r.score! < 70).length) }), href: `/kpi?month=${month}` });
+  }
+  if (can(user, "contractors.view")) {
+    const { contractorScores } = await import("@/server/contractors/score");
+    const scores = [...(await contractorScores(user.companyId)).values()];
+    const rated = scores.filter((s) => s.rating !== null);
+    const rel = scores.filter((s) => s.reliability !== null);
+    tiles.push({
+      label: t("tileContractors"),
+      value: rated.length ? `★ ${(rated.reduce((a, s) => a + s.rating!, 0) / rated.length).toFixed(1)}` : "—",
+      sub: rel.length ? t("tileReliability", { pct: String(Math.round(rel.reduce((a, s) => a + s.reliability!, 0) / rel.length)) }) : undefined,
+      href: "/reports/contractors",
+    });
+  }
+  if (can(user, "projects.view")) {
+    const warranty = await db.project.findMany({ where: { companyId: user.companyId, warrantyEnd: { gte: today } }, select: { warrantyEnd: true } });
+    const soon = warranty.filter((p) => p.warrantyEnd!.getTime() - today.getTime() <= 60 * DAY).length;
+    tiles.push({ label: t("tileWarranty"), value: warranty.length, sub: t("tileWarrantySoon", { n: String(soon) }), href: can(user, "service.view") ? "/service?tab=warranty" : "/reports/warranty" });
+  }
+  if (can(user, "service.view")) {
+    const open = await db.serviceTicket.findMany({
+      where: { companyId: user.companyId, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS"] }, planned: false },
+      select: { reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, priority: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true } } },
+    });
+    const breached = open.filter((x) => slaStatus(x, slaHours(x.priority as Prio, x.serviceContract)).resolve === "BREACHED").length;
+    tiles.push({ label: t("tileService"), value: open.length, sub: t("tileSla", { n: String(breached) }), href: "/service" });
+  }
+  if (tiles.length === 0) return null;
+  return (
+    <section className="mb-6">
+      <h2 className="mb-3 text-sm font-semibold text-muted">{t("management")}</h2>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {tiles.map((x) => (
+          <Link key={x.label} href={x.href}>
+            <Card className="h-full p-4 transition-colors hover:border-primary/40">
+              <div className="text-xs text-muted">{x.label}</div>
+              <div className="num mt-1 text-2xl font-semibold">{x.value}</div>
+              {x.sub && <div className="mt-0.5 text-xs text-muted">{x.sub}</div>}
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}

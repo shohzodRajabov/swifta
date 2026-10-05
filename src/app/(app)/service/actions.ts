@@ -277,7 +277,7 @@ export async function addPart(ticketId: string, _: ActionState, formData: FormDa
     ]);
     if (!t || !product || !wh) fail("invalid");
     if ((await availableQty(user.companyId, product.id, wh.id)) + 1e-9 < d.qty) fail("notEnough");
-    const avg = (await averageCost(user.companyId, [product.id])).get(product.id) ?? { uzs: Number(product.purchasePrice ?? 0), usd: 0 };
+    const avg = (await averageCost(user.companyId, [product.id])).get(product.id) ?? { uzs: Number(product.purchasePrice ?? 0), usd: 0, netUzs: Number(product.purchasePrice ?? 0), netUsd: 0 };
     await db.$transaction(async (tx) => {
       const m = await tx.stockMovement.create({
         data: {
@@ -293,8 +293,8 @@ export async function addPart(ticketId: string, _: ActionState, formData: FormDa
           serviceTicketId: t.id,
           unitCostUzs: new Prisma.Decimal(avg.uzs.toFixed(2)),
           unitCostUsd: new Prisma.Decimal(avg.usd.toFixed(4)),
-          unitCostNetUzs: new Prisma.Decimal(avg.uzs.toFixed(2)),
-          unitCostNetUsd: new Prisma.Decimal(avg.usd.toFixed(4)),
+          unitCostNetUzs: new Prisma.Decimal(avg.netUzs.toFixed(2)),
+          unitCostNetUsd: new Prisma.Decimal(avg.netUsd.toFixed(4)),
           document: `Servis #${t.number}`,
           createdById: user.id,
         },

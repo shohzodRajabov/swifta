@@ -294,7 +294,19 @@
     "contractorDebt": "Contractor payables",
     "periodTitle": "Period figures",
     "netHint": "Revenue − direct costs − overhead − profit tax",
-    "reasonMissingDocs": "Missing documents"
+    "reasonMissingDocs": "Missing documents",
+    "brigade": "Brigade",
+    "employee": "Employee",
+    "contractor": "Contractor",
+    "payStatus": "Payment status",
+    "pay_overdue": "Overdue debt",
+    "pay_debt": "Has receivable",
+    "pay_paid": "Fully paid",
+    "deadlineFilter": "Deadline",
+    "due_delayed": "Delayed",
+    "due_soon": "Ends within 30 days",
+    "onlyProblematic": "Only problematic",
+    "onlyMine": "Only my projects"
   },
   "projects": {
     "title": "Projects",
@@ -1609,7 +1621,14 @@
     "openTask": "Details",
     "myRemarks": "My remarks",
     "messageLabel": "Comment or problem",
-    "messagePlaceholder": "e.g. material is missing"
+    "messagePlaceholder": "e.g. material is missing",
+    "section_overdue": "Overdue",
+    "section_today": "Today",
+    "section_next": "Next",
+    "pause": "Pause",
+    "photo": "Photo",
+    "myObjects": "My projects",
+    "tasksN": "{n} tasks"
   },
   "calendar": {
     "title": "Calendar",
@@ -2136,6 +2155,19 @@
     "kpiGroups": "Groups average",
     "payroll": "Payroll",
     "payrollMonth": "Month {month}",
-    "payrollOpen": "not closed"
+    "payrollOpen": "not closed",
+    "management": "Management indicators",
+    "tileKpi": "Employee KPI · {month}",
+    "tileKpiSub": "Below 70%: {n}",
+    "tileContractors": "Average contractor rating",
+    "tileReliability": "reliability {pct}%",
+    "tileWarranty": "Projects under warranty",
+    "tileWarrantySoon": "Ending in 60 days: {n}",
+    "tileService": "Open service tickets",
+    "tileSla": "SLA breached: {n}"
+  },
+  "voice": {
+    "start": "Voice note (speak)",
+    "stop": "Stop recording"
   }
 }

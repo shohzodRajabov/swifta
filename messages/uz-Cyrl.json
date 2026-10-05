@@ -294,7 +294,19 @@
     "contractorDebt": "Цонтрацторларга қарз",
     "periodTitle": "Давр кўрсаткичлари",
     "netHint": "Даромад − тўғридан-тўғри харажат − умумий харажат − фойда солиғи",
-    "reasonMissingDocs": "Ҳужжат етишмайди"
+    "reasonMissingDocs": "Ҳужжат етишмайди",
+    "brigade": "Бригада",
+    "employee": "Ходим",
+    "contractor": "Цонтрацтор",
+    "payStatus": "Тўлов ҳолати",
+    "pay_overdue": "Муддати ўтган қарз бор",
+    "pay_debt": "Дебиторлик бор",
+    "pay_paid": "Тўлиқ тўланган",
+    "deadlineFilter": "Муддат",
+    "due_delayed": "Кечикаётган",
+    "due_soon": "30 кунда тугайди",
+    "onlyProblematic": "Фақат муаммоли",
+    "onlyMine": "Фақат менинғ объектларим"
   },
   "projects": {
     "title": "Объектлар",
@@ -1609,7 +1621,14 @@
     "openTask": "Батафсил",
     "myRemarks": "Менга бириктирилган камчиликлар",
     "messageLabel": "Изоҳ ёки муаммў",
-    "messagePlaceholder": "Масалан: материал етмаяпти"
+    "messagePlaceholder": "Масалан: материал етмаяпти",
+    "section_overdue": "Кечиккан",
+    "section_today": "Бугун",
+    "section_next": "Кейинги",
+    "pause": "Тўхтатдим",
+    "photo": "Фотў",
+    "myObjects": "Менинғ объектларим",
+    "tasksN": "{n} вазифа"
   },
   "calendar": {
     "title": "Календар",
@@ -2136,6 +2155,19 @@
     "kpiGroups": "Гуруҳлар ўртачаси",
     "payroll": "Иш ҳақи",
     "payrollMonth": "{month} ойи",
-    "payrollOpen": "ёпилмаган"
+    "payrollOpen": "ёпилмаган",
+    "management": "Бошқарув кўрсаткичлари",
+    "tileKpi": "Ходимлар KPI · {month}",
+    "tileKpiSub": "70% дан пастлар: {n}",
+    "tileContractors": "Цонтрацторлар ўртача ратинги",
+    "tileReliability": "ишончлилик {pct}%",
+    "tileWarranty": "Кафолатдаги объектлар",
+    "tileWarrantySoon": "60 кунда тугайди: {n}",
+    "tileService": "Очиқ сервис мурожаатлари",
+    "tileSla": "SLA бузилган: {n}"
+  },
+  "voice": {
+    "start": "Овозли изоҳ (гапиринғ)",
+    "stop": "Ёзишни тўхтатиш"
   }
 }
