@@ -10,6 +10,7 @@ import { ActionForm, DeleteButton, SubmitButton } from "@/components/forms/actio
 import { MoneyInput } from "@/components/forms/money-input";
 import { Money } from "@/components/money";
 import { addExpense, deleteExpense } from "@/app/(app)/projects/actions";
+import { UT } from "@/components/user-text";
 
 type Row = Expense & { createdBy: { name: string } | null; project?: { id: string; code: string; name: string } };
 
@@ -45,7 +46,7 @@ export async function ExpenseTable({ rows, canEdit, showProject }: { rows: Row[]
             )}
             <Td>{t(`costCategory.${e.category}`)}</Td>
             <Td>
-              {e.description}
+              <UT>{e.description}</UT>
               {e.reference && <div className="text-xs text-muted">№ {e.reference}</div>}
             </Td>
             <Td>{e.supplier ?? "—"}</Td>

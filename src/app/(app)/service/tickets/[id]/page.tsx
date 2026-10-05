@@ -16,6 +16,7 @@ import { SlaBadge, TicketStatusBadge } from "@/components/service-bits";
 import { Attachments } from "@/components/attachments";
 import { ticketCost } from "@/server/service/service";
 import { addPart, removePart, setTicketStatus, updateTicket } from "../../actions";
+import { UT } from "@/components/user-text";
 
 const FLOW: Record<ServiceTicketStatus, ServiceTicketStatus[]> = {
   NEW: ["ASSIGNED", "IN_PROGRESS", "CANCELLED"],
@@ -61,7 +62,7 @@ export default async function TicketPage({ params }: PageProps<"/service/tickets
       <PageHeader
         title={
           <>
-            <span className="num text-muted">S-{ticket.number}</span> {ticket.title}
+            <span className="num text-muted">S-{ticket.number}</span> <UT>{ticket.title}</UT>
           </>
         }
         back={{ href: "/service", label: t("service.title") }}
@@ -80,7 +81,7 @@ export default async function TicketPage({ params }: PageProps<"/service/tickets
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
           <Card className="p-5">
             <div className="text-xs uppercase tracking-wide text-muted">{t("service.problem")}</div>
-            <p className="mt-1 whitespace-pre-line">{ticket.problem}</p>
+            <p className="mt-1 whitespace-pre-line"><UT>{ticket.problem}</UT></p>
             {ticket.diagnosis && (
               <>
                 <div className="mt-4 text-xs uppercase tracking-wide text-muted">{t("service.diagnosis")}</div>

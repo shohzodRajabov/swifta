@@ -14,6 +14,7 @@ import { Money } from "@/components/money";
 import { PriorityBadge } from "@/components/project-bits";
 import { SlaBadge, TicketStatusBadge } from "@/components/service-bits";
 import { ticketCost } from "@/server/service/service";
+import { UT } from "@/components/user-text";
 
 const TABS = ["tickets", "contracts", "warranty"] as const;
 type Tab = (typeof TABS)[number];
@@ -258,7 +259,7 @@ async function TicketsTab({ companyId, status, warranty, showMoney }: { companyI
                 <tr key={x.id} className="hover:bg-surface-2/60">
                   <Td>
                     <Link href={`/service/tickets/${x.id}`} className="font-medium hover:text-primary">
-                      <span className="num text-muted">S-{x.number}</span> {x.title}
+                      <span className="num text-muted">S-{x.number}</span> <UT>{x.title}</UT>
                     </Link>
                     <div className="text-xs text-muted">
                       {x.client?.name ?? x.project?.name}

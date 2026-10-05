@@ -666,7 +666,10 @@
     "passwordShort": "The password must be at least 8 characters",
     "qtyOverPlan": "Quantity exceeds the planned remainder ({remaining} {unit} left). State the reason",
     "tooManyHours": "{name}: no more than {max} h per day ({already} h already recorded)",
-    "passportType": "Passport: PDF or image only (JPG, PNG, WEBP)"
+    "passportType": "Passport: PDF or image only (JPG, PNG, WEBP)",
+    "aiKey": "AI key didn't work: {reason}",
+    "aiProvider": "Choose the AI service first",
+    "aiKeyForProvider": "The service changed — enter the key for the new service"
   },
   "poStatus": {
     "DRAFT": "Draft",
@@ -1286,6 +1289,10 @@
     "audit": {
       "title": "Audit log",
       "hint": "Who changed what and when"
+    },
+    "ai": {
+      "title": "AI translation",
+      "hint": "Translate user-entered texts into the viewer's language"
     }
   },
   "firms": {
@@ -2223,5 +2230,30 @@
   "voice": {
     "start": "Voice note (speak)",
     "stop": "Stop recording"
+  },
+  "ai": {
+    "intro": "When the language changes, task titles, descriptions, notes, remarks and service tickets are translated by AI too. Each text is translated once and cached (later views are free and fast). Get a key and enter it here:",
+    "stepGemini": "Free: aistudio.google.com → \"Get API key\" → create a key (Google account, no card). Free limit ~1000 requests/day, up to 40 texts per request",
+    "stepAnthropic": "Paid, high quality: console.anthropic.com → API Keys (Claude Haiku is the cheapest model)",
+    "stepSave": "Choose the provider, enter the key, turn on \"Auto-translate\" and save. The key is verified and stored encrypted",
+    "settings": "Settings",
+    "on": "On",
+    "off": "Off",
+    "provider": "AI service",
+    "providerNone": "— Off —",
+    "free": "free",
+    "model": "Model",
+    "modelHint": "If empty: Gemini — {gemini}, Claude — {claude}",
+    "apiKey": "API key",
+    "keySaved": "Key saved (encrypted). Enter a new one to replace it",
+    "keyHint": "The key is stored encrypted on the server and never shown",
+    "auto": "Auto-translate user texts",
+    "removeKey": "Remove key",
+    "test": "Test",
+    "testing": "Testing…",
+    "clearCache": "Clear translation cache",
+    "cleared": "{n} translations removed",
+    "cachedCount": "Cached translations: {n}",
+    "privacy": "Texts are sent to the chosen AI service. On the free Gemini tier Google may use the data to improve its models; for confidential data use a paid tier or Claude. Names, numbers and codes are kept. The original shows on hover"
   }
 }

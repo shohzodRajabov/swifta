@@ -9,6 +9,7 @@ import { Badge, Button, Card, Empty, PageHeader, Select, Table, Td, Th } from "@
 import { PriorityBadge } from "@/components/project-bits";
 import { RemarkStatusBadge } from "@/components/task-bits";
 import { projectWhere } from "@/server/projects/access";
+import { UT } from "@/components/user-text";
 
 const STATUSES: RemarkStatus[] = ["NEW", "ASSIGNED", "IN_PROGRESS", "FIXED", "REINSPECTION", "ACCEPTED"];
 
@@ -86,7 +87,7 @@ export default async function RemarksPage({ searchParams }: PageProps<"/remarks"
                 <tr key={r.id} className="hover:bg-surface-2/60">
                   <Td>
                     <Link href={`/remarks/${r.id}`} className="font-medium hover:text-primary">
-                      <span className="num text-muted">#{r.number}</span> {r.description}
+                      <span className="num text-muted">#{r.number}</span> <UT>{r.description}</UT>
                     </Link>
                     <div className="text-xs text-muted">
                       {r.project.name}

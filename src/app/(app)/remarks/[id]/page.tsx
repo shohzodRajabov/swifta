@@ -12,6 +12,7 @@ import { RemarkStatusBadge } from "@/components/task-bits";
 import { Attachments } from "@/components/attachments";
 import { projectWhere } from "@/server/projects/access";
 import { setRemarkStatus } from "@/app/(app)/tasks/actions";
+import { UT } from "@/components/user-text";
 
 const FLOW: Record<string, string[]> = {
   NEW: ["ASSIGNED", "IN_PROGRESS"],
@@ -64,7 +65,7 @@ export default async function RemarkPage({ params }: PageProps<"/remarks/[id]">)
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
           <Card className="p-5">
-            <p className="whitespace-pre-line">{remark.description}</p>
+            <p className="whitespace-pre-line"><UT>{remark.description}</UT></p>
           </Card>
           {options.length > 0 && (
             <Card>

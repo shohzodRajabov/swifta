@@ -425,6 +425,14 @@ model Company {
   /// Administrators must use two-factor authentication.
   require2faForAdmins Boolean @default(false)
 
+  // AI translation of user-entered texts
+  /// NONE | GEMINI | ANTHROPIC
+  aiProvider      String  @default("NONE")
+  /// API key, encrypted with ENCRYPTION_KEY ("enc:..."); entered by an administrator.
+  aiApiKey        String?
+  aiModel         String?
+  aiAutoTranslate Boolean @default(false)
+
   // Telegram digest
   telegramBotToken     String?
   telegramChatId       String?
@@ -464,6 +472,7 @@ model Company {
   warehouses       Warehouse[]
   purchaseOrders   PurchaseOrder[]
   movements        StockMovement[]
+  translations     TextTranslation[]
 }
 
 model User {
@@ -2062,4 +2071,18 @@ model AuthThrottle {
   firstAt     DateTime  @default(now())
   lockedUntil DateTime?
   updatedAt   DateTime  @updatedAt
+}
+
+/// Cache of AI translations of user-entered texts (source text hash + target locale).
+model TextTranslation {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  hash      String
+  locale    String
+  text      String
+  provider  String
+  createdAt DateTime @default(now())
+
+  @@unique([companyId, hash, locale])
 }

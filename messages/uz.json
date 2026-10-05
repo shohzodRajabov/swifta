@@ -666,7 +666,10 @@
     "passwordShort": "Parol kamida 8 belgidan iborat bo'lsin",
     "qtyOverPlan": "Hajm rejadagi qoldiqdan oshib ketdi (qolgan: {remaining} {unit}). Sababini yozing",
     "tooManyHours": "{name}: bir kunda {max} soatdan ko'p yozib bo'lmaydi (shu kunga allaqachon {already} soat yozilgan)",
-    "passportType": "Pasport uchun faqat PDF yoki rasm (JPG, PNG, WEBP)"
+    "passportType": "Pasport uchun faqat PDF yoki rasm (JPG, PNG, WEBP)",
+    "aiKey": "AI kaliti ishlamadi: {reason}",
+    "aiProvider": "Avval AI xizmatini tanlang",
+    "aiKeyForProvider": "Xizmat almashtirildi — yangi xizmat uchun kalitni kiriting"
   },
   "poStatus": {
     "DRAFT": "Qoralama",
@@ -1286,6 +1289,10 @@
     "audit": {
       "title": "Audit jurnali",
       "hint": "Kim, qachon, nimani o'zgartirdi"
+    },
+    "ai": {
+      "title": "AI tarjima",
+      "hint": "Foydalanuvchilar kiritgan matnlarni tanlangan tilga avtomatik tarjima qilish"
     }
   },
   "firms": {
@@ -2223,5 +2230,30 @@
   "voice": {
     "start": "Ovozli izoh (gapiring)",
     "stop": "Yozishni to'xtatish"
+  },
+  "ai": {
+    "intro": "Til almashtirilganda vazifa nomlari, tavsiflar, izohlar, kamchiliklar va servis murojaatlari ham tanlangan tilga AI yordamida tarjima qilinadi. Har bir matn bir marta tarjima qilinadi va saqlanadi (keyingi ko'rishlar bepul va tez). Kalitni o'zingiz olasiz va shu yerga kiritasiz:",
+    "stepGemini": "Bepul variant: aistudio.google.com → \"Get API key\" → kalit yarating (Google hisobi kerak, karta shart emas). Bepul limit kuniga ~1000 so'rov — bir so'rovda 40 tagacha matn",
+    "stepAnthropic": "Pullik, yuqori sifat: console.anthropic.com → API Keys (Claude Haiku — eng arzon model)",
+    "stepSave": "Provayderni tanlang, kalitni kiriting, \"Avtomatik tarjima\"ni yoqing va saqlang. Kalit saqlashdan oldin tekshiriladi va shifrlangan holda saqlanadi",
+    "settings": "Sozlamalar",
+    "on": "Yoqilgan",
+    "off": "O'chirilgan",
+    "provider": "AI xizmati",
+    "providerNone": "— O'chirilgan —",
+    "free": "bepul",
+    "model": "Model",
+    "modelHint": "Bo'sh qoldirilsa: Gemini — {gemini}, Claude — {claude}",
+    "apiKey": "API kalit",
+    "keySaved": "Kalit saqlangan (shifrlangan). Almashtirish uchun yangisini kiriting",
+    "keyHint": "Kalit faqat serverda shifrlangan holda saqlanadi va hech kimga ko'rsatilmaydi",
+    "auto": "Foydalanuvchi matnlarini avtomatik tarjima qilish",
+    "removeKey": "Kalitni o'chirish",
+    "test": "Sinab ko'rish",
+    "testing": "Tekshirilmoqda…",
+    "clearCache": "Tarjimalar keshini tozalash",
+    "cleared": "{n} ta tarjima o'chirildi",
+    "cachedCount": "Saqlangan tarjimalar: {n}",
+    "privacy": "Tarjima uchun matnlar tanlangan AI xizmatiga yuboriladi. Google Gemini bepul tarifida Google yuborilgan ma'lumotlardan o'z modellarini yaxshilash uchun foydalanishi mumkin; maxfiy ma'lumotlar uchun pullik tarif yoki Claude'ni tanlang. Odamlar va kompaniyalar nomlari, raqamlar va kodlar tarjima qilinmaydi. Asl matn sichqoncha bilan ustiga borganda ko'rinadi"
   }
 }

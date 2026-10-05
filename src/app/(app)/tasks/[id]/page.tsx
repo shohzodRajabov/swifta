@@ -24,6 +24,7 @@ import { SessionForm } from "../session-form";
 import { OutsourcePanel } from "../outsource-panel";
 import { TaskForm } from "../task-form";
 import { addAssignment, addSession, approve, createRemark, decideSession, inspect, removeAssignment, setTaskStatus, updateTask, workerAct } from "../actions";
+import { UT } from "@/components/user-text";
 
 const PERFORMER_TARGETS: TaskStatus[] = ["ACCEPTED", "IN_PROGRESS", "COMPLETED", "INSPECTION"];
 
@@ -111,7 +112,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
       <PageHeader
         title={
           <>
-            <span className="num text-muted">T-{task.number}</span> {task.title}
+            <span className="num text-muted">T-{task.number}</span> <UT>{task.title}</UT>
           </>
         }
         back={{ href: "/tasks", label: t("tasks.title") }}
@@ -271,8 +272,8 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                     )}
                     {(s.note || s.problems || s.rejectReason) && (
                       <div className="mt-1 text-xs">
-                        {s.note && <div>{s.note}</div>}
-                        {s.problems && <div className="text-warning">⚠ {s.problems}</div>}
+                        {s.note && <div><UT>{s.note}</UT></div>}
+                        {s.problems && <div className="text-warning">⚠ <UT>{s.problems}</UT></div>}
                         {s.rejectReason && <div className="text-danger">✕ {s.rejectReason}</div>}
                       </div>
                     )}
@@ -311,7 +312,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                     <tr key={r.id}>
                       <Td>
                         <Link href={`/remarks/${r.id}`} className="hover:text-primary">
-                          <span className="num text-muted">#{r.number}</span> {r.description}
+                          <span className="num text-muted">#{r.number}</span> <UT>{r.description}</UT>
                         </Link>
                         <div className="text-xs text-muted">{r.responsible?.name ?? "—"}</div>
                       </Td>
@@ -426,7 +427,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                 ))}
               </div>
             )}
-            {task.description && <p className="mt-3 whitespace-pre-line border-t border-border pt-3 text-sm">{task.description}</p>}
+            {task.description && <p className="mt-3 whitespace-pre-line border-t border-border pt-3 text-sm"><UT>{task.description}</UT></p>}
             {task.parent && (
               <p className="mt-3 text-sm">
                 {t("tasks.parent")}:{" "}
@@ -440,7 +441,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                 {task.subtasks.map((s) => (
                   <li key={s.id} className="flex items-center justify-between gap-2">
                     <Link href={`/tasks/${s.id}`} className="hover:text-primary">
-                      T-{s.number} {s.title}
+                      T-{s.number} <UT>{s.title}</UT>
                     </Link>
                     <TaskStatusBadge status={s.status} />
                   </li>
@@ -539,7 +540,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                       {e.percent !== null && ` ${e.percent}%`}
                     </span>
                   </div>
-                  {e.note && <div className={e.type === "PROBLEM" ? "text-warning" : ""}>{e.note}</div>}
+                  {e.note && <div className={e.type === "PROBLEM" ? "text-warning" : ""}><UT>{e.note}</UT></div>}
                   <div className="text-xs text-muted">{formatDateTime(e.at)}</div>
                 </li>
               ))}

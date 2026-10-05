@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Building, DatabaseBackup, FileStack, KeyRound, ListChecks, ScrollText, Send, Settings2, Users, FlaskConical } from "lucide-react";
+import { Building, DatabaseBackup, FileStack, KeyRound, ListChecks, ScrollText, Send, Settings2, Users, FlaskConical, Languages } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { can, type Permission } from "@/lib/permissions";
 import { Card, PageHeader } from "@/components/ui";
@@ -13,6 +13,7 @@ const ITEMS: { href: string; key: string; icon: typeof Users; perm: Permission }
   { href: "/settings/roles", key: "roles", icon: KeyRound, perm: "roles.manage" },
   { href: "/settings/work-types", key: "workTypes", icon: FileStack, perm: "settings.manage" },
   { href: "/settings/telegram", key: "telegram", icon: Send, perm: "settings.manage" },
+  { href: "/settings/ai", key: "ai", icon: Languages, perm: "settings.manage" },
   { href: "/settings/backups", key: "backups", icon: DatabaseBackup, perm: "backups.manage" },
   { href: "/settings/demo", key: "demo", icon: FlaskConical, perm: "demo.access" },
   { href: "/settings/audit", key: "audit", icon: ScrollText, perm: "audit.view" },

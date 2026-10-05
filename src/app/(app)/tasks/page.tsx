@@ -14,6 +14,7 @@ import { DeadlineBadge, TaskStatusBadge, TASK_TONE } from "@/components/task-bit
 import { taskWhere, myTaskConditions } from "@/server/workforce/access";
 import { deadlineState } from "@/server/workforce/tasks";
 import { taskPercent } from "@/server/projects/progress";
+import { UT } from "@/components/user-text";
 
 const STATUSES: TaskStatus[] = ["NEW", "ASSIGNED", "ACCEPTED", "IN_PROGRESS", "COMPLETED", "INSPECTION", "APPROVED", "REWORK", "BLOCKED", "CANCELLED"];
 const BOARD: TaskStatus[] = ["NEW", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "INSPECTION", "REWORK", "APPROVED"];
@@ -167,7 +168,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
                 <tr key={tk.id} className="hover:bg-surface-2/60">
                   <Td>
                     <Link href={`/tasks/${tk.id}`} className="font-medium hover:text-primary">
-                      <span className="num text-muted">T-{tk.number}</span> {tk.title}
+                      <span className="num text-muted">T-{tk.number}</span> <UT>{tk.title}</UT>
                     </Link>
                     <div className="text-xs text-muted">
                       {tk.project.name}
@@ -215,7 +216,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
                     <Link key={tk.id} href={`/tasks/${tk.id}`}>
                       <Card className="p-3 transition-colors hover:border-primary/50">
                         <div className="text-sm font-medium">
-                          <span className="num text-muted">T-{tk.number}</span> {tk.title}
+                          <span className="num text-muted">T-{tk.number}</span> <UT>{tk.title}</UT>
                         </div>
                         <div className="mt-0.5 text-xs text-muted">{tk.project.name}</div>
                         <div className="mt-2">

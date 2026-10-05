@@ -7,6 +7,7 @@ import { cn, isoDate, toDateOnly } from "@/lib/utils";
 import { Card, PageHeader } from "@/components/ui";
 import { taskWhere } from "@/server/workforce/access";
 import { TASK_TONE } from "@/components/task-bits";
+import { UT } from "@/components/user-text";
 
 const TONE_CLASS = {
   neutral: "bg-surface-2 text-text",
@@ -88,7 +89,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
                   ))}
                   {dayTasks.slice(0, 4).map((x) => (
                     <Link key={x.id} href={`/tasks/${x.id}`} className={cn("truncate rounded px-1 py-0.5 text-[11px]", TONE_CLASS[TASK_TONE[x.status]])} title={x.title}>
-                      T-{x.number} {x.title}
+                      T-{x.number} <UT>{x.title}</UT>
                     </Link>
                   ))}
                   {dayTasks.length > 4 && <span className="text-[11px] text-muted">+{dayTasks.length - 4}</span>}

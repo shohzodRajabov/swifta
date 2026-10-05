@@ -18,6 +18,7 @@ import { taskPercent } from "@/server/projects/progress";
 import { confirmSession, workerAct } from "@/app/(app)/tasks/actions";
 import { kpiHistory } from "@/server/kpi/view";
 import { KpiScore } from "@/components/kpi-bits";
+import { UT } from "@/components/user-text";
 
 export default async function MePage() {
   const user = await requireAnyPermission("worker.self", "tasks.view");
@@ -131,7 +132,7 @@ export default async function MePage() {
               <div key={m.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
                 <div className="min-w-0 flex-1">
                   <div className="font-medium">
-                    {formatDate(m.session.date)} · T-{m.session.task.number} {m.session.task.title}
+                    {formatDate(m.session.date)} · T-{m.session.task.number} <UT>{m.session.task.title}</UT>
                   </div>
                   <div className="text-xs text-muted">
                     {m.session.group?.name && `${m.session.group.name} · `}
@@ -181,7 +182,7 @@ export default async function MePage() {
                     <div key={tk.id} className="px-5 py-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link href={`/tasks/${tk.id}`} className="font-medium hover:text-primary">
-                          <span className="num text-muted">T-{tk.number}</span> {tk.title}
+                          <span className="num text-muted">T-{tk.number}</span> <UT>{tk.title}</UT>
                         </Link>
                         <TaskStatusBadge status={tk.status} />
                         <DeadlineBadge state={deadlineState(tk)} />
@@ -263,7 +264,7 @@ export default async function MePage() {
             {remarks.map((r) => (
               <Link key={r.id} href={`/remarks/${r.id}`} className="flex items-center gap-3 px-5 py-3 text-sm hover:bg-surface-2/60">
                 <span className="num text-muted">#{r.number}</span>
-                <span className="min-w-0 flex-1 truncate">{r.description}</span>
+                <span className="min-w-0 flex-1 truncate"><UT>{r.description}</UT></span>
                 <RemarkStatusBadge status={r.status} />
                 <span className="num text-xs text-muted">{formatDate(r.deadline)}</span>
               </Link>

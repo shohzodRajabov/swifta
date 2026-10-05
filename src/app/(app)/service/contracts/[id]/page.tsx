@@ -16,6 +16,7 @@ import { TicketStatusBadge } from "@/components/service-bits";
 import { ticketCost } from "@/server/service/service";
 import { ContractForm } from "../contract-form";
 import { planVisits, saveContract } from "../../actions";
+import { UT } from "@/components/user-text";
 
 export default async function ContractPage({ params }: PageProps<"/service/contracts/[id]">) {
   const { id } = await params;
@@ -126,7 +127,7 @@ export default async function ContractPage({ params }: PageProps<"/service/contr
                 <tr key={x.id} className="hover:bg-surface-2/60">
                   <Td>
                     <Link href={`/service/tickets/${x.id}`} className="font-medium hover:text-primary">
-                      <span className="num text-muted">S-{x.number}</span> {x.title}
+                      <span className="num text-muted">S-{x.number}</span> <UT>{x.title}</UT>
                     </Link>
                     {x.planned && <Badge tone="primary" className="ml-2">{t("service.planned")}</Badge>}
                   </Td>

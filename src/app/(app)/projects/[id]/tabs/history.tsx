@@ -5,6 +5,7 @@ import { Badge, Card, CardHeader, Empty, Table, Td, Th } from "@/components/ui";
 import { AuditDiff } from "@/components/audit-diff";
 import { maskForViewer } from "@/lib/audit-mask";
 import { requireUser } from "@/lib/auth";
+import { UT } from "@/components/user-text";
 
 export async function HistoryTab({ projectId, companyId }: { projectId: string; companyId: string }) {
   const t = await getTranslations();
@@ -46,7 +47,7 @@ export async function HistoryTab({ projectId, companyId }: { projectId: string; 
                 <div className="num text-xs text-muted">
                   {formatDateTime(e.enteredAt)} · {e.user?.name ?? "—"}
                 </div>
-                {e.note && <div className="mt-1 text-xs">{e.note}</div>}
+                {e.note && <div className="mt-1 text-xs"><UT>{e.note}</UT></div>}
               </li>
             ))}
           </ol>

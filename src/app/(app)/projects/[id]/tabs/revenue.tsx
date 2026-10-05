@@ -23,6 +23,7 @@ import {
   deletePayment,
   setActStatus,
 } from "@/app/(app)/projects/actions";
+import { UT } from "@/components/user-text";
 
 const ACT_TONE = { DRAFT: "warning", SIGNED: "success", CANCELLED: "neutral" } as const;
 
@@ -202,7 +203,7 @@ export async function RevenueTab({
                 <tr key={a.id}>
                   <Td className="num">{a.number}</Td>
                   <Td className="num">{formatDate(a.date)}</Td>
-                  <Td>{a.description}</Td>
+                  <Td><UT>{a.description}</UT></Td>
                   <Td className="text-right">
                     <Money size="sm" value={recordMoney(a)} tone="auto" />
                   </Td>

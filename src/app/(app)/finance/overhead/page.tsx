@@ -16,6 +16,7 @@ import { FinanceTabs } from "@/components/finance-tabs";
 import { PeriodFields } from "@/components/period-filter";
 import { pendingApprovalsCount } from "@/server/finance/pending";
 import { addOverhead, deleteOverhead } from "./actions";
+import { UT } from "@/components/user-text";
 
 export default async function OverheadPage({ searchParams }: PageProps<"/finance/overhead">) {
   const user = await requirePermission("overhead.view");
@@ -146,7 +147,7 @@ export default async function OverheadPage({ searchParams }: PageProps<"/finance
                       <Badge>{t(`overheadCategory.${r.category}`)}</Badge>
                     </Td>
                     <Td>
-                      {r.description}
+                      <UT>{r.description}</UT>
                       {r.supplier && <div className="text-xs text-muted">{r.supplier}</div>}
                     </Td>
                     <Td className="text-xs">{r.legalEntity?.name ?? "—"}</Td>
