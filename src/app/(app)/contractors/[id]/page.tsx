@@ -85,6 +85,11 @@ export default async function ContractorPage({ params, searchParams }: PageProps
           <div className="mt-1 text-3xl">
             <RatingValue rating={score?.rating} />
           </div>
+          {score?.lowData && score.rating !== null && (
+            <div className="mt-1 text-[11px] text-muted" title={t("contractors.lowDataHint")}>
+              <Badge tone="warning">{t("contractors.lowData")}</Badge> {t("contractors.ownScore", { value: String(score.rawRating ?? "—") })}
+            </div>
+          )}
           <ul className="mt-3 space-y-1 text-xs">
             {RATING_COMPONENTS.filter((k) => score?.ratingParts[k] !== undefined).map((k) => (
               <li key={k} className="flex items-center gap-2">
@@ -102,6 +107,9 @@ export default async function ContractorPage({ params, searchParams }: PageProps
           <div className="mt-1 text-3xl">
             <ReliabilityValue value={score?.reliability} />
           </div>
+          {score?.lowData && score.reliability !== null && (
+            <div className="mt-1 text-[11px] text-muted">{t("contractors.ownScore", { value: `${score.rawReliability ?? "—"}%` })}</div>
+          )}
           <ul className="mt-3 space-y-1 text-xs">
             {RELIABILITY_COMPONENTS.filter((k) => score?.reliabilityParts[k] !== undefined).map((k) => (
               <li key={k} className="flex items-center gap-2">

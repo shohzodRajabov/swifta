@@ -69,6 +69,10 @@ export async function ContractForm({
       <Field label={t("service.slaResolve")} hint={t("service.hours")}>
         <Input name="slaResolveHours" inputMode="numeric" defaultValue={contract?.slaResolveHours ?? ""} placeholder="24" />
       </Field>
+      <label className="flex items-center gap-2 self-end pb-2 text-sm">
+        <input type="checkbox" name="slaBusinessHours" defaultChecked={contract?.slaBusinessHours ?? false} className="size-4" />
+        {t("service.slaBusinessHours")}
+      </label>
       {contract && (
         <Field label={t("common.status")}>
           <Select name="status" defaultValue={contract.status}>

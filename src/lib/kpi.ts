@@ -112,3 +112,24 @@ export function monthBounds(month: string) {
   const [y, m] = month.split("-").map(Number);
   return { from: new Date(Date.UTC(y, m - 1, 1)), to: new Date(Date.UTC(y, m, 0)), end: new Date(Date.UTC(y, m, 1)) };
 }
+
+/**
+ * Expected workdays (M8) between two date-only days inclusive: Monday–Friday, plus Saturday when the company's
+ * monthly norm is 24+ days (a six-day week).
+ */
+export function expectedWorkdays(from: Date, to: Date, normWorkDays: number): Date[] {
+  const sixDay = normWorkDays >= 24;
+  const out: Date[] = [];
+  for (let t = from.getTime(); t <= to.getTime(); t += 86400000) {
+    const wd = new Date(t).getUTCDay();
+    if (wd === 0 || (wd === 6 && !sixDay)) continue;
+    out.push(new Date(t));
+  }
+  return out;
+}
+
+/** Weighted share in % (M7): Σ weight of good items / Σ weight; null without weight. */
+export function weightedPct(items: { weight: number; good: boolean }[]) {
+  const w = items.reduce((s, i) => s + Math.max(0, i.weight), 0);
+  return w > 0 ? (items.filter((i) => i.good).reduce((s, i) => s + Math.max(0, i.weight), 0) / w) * 100 : null;
+}

@@ -82,7 +82,7 @@ export default async function GroupPage({ params }: PageProps<"/employees/groups
                       </Td>
                       <Td className="num">{formatDate(m.fromDate)}</Td>
                       <Td>
-                        <EfficiencyBadge index={ef?.index} reliable={ef?.reliable} />
+                        <EfficiencyBadge index={ef?.index} reliable={ef?.reliable} distinct={ef?.distinct} />
                       </Td>
                       {canManage && (
                         <Td>

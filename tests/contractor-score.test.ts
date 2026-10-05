@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scoreContractor, normalizeWeights, DEFAULT_RATING_WEIGHTS, type OutsourceFact } from "@/lib/contractor-score";
+import { scoreContractor, smoothScores, normalizeWeights, DEFAULT_RATING_WEIGHTS, type ContractorScoreResult, type OutsourceFact } from "@/lib/contractor-score";
 
 const d = (s: string) => new Date(`${s}T00:00:00Z`);
 const fact = (o: Partial<OutsourceFact>): OutsourceFact => ({
@@ -53,5 +53,18 @@ describe("contractor score", () => {
     const onlyQuality = normalizeWeights({ quality: 100, deadline: 0, rework: 0, price: 0, complaints: 0 }, DEFAULT_RATING_WEIGHTS);
     expect(scoreContractor(facts, onlyQuality).rating).toBe(0);
     expect(normalizeWeights({ quality: "x" }, DEFAULT_RATING_WEIGHTS).quality).toBe(40);
+  });
+});
+
+describe("smoothing (M9)", () => {
+  it("pulls a one-job newcomer toward the company average", () => {
+    const mk = (rating: number, verified: number) =>
+      ({ rating, reliability: 100, ratingParts: {}, reliabilityParts: {}, stats: { verified, completed: verified, rejected: 0, cancelled: 0 } }) as unknown as ContractorScoreResult;
+    const [veteran, newcomer] = smoothScores([mk(4, 20), mk(5, 1)]);
+    expect(newcomer.rawRating).toBe(5);
+    expect(newcomer.rating).toBeCloseTo((1 * 5 + 3 * 4.5) / 4, 2);
+    expect(newcomer.lowData).toBe(true);
+    expect(veteran.lowData).toBe(false);
+    expect(veteran.rating!).toBeLessThan(4.1);
   });
 });

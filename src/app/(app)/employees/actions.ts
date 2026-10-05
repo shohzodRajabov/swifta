@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { can } from "@/lib/permissions";
 import { normalizePhone } from "@/lib/phone";
-import { generateOneTimePassword } from "@/lib/password";
+import { generateOneTimePassword, otpExpiry } from "@/lib/password";
 import { toDateOnly } from "@/lib/utils";
 import { fail, formObject, runAction, zDate, zOptDate, zOptId, zOptNumber, zOptText, zText, type ActionState } from "@/lib/action";
 import type { CurrentUser } from "@/lib/auth";
@@ -96,6 +96,7 @@ export async function grantLogin(employeeId: string, _: ActionState, formData: F
           roleId: role.id,
           passwordHash: await bcrypt.hash(password, 10),
           mustChangePassword: true,
+          otpExpiresAt: otpExpiry(),
         },
       });
       await tx.employee.update({ where: { id: employeeId }, data: { userId: u.id, phone } });

@@ -12,7 +12,7 @@ export function LoginForm() {
     <form action={action} className="flex flex-col gap-4">
       {state?.error && (
         <div role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
-          {state.error === "locked" ? t("locked", { minutes: String(state.minutes ?? 15) }) : t("invalid")}
+          {state.error === "locked" ? t("locked", { minutes: String(state.minutes ?? 15) }) : state.error === "otpExpired" ? t("otpExpired") : t("invalid")}
         </div>
       )}
       <Field label={t("identifier")} hint={t("identifierHint")}>

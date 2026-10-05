@@ -519,7 +519,7 @@ export const REPORTS: ReportDef[] = [
     async run(c) {
       const tickets = await db.serviceTicket.findMany({
         where: { companyId: c.user.companyId, reportedAt: range(c), ...(c.projectId ? { projectId: c.projectId } : {}), planned: false },
-        include: { client: { select: { name: true } }, project: { select: { name: true } }, responsible: { select: { name: true } }, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true } }, parts: { select: { qty: true, unitCostUzs: true } } },
+        include: { client: { select: { name: true } }, project: { select: { name: true } }, responsible: { select: { name: true } }, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true, slaBusinessHours: true } }, parts: { select: { qty: true, unitCostUzs: true } } },
         orderBy: { number: "desc" },
       });
       const rows: Row[] = tickets.map((x) => {

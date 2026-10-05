@@ -119,7 +119,21 @@
     "changePassword": "Parolni o'zgartirish",
     "logoutEverywhere": "Barcha qurilmalardan chiqish",
     "logoutEverywhereHint": "Telefon yo'qolsa yoki parol boshqalarga ma'lum bo'lsa",
-    "back": "Orqaga"
+    "back": "Orqaga",
+    "twoFactorTitle": "Ikki bosqichli tasdiqlash",
+    "twoFactorText": "Autentifikator ilovasidagi (Google Authenticator, Microsoft Authenticator va h.k.) 6 xonali kodni kiriting",
+    "code": "Kod",
+    "codeWrong": "Kod noto'g'ri yoki eskirgan",
+    "verify": "Tasdiqlash",
+    "twoFactorSetup": "Ikki bosqichli kirish",
+    "twoFactorRequired": "Kompaniya qoidasi: administratorlar ikki bosqichli kirishni yoqishi shart",
+    "twoFactorEnabled": "Ikki bosqichli kirish yoqildi",
+    "twoFactorOn": "Yoqilgan: har kirishda paroldan keyin ilovadagi kod so'raladi. Telefonni yo'qotsangiz, administrator uni o'chirib beradi",
+    "twoFactorScan": "Autentifikator ilovasida QR kodni skanerlang (yoki kalitni qo'lda kiriting), so'ng ilova ko'rsatgan kodni yozing",
+    "twoFactorIntro": "Parol o'g'irlansa ham hisobingizga kira olmasliklari uchun telefoningizdagi autentifikator ilovasi kodini qo'shimcha so'rash",
+    "twoFactorStart": "Yoqish",
+    "twoFactorConfirm": "Tasdiqlash va yoqish",
+    "twoFactorDisable": "O'chirish"
   },
   "roles": {
     "ADMIN": "Administrator",
@@ -558,7 +572,9 @@
     "directByCategory": "To'g'ridan-to'g'ri xarajatlar toifalar bo'yicha",
     "byMonth": "Oylar bo'yicha",
     "advance": "Olingan avans",
-    "advanceHint": "Mijoz to'lagan, lekin akt bilan hali yopilmagan summa — bizning majburiyatimiz (bajarilishi kerak bo'lgan ish)"
+    "advanceHint": "Mijoz to'lagan, lekin akt bilan hali yopilmagan summa — bizning majburiyatimiz (bajarilishi kerak bo'lgan ish)",
+    "fxDiff": "Kurs farqi",
+    "fxDiffHint": "To'lovlar to'lov kunidagi kurs bo'yicha minus shartnoma kursi ({rate}) bo'yicha"
   },
   "users": {
     "title": "Foydalanuvchilar",
@@ -587,7 +603,8 @@
     "otpHint": "Parolni xodimga yetkazing. U faqat hozir ko'rinadi.",
     "login": "Login",
     "lastLogin": "Oxirgi kirish",
-    "mustChange": "Parol o'rnatilmagan"
+    "mustChange": "Parol o'rnatilmagan",
+    "reset2fa": "2FA ni o'chirish"
   },
   "audit": {
     "title": "Audit jurnali",
@@ -1184,7 +1201,10 @@
     "scoreHistory": "Rating tarixi",
     "scoreHistoryHint": "Har bir ish qabul qilinganda yoki qaytarilganda yangilanadi",
     "documents": "Hujjatlar va shartnomalar",
-    "documentsHint": "Shartnoma, pasport nusxasi, litsenziya va boshqalar"
+    "documentsHint": "Shartnoma, pasport nusxasi, litsenziya va boshqalar",
+    "lowData": "kam ma'lumot",
+    "lowDataHint": "3 tadan kam yakunlangan ish: baho kompaniya o'rtachasiga yaqinlashtirilgan",
+    "ownScore": "o'zining: {value}"
   },
   "groupRole": {
     "LEADER": "Lider",
@@ -1228,7 +1248,8 @@
       "contractorReliabilityHint": "Ishonchlilik %: o'z vaqtida bajarish, qabul qilingan ishlar ulushi, qayta ishlash va bekor qilishlar",
       "overtimeMultiplier": "Overtime koeffitsiyenti",
       "overtimeHint": "Kunlik normadan ortiq soatlar shu koeffitsiyent bilan to'lanadi va obyektga yoziladi (masalan 1.5)",
-      "maxDailyHours": "Bir kunda maksimal soat"
+      "maxDailyHours": "Bir kunda maksimal soat",
+      "require2faForAdmins": "Administratorlar uchun ikki bosqichli kirish majburiy"
     },
     "firms": {
       "title": "Bizning firmalar",
@@ -1469,7 +1490,8 @@
     "passport": "Pasport",
     "passportNumber": "Pasport seriyasi va raqami",
     "passportHint": "Pasport nusxasini (PDF yoki rasm) saqlangandan keyin xodim kartasida yuklaysiz",
-    "passportPrivacy": "Shaxsiy ma'lumot: faqat xodimlarni tahrirlash huquqi borlar ko'radi, har bir ochilish audit jurnalga yoziladi"
+    "passportPrivacy": "Shaxsiy ma'lumot: faqat xodimlarni tahrirlash huquqi borlar ko'radi, har bir ochilish audit jurnalga yoziladi",
+    "efficiencyGroupOnly": "≈ Soatlarning faqat {pct}% shaxsni ajratadi (yolg'iz yoki har xil soatli sessiyalar) — indeks asosan guruhni ko'rsatadi"
   },
   "groups": {
     "new": "Yangi guruh",
@@ -1840,7 +1862,9 @@
     "jobs": "ishlar",
     "reworked": "qayta ishlangan",
     "overrunPct": "narx o'zgarishi %",
-    "tolerance": "chegara %"
+    "tolerance": "chegara %",
+    "subjectivePct": "ulush rahbar foizida, %",
+    "unmarked": "belgilanmagan ish kuni"
   },
   "drawings": {
     "title": "Chizmalar",
@@ -2019,7 +2043,8 @@
     "slaTextPlaceholder": "Masalan: har oy filtrlarni tozalash, freon bosimini tekshirish, hisobot",
     "visits": "Rejali tashriflar (bajarilgan / jami)",
     "contractCosts": "xarajat {c} · hisob {b}",
-    "planVisits": "Rejali tashriflarni yaratish ({n})"
+    "planVisits": "Rejali tashriflarni yaratish ({n})",
+    "slaBusinessHours": "SLA ish soatlarida (Du–Sha 09:00–18:00)"
   },
   "reports": {
     "title": "Hisobotlar",

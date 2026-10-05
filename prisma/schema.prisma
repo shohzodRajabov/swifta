@@ -421,6 +421,10 @@ model Company {
   contractorReliabilityConfig Json?
   contractorPhoneRequired     Boolean @default(true)
 
+  // Security
+  /// Administrators must use two-factor authentication.
+  require2faForAdmins Boolean @default(false)
+
   // Telegram digest
   telegramBotToken     String?
   telegramChatId       String?
@@ -480,6 +484,11 @@ model User {
   mustChangePassword Boolean   @default(false)
   /// Bumped on password change / reset / "sign out everywhere": older session tokens stop working.
   sessionVersion     Int       @default(0)
+  /// A one-time password stops working after this moment (X7).
+  otpExpiresAt       DateTime?
+  /// Two-factor authentication (TOTP, authenticator app): secret is stored encrypted ("enc:..."), X9.
+  totpSecret         String?
+  totpEnabled        Boolean   @default(false)
   lastLoginAt        DateTime?
   locale             String    @default("uz")
   active             Boolean   @default(true)
@@ -1981,6 +1990,8 @@ model ServiceContract {
   slaResponseHours Int?
   slaResolveHours  Int?
   slaText          String?
+  /// SLA hours count only working time (Mon–Sat 09:00–18:00 Tashkent) instead of calendar hours (M11).
+  slaBusinessHours Boolean               @default(false)
   status           ServiceContractStatus @default(ACTIVE)
   note             String?
 

@@ -7,6 +7,9 @@ export type Efficiency = {
   sessions: number;
   hours: number;
   reliable: boolean;
+  /** M6: share of the hours (0–1) from sessions that tell members apart (solo, or different hours per person).
+   * Low = mostly whole-group sessions with equal hours, so the index mostly reflects the group, not the person. */
+  distinct: number;
   byWorkType: { workTypeId: string | null; index: number; sessions: number; hours: number; ratePerHour: number }[];
 };
 
@@ -37,11 +40,14 @@ export async function efficiencyIndexes(companyId: string, employeeIds?: string[
     avg.set(key, { qty: a.qty + Number(s.quantity), hours: a.hours + hours });
   }
   const per = new Map<string, Map<string, { weighted: number; hours: number; sessions: number }>>();
+  const distinctHours = new Map<string, number>();
   for (const s of sessions) {
     const key = s.task.workTypeId ?? "-";
     const total = s.members.reduce((x, m) => x + Number(m.hours), 0);
     if (total <= 0) continue;
     const rate = Number(s.quantity) / total;
+    const telling = s.members.length === 1 || new Set(s.members.map((m) => Number(m.hours))).size > 1;
+    if (telling) for (const m of s.members) distinctHours.set(m.employeeId, (distinctHours.get(m.employeeId) ?? 0) + Number(m.hours));
     for (const m of s.members) {
       if (employeeIds && !employeeIds.includes(m.employeeId)) continue;
       const byType = per.get(m.employeeId) ?? new Map();
@@ -72,6 +78,7 @@ export async function efficiencyIndexes(companyId: string, employeeIds?: string[
       sessions: sCount,
       hours: hSum,
       reliable: sCount >= company.efficiencyMinSessions,
+      distinct: hSum > 0 ? (distinctHours.get(employeeId) ?? 0) / hSum : 0,
       byWorkType: list.sort((a, b) => b.hours - a.hours),
     });
   }

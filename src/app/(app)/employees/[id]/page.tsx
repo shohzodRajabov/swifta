@@ -76,7 +76,7 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
           <div className="text-xs uppercase tracking-wide text-muted">{t("employees.efficiency")}</div>
           <div className="mt-2 flex items-center gap-3">
             <span className="text-3xl font-semibold">{eff?.index ? eff.index.toFixed(2) : "—"}</span>
-            <EfficiencyBadge index={eff?.index} reliable={eff?.reliable} />
+            <EfficiencyBadge index={eff?.index} reliable={eff?.reliable} distinct={eff?.distinct} />
           </div>
           <div className="mt-1 text-xs text-muted">
             {t("employees.efficiencyBasis", { sessions: String(eff?.sessions ?? 0), hours: formatNumber(eff?.hours ?? 0) })}

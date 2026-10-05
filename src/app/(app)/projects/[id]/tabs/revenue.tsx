@@ -7,7 +7,7 @@ import type { ProjectMetrics } from "@/lib/metrics";
 import { recordMoney } from "@/lib/money-value";
 import { allocatePayments } from "@/lib/schedule";
 import { formatDate, isoDate, toDateOnly } from "@/lib/utils";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatUzs } from "@/lib/format";
 import { Badge, Button, Card, CardHeader, Empty, Field, Input, Select, Table, Td, Th } from "@/components/ui";
 import { ActionForm, DeleteButton, SubmitButton } from "@/components/forms/action-form";
 import { MoneyInput } from "@/components/forms/money-input";
@@ -54,7 +54,7 @@ export async function RevenueTab({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-4">
         {(
           [
             ["finance.contractBase", m.contract],
@@ -71,6 +71,16 @@ export async function RevenueTab({
             <Money value={value} align="left" />
           </Card>
         ))}
+        {m.fxDiff !== null && (
+          <Card className="p-4">
+            <div className="mb-1 text-xs text-muted">{t("finance.fxDiff")}</div>
+            <div className={`num text-sm font-semibold ${m.fxDiff < 0 ? "text-danger" : m.fxDiff > 0 ? "text-success" : ""}`}>
+              {m.fxDiff > 0 ? "+" : ""}
+              {formatUzs(m.fxDiff)}
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted">{t("finance.fxDiffHint", { rate: formatNumber(m.contract.rate, 2) })}</div>
+          </Card>
+        )}
       </div>
 
       {/* Acts of completed works */}

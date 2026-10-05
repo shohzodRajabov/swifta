@@ -148,7 +148,7 @@ export default async function KpiDetailPage({ params, searchParams }: PageProps<
                           {s.label}
                         </Link>
                       )}
-                      {s.detail && <span className="num shrink-0 text-xs text-muted">{s.detail}</span>}
+                      {s.detail && <span className="num shrink-0 text-xs text-muted">{s.type === "attendance" && s.detail === "?" ? t("kpiRaw.unmarked") : s.detail}</span>}
                     </li>
                   ))}
                 </ul>

@@ -135,3 +135,36 @@ export function scoreContractor(
     reliabilityParts,
   };
 }
+
+/** Pseudo-jobs of the company average mixed into a contractor's score (M9). */
+export const SMOOTHING_JOBS = 3;
+/** Neutral prior when the company has no scored contractors yet. */
+export const NEUTRAL_PRIOR = { rating: 3.5, reliability: 80 };
+
+export type Smoothed = { rating: number | null; reliability: number | null; rawRating: number | null; rawReliability: number | null; lowData: boolean };
+
+/**
+ * Bayesian smoothing toward the company average: with n jobs the shown score is (n·own + k·avg)/(n + k),
+ * so one lucky (or unlucky) job can't put a newcomer at the top (or bottom). Scores need at least one job.
+ */
+export function smoothScores(results: ContractorScoreResult[], k = SMOOTHING_JOBS): Smoothed[] {
+  const avg = (xs: (number | null)[], fallback: number) => {
+    const v = xs.filter((x): x is number => x !== null);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : fallback;
+  };
+  const priorRating = avg(results.map((r) => r.rating), NEUTRAL_PRIOR.rating);
+  const priorRel = avg(results.map((r) => r.reliability), NEUTRAL_PRIOR.reliability);
+  return results.map((r) => {
+    const nR = r.stats.verified;
+    const nL = r.stats.completed + r.stats.rejected + r.stats.cancelled;
+    const mix = (own: number | null, n: number, prior: number, digits: number) =>
+      own === null ? null : Math.round(((n * own + k * prior) / (n + k)) * 10 ** digits) / 10 ** digits;
+    return {
+      rating: mix(r.rating, nR, priorRating, 2),
+      reliability: mix(r.reliability, nL, priorRel, 1),
+      rawRating: r.rating,
+      rawReliability: r.reliability,
+      lowData: nL < k,
+    };
+  });
+}

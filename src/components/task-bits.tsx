@@ -46,14 +46,20 @@ export function RemarkStatusBadge({ status }: { status: RemarkStatus }) {
 }
 
 /** Efficiency index (1.00 = company average); grey while there are too few sessions to trust it. */
-export function EfficiencyBadge({ index, reliable }: { index: number | null | undefined; reliable?: boolean }) {
+/** Below this share of person-distinguishing hours the index mostly describes the group (M6). */
+export const MIN_DISTINCT = 0.3;
+
+export function EfficiencyBadge({ index, reliable, distinct }: { index: number | null | undefined; reliable?: boolean; distinct?: number }) {
   const t = useTranslations("employees");
   if (index === null || index === undefined) return <span className="text-xs text-muted">—</span>;
-  const tone: Tone = !reliable ? "neutral" : index >= 1.1 ? "success" : index < 0.85 ? "danger" : index < 0.95 ? "warning" : "primary";
+  const groupOnly = distinct !== undefined && distinct < MIN_DISTINCT;
+  const tone: Tone = !reliable || groupOnly ? "neutral" : index >= 1.1 ? "success" : index < 0.85 ? "danger" : index < 0.95 ? "warning" : "primary";
+  const title = [reliable ? t("efficiencyHint") : t("efficiencyUnreliable"), groupOnly ? t("efficiencyGroupOnly", { pct: String(Math.round((distinct ?? 0) * 100)) }) : null].filter(Boolean).join("\n");
   return (
-    <Badge tone={tone} title={reliable ? t("efficiencyHint") : t("efficiencyUnreliable")}>
+    <Badge tone={tone} title={title}>
       <span className="num">{index.toFixed(2)}</span>
       {!reliable && "*"}
+      {groupOnly && "≈"}
     </Badge>
   );
 }

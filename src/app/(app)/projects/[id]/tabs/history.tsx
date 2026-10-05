@@ -3,9 +3,12 @@ import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/utils";
 import { Badge, Card, CardHeader, Empty, Table, Td, Th } from "@/components/ui";
 import { AuditDiff } from "@/components/audit-diff";
+import { maskForViewer } from "@/lib/audit-mask";
+import { requireUser } from "@/lib/auth";
 
 export async function HistoryTab({ projectId, companyId }: { projectId: string; companyId: string }) {
   const t = await getTranslations();
+  const viewer = await requireUser();
   const [events, logs] = await Promise.all([
     db.projectStageEvent.findMany({
       where: { projectId },
@@ -75,7 +78,7 @@ export async function HistoryTab({ projectId, companyId }: { projectId: string; 
                     </Badge>
                   </Td>
                   <Td>
-                    <AuditDiff action={l.action} before={l.before} after={l.after} />
+                    <AuditDiff action={l.action} before={maskForViewer(l.before, viewer)} after={maskForViewer(l.after, viewer)} />
                   </Td>
                 </tr>
               ))}

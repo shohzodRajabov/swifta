@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { resolveMoney } from "@/lib/fx";
 import { availableQty, averageCost } from "@/lib/stock";
-import { plannedVisits, slaHours } from "@/lib/sla";
+import { plannedVisits, slaDue, slaHours } from "@/lib/sla";
 import { toDateOnly } from "@/lib/utils";
 import { fail, formObject, runAction, zDate, zNumber, zOptId, zOptNumber, zOptText, zText, zVat, type ActionState } from "@/lib/action";
 import type { CurrentUser } from "@/lib/auth";
@@ -33,6 +33,7 @@ export async function saveContract(id: string | null, _: ActionState, formData: 
         frequency: z.enum(["MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "ON_CALL"]),
         slaResponseHours: zOptNumber,
         slaResolveHours: zOptNumber,
+        slaBusinessHours: z.preprocess((v) => v === "on", z.boolean()),
         slaText: zOptText,
         status: z.enum(["ACTIVE", "EXPIRED", "CANCELLED"]).default("ACTIVE"),
         note: zOptText,
@@ -55,6 +56,7 @@ export async function saveContract(id: string | null, _: ActionState, formData: 
       frequency: d.frequency,
       slaResponseHours: d.slaResponseHours ? Math.round(d.slaResponseHours) : null,
       slaResolveHours: d.slaResolveHours ? Math.round(d.slaResolveHours) : null,
+      slaBusinessHours: d.slaBusinessHours,
       slaText: d.slaText,
       status: d.status,
       note: d.note,
@@ -173,7 +175,7 @@ export async function createTicket(_: ActionState, formData: FormData): Promise<
           status: d.responsibleUserId ? "ASSIGNED" : "NEW",
           respondedAt: d.responsibleUserId ? now : null,
           reportedAt: now,
-          dueAt: new Date(now.getTime() + hours.resolve * H),
+          dueAt: slaDue(now, hours.resolve, hours.business),
           createdById: user.id,
         },
       });

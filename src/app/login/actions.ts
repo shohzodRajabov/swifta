@@ -6,7 +6,9 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { normalizePhone } from "@/lib/phone";
-import { SESSION_COOKIE, sessionCookieOptions, signSession, verifySession } from "@/lib/session";
+import { PENDING_2FA_COOKIE, SESSION_COOKIE, sessionCookieOptions, signPending2fa, signSession, verifyPending2fa, verifySession } from "@/lib/session";
+import { openSecret } from "@/lib/crypto-box";
+import { verifyTotp } from "@/lib/totp";
 import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
 import { getCurrentUser } from "@/lib/auth";
 import { lockedUntil, registerFailure, registerSuccess, throttleKeys } from "@/server/auth/throttle";
@@ -38,7 +40,13 @@ export async function login(_: unknown, formData: FormData) {
     return { error: "invalid" };
   }
   await registerSuccess(keys);
+  if (user.mustChangePassword && user.otpExpiresAt && user.otpExpiresAt < new Date()) return { error: "otpExpired" };
 
+  // Second factor (X9): the session is issued only after the authenticator code.
+  if (user.totpEnabled && user.totpSecret) {
+    (await cookies()).set(PENDING_2FA_COOKIE, await signPending2fa({ userId: user.id, sv: user.sessionVersion }), { ...sessionCookieOptions, maxAge: 300 });
+    redirect("/login/verify");
+  }
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   const token = await signSession({ userId: user.id, companyId: user.companyId, sv: user.sessionVersion });
   const jar = await cookies();
@@ -67,7 +75,7 @@ export async function setOwnPassword(_: unknown, formData: FormData) {
   if (await bcrypt.compare(parsed.data.password, user.passwordHash)) return { error: "same" };
   const updated = await db.user.update({
     where: { id: user.id },
-    data: { passwordHash: await bcrypt.hash(parsed.data.password, 10), mustChangePassword: false, sessionVersion: { increment: 1 } },
+    data: { passwordHash: await bcrypt.hash(parsed.data.password, 10), mustChangePassword: false, otpExpiresAt: null, sessionVersion: { increment: 1 } },
   });
   // Keep this browser signed in with the new version; every other session is invalidated.
   (await cookies()).set(SESSION_COOKIE, await signSession({ userId: updated.id, companyId: updated.companyId, sv: updated.sessionVersion }), sessionCookieOptions);
@@ -92,4 +100,26 @@ export async function setLocale(locale: string) {
   (await cookies()).set(LOCALE_COOKIE, locale, { path: "/", maxAge: 31536000 });
   const session = await verifySession((await cookies()).get(SESSION_COOKIE)?.value);
   if (session) await db.user.update({ where: { id: session.userId }, data: { locale } }).catch(() => undefined);
+}
+
+/** Second step of sign-in: the 6-digit code from the authenticator app (throttled like passwords). */
+export async function verifySecondFactor(_: unknown, formData: FormData) {
+  const jar = await cookies();
+  const pending = await verifyPending2fa(jar.get(PENDING_2FA_COOKIE)?.value);
+  if (!pending) redirect("/login");
+  const keys = throttleKeys(`2fa:${pending.userId}`, null);
+  const locked = await lockedUntil(keys);
+  if (locked) return { error: "locked", minutes: Math.max(1, Math.ceil((locked.getTime() - Date.now()) / 60000)) };
+  const user = await db.user.findUnique({ where: { id: pending.userId } });
+  if (!user || !user.active || user.sessionVersion !== pending.sv || !user.totpSecret) redirect("/login");
+  if (!verifyTotp(openSecret(user.totpSecret)!, String(formData.get("code") ?? ""))) {
+    await registerFailure(keys);
+    return { error: "code" };
+  }
+  await registerSuccess(keys);
+  jar.delete(PENDING_2FA_COOKIE);
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  jar.set(SESSION_COOKIE, await signSession({ userId: user.id, companyId: user.companyId, sv: user.sessionVersion }), sessionCookieOptions);
+  if (isLocale(user.locale)) jar.set(LOCALE_COOKIE, user.locale, { path: "/", maxAge: 31536000 });
+  redirect("/");
 }

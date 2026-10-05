@@ -1,7 +1,8 @@
 // KPI computation from recorded facts (sessions, tasks, inspections, remarks, attendance, contractor work).
 // No "server-only" import: the demo generator (tsx) uses it too.
 import type { KpiSubject, Prisma, PrismaClient } from "@prisma/client";
-import { combine, coverage, MIN_COVERAGE, monthBounds, pct, type ComponentResult, type KpiSource, type RuleComponent, type SnapshotComponent } from "@/lib/kpi";
+import { today as todayDate } from "@/lib/utils";
+import { combine, coverage, expectedWorkdays, MIN_COVERAGE, monthBounds, pct, weightedPct, type ComponentResult, type KpiSource, type RuleComponent, type SnapshotComponent } from "@/lib/kpi";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 const n = (v: unknown) => (v === null || v === undefined ? 0 : Number(v));
@@ -47,6 +48,7 @@ async function loadMonth(db: Db, companyId: string, month: string) {
       groupId: true,
       leaderId: true,
       status: true,
+      method: true,
       task: { select: { id: true, number: true, title: true, workTypeId: true } },
       members: { select: { employeeId: true, hours: true, contributionQty: true, confirmation: true } },
     },
@@ -67,7 +69,7 @@ async function loadMonth(db: Db, companyId: string, month: string) {
   // all sessions ever (to know who worked on which task)
   const allSessions = await db.workSession.findMany({
     where: { companyId, status: { not: "REJECTED" }, date: { lte: to } },
-    select: { taskId: true, groupId: true, members: { select: { employeeId: true } } },
+    select: { taskId: true, groupId: true, members: { select: { employeeId: true, hours: true } } },
   });
   const finishedTasks = await db.task.findMany({
     where: { companyId, actualFinish: { gte: from, lt: end } },
@@ -85,14 +87,42 @@ async function loadMonth(db: Db, companyId: string, month: string) {
 }
 type MonthFacts = Awaited<ReturnType<typeof loadMonth>>;
 
-function deadlineComponent(f: MonthFacts, taskIds: Set<string>): ComponentResult {
+/** On-time share of finished tasks; with `share` (M7) each task counts by the subject's share of its hours. */
+function deadlineComponent(f: MonthFacts, taskIds: Set<string>, share?: (taskId: string) => number): ComponentResult {
   const list = f.finishedTasks.filter((t) => taskIds.has(t.id) && t.deadline);
-  const sources: KpiSource[] = list.map((t) => {
+  const items = list.map((t) => {
     const late = Math.max(0, Math.ceil((t.actualFinish!.getTime() - (t.deadline!.getTime() + DAY - 1)) / DAY));
-    return { type: "task", id: t.id, label: taskLabel(t), detail: late > 0 ? `+${late}` : "✓", good: late === 0 };
+    const w = share ? share(t.id) : 1;
+    return { t, late, w, good: late === 0 };
   });
-  const onTime = sources.filter((s) => s.good).length;
-  return { value: pct(onTime, list.length), raw: { finished: list.length, onTime }, sources: cap(sources) };
+  const sources: KpiSource[] = items.map(({ t, late, w }) => ({
+    type: "task",
+    id: t.id,
+    label: taskLabel(t),
+    detail: `${late > 0 ? `+${late}` : "✓"}${share ? ` · ${Math.round(w * 100)}%` : ""}`,
+    good: late === 0,
+  }));
+  const onTime = items.filter((i) => i.good).length;
+  return {
+    value: share ? weightedPct(items.map((i) => ({ weight: i.w, good: i.good }))) : pct(onTime, list.length),
+    raw: { finished: list.length, onTime },
+    sources: cap(sources),
+  };
+}
+
+/** The employee's share of all recorded hours on each task (M7). */
+function hourShares(f: MonthFacts, employeeId: string) {
+  const total = new Map<string, number>();
+  const mine = new Map<string, number>();
+  for (const s of f.allSessions)
+    for (const m of s.members) {
+      total.set(s.taskId, (total.get(s.taskId) ?? 0) + n(m.hours));
+      if (m.employeeId === employeeId) mine.set(s.taskId, (mine.get(s.taskId) ?? 0) + n(m.hours));
+    }
+  return (taskId: string) => {
+    const tot = total.get(taskId) ?? 0;
+    return tot > 0 ? (mine.get(taskId) ?? 0) / tot : 0;
+  };
 }
 
 function inspectionComponents(f: MonthFacts, taskIds: Set<string>): { firstPass: ComponentResult; rework: ComponentResult } {
@@ -117,7 +147,11 @@ function remarksComponent(f: MonthFacts, taskIds: Set<string>, penalty: number, 
   };
 }
 
-function quantityComponent(f: MonthFacts, rows: { sessionId: string; date: Date; task: { id: string; number: number; title: string; workTypeId: string | null }; qty: number; hours: number; unit: string | null }[], target: number): ComponentResult {
+function quantityComponent(
+  f: MonthFacts,
+  rows: { sessionId: string; date: Date; task: { id: string; number: number; title: string; workTypeId: string | null }; qty: number; hours: number; unit: string | null; subjective?: boolean }[],
+  target: number,
+): ComponentResult {
   let done = 0;
   let expected = 0;
   for (const r of rows) {
@@ -127,7 +161,13 @@ function quantityComponent(f: MonthFacts, rows: { sessionId: string; date: Date;
   const ratio = expected > 0 ? done / expected : null;
   return {
     value: ratio === null ? null : Math.min(100, (ratio / (target || 1)) * 100),
-    raw: { ratio: ratio === null ? null : Math.round(ratio * 100) / 100, sessions: rows.length, hours: Math.round(rows.reduce((s, r) => s + r.hours, 0) * 10) / 10 },
+    raw: {
+      ratio: ratio === null ? null : Math.round(ratio * 100) / 100,
+      sessions: rows.length,
+      hours: Math.round(rows.reduce((s, r) => s + r.hours, 0) * 10) / 10,
+      // M6: shares set by the leader's percentages are an estimate, not a measurement.
+      subjectivePct: rows.some((r) => r.subjective) ? Math.round((rows.filter((r) => r.subjective).length / rows.length) * 100) : null,
+    },
     sources: cap(
       [...rows]
         .sort((a, b) => b.date.getTime() - a.date.getTime())
@@ -140,8 +180,10 @@ function quantityComponent(f: MonthFacts, rows: { sessionId: string; date: Date;
 
 export async function computeEmployees(db: Db, companyId: string, month: string, rule: RuleComponent[]): Promise<SubjectResult[]> {
   const f = await loadMonth(db, companyId, month);
-  const [employees, attendance] = await Promise.all([
-    db.employee.findMany({ where: { companyId }, select: { id: true, fullName: true, active: true } }),
+  const now = todayDate();
+  const [company, employees, attendance] = await Promise.all([
+    db.company.findUniqueOrThrow({ where: { id: companyId }, select: { normWorkDays: true } }),
+    db.employee.findMany({ where: { companyId }, select: { id: true, fullName: true, active: true, hireDate: true } }),
     db.attendanceDay.findMany({ where: { companyId, date: { gte: f.from, lte: f.to } }, select: { id: true, employeeId: true, date: true, type: true, note: true } }),
   ]);
   const out: SubjectResult[] = [];
@@ -152,23 +194,32 @@ export async function computeEmployees(db: Db, companyId: string, month: string,
     const taskIds = new Set(f.allSessions.filter((s) => s.members.some((m) => m.employeeId === e.id)).map((s) => s.taskId));
     const rows = mine.map((s) => {
       const m = s.members.find((x) => x.employeeId === e.id)!;
-      return { sessionId: s.id, date: s.date, task: s.task, qty: n(m.contributionQty), hours: n(m.hours), unit: s.unit };
+      return { sessionId: s.id, date: s.date, task: s.task, qty: n(m.contributionQty), hours: n(m.hours), unit: s.unit, subjective: s.method === "LEADER" && s.members.length > 1 };
     });
     const insp = inspectionComponents(f, taskIds);
     const worked = days.filter((d) => WORKED.includes(d.type)).length;
     const absent = days.filter((d) => d.type === "ABSENT").length;
+    // M8: expected workdays (from hiring, up to today) with nothing marked count as missed.
+    const yesterday = new Date(now.getTime() - DAY); // today may still be marked later
+    const lastDay = f.to < yesterday ? f.to : yesterday;
+    const firstDay = e.hireDate && e.hireDate > f.from ? e.hireDate : f.from;
+    const marked = new Set(days.map((d) => fmt(d.date)));
+    const unmarked = e.active && firstDay <= lastDay ? expectedWorkdays(firstDay, lastDay, company.normWorkDays).filter((d) => !marked.has(fmt(d))) : [];
     const led = mine.filter((s) => s.leaderId === e.id);
     const ledOk = led.filter((s) => s.createdAt.getTime() - s.date.getTime() <= 2 * DAY && !s.members.some((m) => m.confirmation === "DISPUTED"));
     const results: Record<string, ComponentResult> = {
       quantity: quantityComponent(f, rows, param(rule, "quantity", "target", 1)),
-      deadline: deadlineComponent(f, new Set(mine.map((s) => s.task.id).concat([...taskIds]))),
+      deadline: deadlineComponent(f, new Set(mine.map((s) => s.task.id).concat([...taskIds])), hourShares(f, e.id)),
       firstPass: insp.firstPass,
       rework: insp.rework,
       remarks: remarksComponent(f, taskIds, param(rule, "remarks", "penalty", 15), mine.length > 0),
       attendance: {
-        value: worked + absent > 0 ? pct(worked, worked + absent) : null,
-        raw: { worked, absent },
-        sources: cap(days.filter((d) => d.type === "ABSENT").map((d) => ({ type: "attendance", id: d.id, label: fmt(d.date), detail: d.note ?? "", good: false }))),
+        value: worked + absent + unmarked.length > 0 ? pct(worked, worked + absent + unmarked.length) : null,
+        raw: { worked, absent, unmarked: unmarked.length },
+        sources: cap([
+          ...days.filter((d) => d.type === "ABSENT").map((d) => ({ type: "attendance" as const, id: d.id, label: fmt(d.date), detail: d.note ?? "", good: false })),
+          ...unmarked.map((d) => ({ type: "attendance" as const, id: `${e.id}:${fmt(d)}`, label: fmt(d), detail: "?", good: false })),
+        ]),
       },
       leadership: {
         value: led.length ? pct(ledOk.length, led.length) : null,

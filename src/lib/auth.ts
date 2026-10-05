@@ -14,7 +14,7 @@ export const getCurrentUser = cache(async () => {
   const load = (id: string) =>
     db.user.findUnique({
       where: { id },
-      include: { roleDef: true, company: { select: { id: true, name: true, isDemo: true } }, employee: { select: { id: true } } },
+      include: { roleDef: true, company: { select: { id: true, name: true, isDemo: true, require2faForAdmins: true } }, employee: { select: { id: true } } },
     });
   const user = await load(session.userId);
   if (!user && session.homeUserId) {
@@ -34,6 +34,8 @@ export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (user.mustChangePassword) redirect("/set-password");
+  // X9: the company may require administrators to sign in with a second factor.
+  if (user.company.require2faForAdmins && !user.totpEnabled && can(user, "settings.manage") && !user.homeUserId) redirect("/security");
   return user;
 }
 

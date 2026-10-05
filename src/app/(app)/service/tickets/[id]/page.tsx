@@ -34,7 +34,7 @@ export default async function TicketPage({ params }: PageProps<"/service/tickets
     include: {
       client: { select: { id: true, name: true, phone: true, contactPerson: true } },
       project: { select: { id: true, name: true, warrantyEnd: true, address: true } },
-      serviceContract: { select: { id: true, number: true, slaResponseHours: true, slaResolveHours: true, slaText: true } },
+      serviceContract: { select: { id: true, number: true, slaResponseHours: true, slaResolveHours: true, slaBusinessHours: true, slaText: true } },
       responsible: { select: { name: true } },
       parts: { orderBy: { createdAt: "asc" } },
     },

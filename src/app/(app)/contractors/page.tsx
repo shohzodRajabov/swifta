@@ -174,6 +174,11 @@ export default async function ContractorsPage({ searchParams }: PageProps<"/cont
                   </Td>
                   <Td className="text-right">
                     <RatingValue rating={s?.rating} />
+                    {s?.lowData && s.rating !== null && (
+                      <div className="text-[10px] text-muted" title={t("contractors.lowDataHint")}>
+                        {t("contractors.lowData")}
+                      </div>
+                    )}
                   </Td>
                   <Td className="text-right">
                     <ReliabilityValue value={s?.reliability} />

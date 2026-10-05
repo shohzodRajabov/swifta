@@ -228,7 +228,7 @@ export async function getNotifications(user: CurrentUser): Promise<Notification[
   if (can(user, "service.view")) {
     const tickets = await db.serviceTicket.findMany({
       where: { companyId, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS"] } },
-      select: { id: true, number: true, title: true, planned: true, priority: true, reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, responsibleUserId: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true } } },
+      select: { id: true, number: true, title: true, planned: true, priority: true, reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, responsibleUserId: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true, slaBusinessHours: true } } },
     });
     for (const x of tickets) {
       const params = { ticket: `S-${x.number} ${x.title}` };

@@ -158,6 +158,9 @@ export function AppShell({
         <Link href="/set-password" className="text-muted hover:text-text">
           {t("auth.changePassword")}
         </Link>
+        <Link href="/security" className="text-muted hover:text-text">
+          {t("auth.twoFactorSetup")}
+        </Link>
         <form action={logoutEverywhere}>
           <button type="submit" className="text-muted hover:text-text" title={t("auth.logoutEverywhereHint")}>
             {t("auth.logoutEverywhere")}

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/utils";
 import { Badge, Button, Card, Empty, PageHeader, Select, Table, Td, Th } from "@/components/ui";
 import { AuditDiff } from "@/components/audit-diff";
+import { maskForViewer } from "@/lib/audit-mask";
 
 export default async function AuditPage({ searchParams }: PageProps<"/settings/audit">) {
   const user = await requirePermission("audit.view");
@@ -68,7 +69,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/settings/a
                     </Badge>
                   </Td>
                   <Td>
-                    <AuditDiff action={l.action} before={l.before} after={l.after} />
+                    <AuditDiff action={l.action} before={maskForViewer(l.before, user)} after={maskForViewer(l.after, user)} />
                   </Td>
                 </tr>
               ))}

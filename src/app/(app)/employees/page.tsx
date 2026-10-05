@@ -125,7 +125,7 @@ async function ListTab({ companyId, q, showInactive, showSalary }: { companyId: 
                     </div>
                   </Td>
                   <Td>
-                    <EfficiencyBadge index={ef?.index} reliable={ef?.reliable} />
+                    <EfficiencyBadge index={ef?.index} reliable={ef?.reliable} distinct={ef?.distinct} />
                   </Td>
                   <Td className="num text-right">{ef?.sessions ?? 0}</Td>
                   {showSalary && <Td className="num text-right">{formatNumber(Number(e.salary))}</Td>}

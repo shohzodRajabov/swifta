@@ -112,7 +112,7 @@ export default async function MePage() {
           <Card className="p-4">
             <div className="text-xs text-muted">{t("employees.efficiency")}</div>
             <div className="mt-2">
-              <EfficiencyBadge index={eff?.index} reliable={eff?.reliable} />
+              <EfficiencyBadge index={eff?.index} reliable={eff?.reliable} distinct={eff?.distinct} />
             </div>
             {lastKpi && (
               <Link href={`/kpi/EMPLOYEE/${emp.id}?month=${lastKpi.month}`} className="mt-2 block text-xs text-primary">

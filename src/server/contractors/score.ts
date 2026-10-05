@@ -6,6 +6,7 @@ import {
   DEFAULT_RELIABILITY_WEIGHTS,
   normalizeWeights,
   scoreContractor,
+  smoothScores,
   type ContractorScoreResult,
   type OutsourceFact,
 } from "@/lib/contractor-score";
@@ -61,12 +62,20 @@ async function factsFor(companyId: string, contractorIds: string[] | undefined, 
   return byContractor;
 }
 
-export type ContractorScore = ContractorScoreResult & { projects: number };
+export type ContractorScore = ContractorScoreResult & { projects: number; rawRating: number | null; rawReliability: number | null; lowData: boolean };
 
+/** Scores of contractors; rating and reliability are smoothed toward the company average (M9). */
 export async function contractorScores(companyId: string, contractorIds?: string[], tx: Db = db): Promise<Map<string, ContractorScore>> {
-  const [weights, facts] = await Promise.all([scoreWeights(companyId, tx), factsFor(companyId, contractorIds, tx)]);
+  // The company average needs everyone's facts, even when only some contractors are asked for.
+  const [weights, facts] = await Promise.all([scoreWeights(companyId, tx), factsFor(companyId, undefined, tx)]);
+  const ids = [...facts.keys()];
+  const raw = ids.map((id) => scoreContractor(facts.get(id)!.facts, weights.rating, weights.reliability));
+  const smooth = smoothScores(raw);
   const out = new Map<string, ContractorScore>();
-  for (const [id, f] of facts) out.set(id, { ...scoreContractor(f.facts, weights.rating, weights.reliability), projects: f.projects.size });
+  ids.forEach((id, i) => {
+    if (contractorIds && !contractorIds.includes(id)) return;
+    out.set(id, { ...raw[i], ...smooth[i], projects: facts.get(id)!.projects.size });
+  });
   return out;
 }
 

@@ -5,10 +5,10 @@ import { db } from "@/lib/db";
 import { formatPhone } from "@/lib/phone";
 import { roleLabel } from "@/lib/roles";
 import { formatDateTime } from "@/lib/utils";
-import { Badge, Card, CardHeader, Field, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
+import { Badge, Button, Card, CardHeader, Field, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { CreateUserForm, ResetPasswordButton } from "./otp-forms";
-import { createUser, resetPassword, updateUser } from "./actions";
+import { createUser, resetPassword, resetTwoFactor, updateUser } from "./actions";
 
 export default async function UsersPage() {
   const me = await requirePermission("users.manage");
@@ -103,8 +103,15 @@ export default async function UsersPage() {
                       </label>
                       <SubmitButton variant="secondary">{t("common.save")}</SubmitButton>
                     </ActionForm>
-                    <div className="mt-1">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <ResetPasswordButton action={resetPassword.bind(null, u.id)} />
+                      {u.totpEnabled && (
+                        <form action={resetTwoFactor.bind(null, u.id)}>
+                          <Button type="submit" variant="ghost" className="h-8 px-2 text-xs">
+                            {t("users.reset2fa")}
+                          </Button>
+                        </form>
+                      )}
                     </div>
                   </Td>
                 </tr>

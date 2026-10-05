@@ -59,6 +59,8 @@ export type ProjectMetrics = {
   receivable: Amount;
   /** Payments received beyond signed acts: an advance — work we still owe the customer (contract liability). */
   advance: Amount;
+  /** USD contracts (M10): payments valued at their actual rates minus the same USD at the contract rate (UZS; + = gain). */
+  fxDiff: number | null;
   /** Payment-schedule instalments past due and not yet paid. */
   overdueDebt: Amount;
   scheduled: Amount;
@@ -346,6 +348,7 @@ export async function computeMetrics(projects: ProjectLite[]): Promise<Map<strin
       received,
       receivable: clamp0(sub(actsGross, received)),
       advance: clamp0(sub(received, actsGross)),
+      fxDiff: p.contractCurrency === "USD" && received.count > 0 ? received.uzs - received.usd * n(p.contractFxRate) : null,
       overdueDebt: clamp0(sub(dueSoFar, received)),
       scheduled,
       actsGross,

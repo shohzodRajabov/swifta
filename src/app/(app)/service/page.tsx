@@ -29,7 +29,7 @@ export default async function ServicePage({ searchParams }: PageProps<"/service"
   const [openTickets, contracts, warrantyProjects] = await Promise.all([
     db.serviceTicket.findMany({
       where: { companyId: user.companyId, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS"] } },
-      select: { reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, priority: true, planned: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true } } },
+      select: { reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, priority: true, planned: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true, slaBusinessHours: true } } },
     }),
     db.serviceContract.findMany({
       where: { companyId: user.companyId },
@@ -216,7 +216,7 @@ async function TicketsTab({ companyId, status, warranty, showMoney }: { companyI
       client: { select: { name: true } },
       project: { select: { name: true } },
       responsible: { select: { name: true } },
-      serviceContract: { select: { number: true, slaResponseHours: true, slaResolveHours: true } },
+      serviceContract: { select: { number: true, slaResponseHours: true, slaResolveHours: true, slaBusinessHours: true } },
       parts: { select: { qty: true, unitCostUzs: true } },
     },
   });

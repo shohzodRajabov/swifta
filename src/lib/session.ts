@@ -41,3 +41,20 @@ export const sessionCookieOptions = {
   path: "/",
   maxAge: MAX_AGE,
 };
+
+/** Between the password and the second factor: a short-lived token naming the user (X9). */
+export const PENDING_2FA_COOKIE = "swifta_2fa";
+
+export async function signPending2fa(payload: { userId: string; sv: number }): Promise<string> {
+  return new SignJWT({ ...payload, purpose: "2fa" }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("5m").sign(key());
+}
+
+export async function verifyPending2fa(token: string | undefined): Promise<{ userId: string; sv: number } | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, key(), { algorithms: ["HS256"] });
+    return payload.purpose === "2fa" ? { userId: String(payload.userId), sv: Number(payload.sv) } : null;
+  } catch {
+    return null;
+  }
+}

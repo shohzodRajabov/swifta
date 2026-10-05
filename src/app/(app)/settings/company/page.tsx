@@ -37,6 +37,10 @@ export default async function CompanySettingsPage() {
             <input type="checkbox" name="contractorPhoneRequired" defaultChecked={c.contractorPhoneRequired} className="size-4" />
             {t("settings.company.contractorPhoneRequired")}
           </label>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2">
+            <input type="checkbox" name="require2faForAdmins" defaultChecked={c.require2faForAdmins} className="size-4" />
+            {t("settings.company.require2faForAdmins")}
+          </label>
         </Card>
 
         <Card className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">

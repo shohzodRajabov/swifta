@@ -1,11 +1,12 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
+import { stripSecrets } from "./audit-mask";
 
 type Tx = Prisma.TransactionClient;
 
 function plain(value: unknown): Prisma.InputJsonValue | undefined {
   if (value === undefined || value === null) return undefined;
-  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+  return stripSecrets(JSON.parse(JSON.stringify(value))) as Prisma.InputJsonValue;
 }
 
 /** Record a change to an important entity. Call inside the same transaction as the change. */

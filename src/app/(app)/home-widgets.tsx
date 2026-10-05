@@ -69,7 +69,7 @@ export async function HomeWidgets({ user, compact = false }: { user: CurrentUser
   if (can(user, "service.view")) {
     const open = await db.serviceTicket.findMany({
       where: { companyId: user.companyId, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS"] }, planned: false },
-      select: { reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, priority: true, responsibleUserId: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true } } },
+      select: { reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, priority: true, responsibleUserId: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true, slaBusinessHours: true } } },
     });
     const breached = open.filter((x) => slaStatus(x, slaHours(x.priority as Prio, x.serviceContract)).resolve === "BREACHED").length;
     const visits = await db.serviceTicket.count({ where: { companyId: user.companyId, planned: true, status: { in: ["NEW", "ASSIGNED"] }, dueAt: { lte: new Date(today.getTime() + 7 * DAY) } } });
@@ -201,7 +201,7 @@ export async function ManagementTiles({ user }: { user: CurrentUser }) {
   if (can(user, "service.view")) {
     const open = await db.serviceTicket.findMany({
       where: { companyId: user.companyId, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS"] }, planned: false },
-      select: { reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, priority: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true } } },
+      select: { reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, priority: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true, slaBusinessHours: true } } },
     });
     const breached = open.filter((x) => slaStatus(x, slaHours(x.priority as Prio, x.serviceContract)).resolve === "BREACHED").length;
     tiles.push({ label: t("tileService"), value: open.length, sub: t("tileSla", { n: String(breached) }), href: "/service" });

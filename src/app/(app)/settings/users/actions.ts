@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { normalizePhone } from "@/lib/phone";
-import { generateOneTimePassword } from "@/lib/password";
+import { generateOneTimePassword, otpExpiry } from "@/lib/password";
 import { fail, formObject, runAction, zOptText, zText, type ActionState } from "@/lib/action";
 import type { CurrentUser } from "@/lib/auth";
 
@@ -40,6 +40,7 @@ export async function createUser(_: ActionState, formData: FormData): Promise<Ac
           roleId: data.roleId,
           passwordHash: await bcrypt.hash(password, 10),
           mustChangePassword: true,
+          otpExpiresAt: otpExpiry(),
         },
       });
       await audit(tx, { companyId: user.companyId, userId: user.id }, "User", u.id, "create", null, {
@@ -100,7 +101,7 @@ export async function resetPassword(id: string, _: ActionState): Promise<ActionS
     await db.$transaction(async (tx) => {
       await tx.user.update({
         where: { id },
-        data: { passwordHash: await bcrypt.hash(password, 10), mustChangePassword: true, sessionVersion: { increment: 1 } },
+        data: { passwordHash: await bcrypt.hash(password, 10), mustChangePassword: true, otpExpiresAt: otpExpiry(), sessionVersion: { increment: 1 } },
       });
       await audit(tx, { companyId: user.companyId, userId: user.id }, "User", id, "update", null, { password: "reset" });
     });
@@ -108,4 +109,17 @@ export async function resetPassword(id: string, _: ActionState): Promise<ActionS
   });
   if (res?.ok) revalidatePath("/settings/users");
   return res;
+}
+
+/** Turns off a user's second factor (lost phone); they sign in with the password and may enrol again. */
+export async function resetTwoFactor(id: string) {
+  await runAction("users.manage", async (user) => {
+    const target = await db.user.findFirst({ where: { id, companyId: user.companyId } });
+    if (!target) fail("invalid");
+    await db.$transaction(async (tx) => {
+      await tx.user.update({ where: { id }, data: { totpEnabled: false, totpSecret: null, sessionVersion: { increment: 1 } } });
+      await audit(tx, { companyId: user.companyId, userId: user.id }, "User", id, "update", null, { twoFactor: "reset" });
+    });
+  });
+  revalidatePath("/settings/users");
 }

@@ -41,8 +41,9 @@ export async function updateCompanySettings(_: ActionState, formData: FormData):
         overtimeMultiplier: zNumber.pipe(z.number().min(1).max(5)),
         maxDailyHours: zNumber.pipe(z.number().int().min(4).max(24)),
         contractorPhoneRequired: z.preprocess((v) => v === "on", z.boolean()),
+        require2faForAdmins: z.preprocess((v) => v === "on", z.boolean()),
       })
-      .parse({ contractorPhoneRequired: formData.get("contractorPhoneRequired") ?? "", ...formObject(formData) });
+      .parse({ contractorPhoneRequired: formData.get("contractorPhoneRequired") ?? "", require2faForAdmins: formData.get("require2faForAdmins") ?? "", ...formObject(formData) });
     const before = await db.company.findUniqueOrThrow({ where: { id: user.companyId } });
     await db.$transaction(async (tx) => {
       const after = await tx.company.update({
@@ -62,6 +63,7 @@ export async function updateCompanySettings(_: ActionState, formData: FormData):
           overtimeMultiplier: new Prisma.Decimal(d.overtimeMultiplier),
           maxDailyHours: d.maxDailyHours,
           contractorPhoneRequired: d.contractorPhoneRequired,
+          require2faForAdmins: d.require2faForAdmins,
           contractorRatingConfig: weightsFrom(formData, "rw_", DEFAULT_RATING_WEIGHTS),
           contractorReliabilityConfig: weightsFrom(formData, "lw_", DEFAULT_RELIABILITY_WEIGHTS),
         },
