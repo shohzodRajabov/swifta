@@ -1252,7 +1252,10 @@
       "overtimeMultiplier": "Overtime koeffitsiyenti",
       "overtimeHint": "Kunlik normadan ortiq soatlar shu koeffitsiyent bilan to'lanadi va obyektga yoziladi (masalan 1.5)",
       "maxDailyHours": "Bir kunda maksimal soat",
-      "require2faForAdmins": "Administratorlar uchun ikki bosqichli kirish majburiy"
+      "require2faForAdmins": "Administratorlar uchun ikki bosqichli kirish majburiy",
+      "kpiBonusEnabled": "KPI bo'yicha bonus berish",
+      "kpiBonusScale": "Bonus shkalasi (KPI ball : maoshdan %)",
+      "kpiBonusScaleHint": "Masalan \"90:20, 80:10, 70:5\" — KPI 90+ bo'lsa maoshning 20%, 80+ — 10%, 70+ — 5%. Ma'lumoti kam natijaga bonus berilmaydi. Bonus xodimlar KPI oyi tasdiqlanganda qotiriladi va shu oy ish haqiga qo'shiladi"
     },
     "firms": {
       "title": "Bizning firmalar",
@@ -1540,7 +1543,9 @@
     "closed": "Oy yopilgan",
     "reopen": "Qayta ochish",
     "pendingSessions": "{n} ta sessiya tasdiq kutmoqda",
-    "overtime": "+ overtime {h} soat: {sum}"
+    "overtime": "+ overtime {h} soat: {sum}",
+    "kpiBonus": "+ KPI bonus {sum} (soliqlar bilan {cost})",
+    "kpiBonusHint": "Tasdiqlangan KPI oyidan. Obyektlarga taqsimlanmaydi — umumiy xarajatga o'tadi"
   },
   "tasks": {
     "title": "Vazifalar",
@@ -1818,7 +1823,10 @@
     "weightHint": "0 — komponent ishlatilmaydi. Og'irliklar yig'indisi 100 bo'lishi shart emas: natija nisbat bo'yicha hisoblanadi.",
     "saveVersion": "Versiyani saqlash",
     "lowCoverage": "kam ma'lumot ({pct}%)",
-    "lowCoverageHint": "Formula komponentlarining yarmidan kamida ma'lumot bor — natija ishonchli emas"
+    "lowCoverageHint": "Formula komponentlarining yarmidan kamida ma'lumot bor — natija ishonchli emas",
+    "bonus": "Bonus",
+    "bonusFixed": "Oy tasdiqlangan: bonus qotirilgan",
+    "bonusEstimate": "Taxminiy: oy tasdiqlanganda qotiriladi"
   },
   "kpiComponent": {
     "quantity": "Ish hajmi",

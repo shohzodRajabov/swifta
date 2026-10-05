@@ -11,7 +11,8 @@ import { Badge, Button, Card, Empty, Input, LinkButton, Notice, PageHeader, Tabl
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { CoverageNote, KpiBar, KpiScore } from "@/components/kpi-bits";
 import { kpiTable } from "@/server/kpi/view";
-import { coverage, MIN_COVERAGE } from "@/lib/kpi";
+import { bonusPct, coverage, MIN_COVERAGE, parseBonusScale } from "@/lib/kpi";
+import { formatNumber } from "@/lib/format";
 import { calculateKpi, setKpiPeriodStatus } from "./actions";
 
 const SUBJECTS: KpiSubject[] = ["EMPLOYEE", "GROUP", "CONTRACTOR"];
@@ -38,6 +39,24 @@ export default async function KpiPage({ searchParams }: PageProps<"/kpi">) {
     db.kpiPeriod.findMany({ where: { companyId: user.companyId, month }, select: { subject: true, status: true } }),
   ]);
   const keys = table.rule?.components.map((c) => c.key) ?? [];
+  // KPI bonus (employees): fixed amounts once the month is approved, otherwise an estimate.
+  const company = await db.company.findUniqueOrThrow({ where: { id: user.companyId }, select: { kpiBonusEnabled: true, kpiBonusScale: true } });
+  const showBonus = subject === "EMPLOYEE" && company.kpiBonusEnabled && can(user, "salaries.view");
+  const approved = table.period?.status === "APPROVED";
+  const bonusOf = new Map<string, { pct: number; amount: number }>();
+  if (showBonus && table.rows.length) {
+    const scale = parseBonusScale(company.kpiBonusScale);
+    const [emps, snaps] = await Promise.all([
+      db.employee.findMany({ where: { companyId: user.companyId, id: { in: table.rows.map((r) => r.id) } }, select: { id: true, salary: true } }),
+      approved ? db.kpiSnapshot.findMany({ where: { periodId: table.period!.id }, select: { employeeId: true, bonusPct: true, bonusUzs: true } }) : [],
+    ]);
+    for (const r of table.rows) {
+      const fixed = snaps.find((x) => x.employeeId === r.id);
+      const pct = approved ? Number(fixed?.bonusPct ?? 0) : bonusPct(r.score, coverage(r.components), scale);
+      const salary = Number(emps.find((e) => e.id === r.id)?.salary ?? 0);
+      bonusOf.set(r.id, { pct, amount: approved ? Number(fixed?.bonusUzs ?? 0) : (salary * pct) / 100 });
+    }
+  }
   const counted = table.rows.filter((r) => coverage(r.components) >= MIN_COVERAGE);
   const avg = counted.length ? counted.reduce((s, r) => s + (r.score ?? 0), 0) / counted.length : null;
   const href = (q: Record<string, string>) => `/kpi?${new URLSearchParams({ month, subject, ...q }).toString()}`;
@@ -129,6 +148,11 @@ export default async function KpiPage({ searchParams }: PageProps<"/kpi">) {
               <tr>
                 <Th>{t(`kpi.subject_${subject}`)}</Th>
                 <Th className="text-right">KPI</Th>
+                {showBonus && (
+                  <Th className="text-right" title={approved ? t("kpi.bonusFixed") : t("kpi.bonusEstimate")}>
+                    {t("kpi.bonus")}
+                  </Th>
+                )}
                 {keys.map((k) => (
                   <Th key={k} title={t(`kpiComponent.${k}_hint`)}>
                     {t(`kpiComponent.${k}`)}
@@ -151,6 +175,19 @@ export default async function KpiPage({ searchParams }: PageProps<"/kpi">) {
                     </Link>
                     <CoverageNote components={r.components} />
                   </Td>
+                  {showBonus && (
+                    <Td className="num text-right text-sm">
+                      {bonusOf.get(r.id)?.pct ? (
+                        <>
+                          {approved ? "" : "≈ "}
+                          {formatNumber(Math.round(bonusOf.get(r.id)!.amount))}
+                          <div className="text-[11px] text-muted">{bonusOf.get(r.id)!.pct}%</div>
+                        </>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </Td>
+                  )}
                   {keys.map((k) => (
                     <Td key={k}>
                       <KpiBar value={r.components.find((c) => c.key === k)?.value ?? null} />
@@ -164,7 +201,7 @@ export default async function KpiPage({ searchParams }: PageProps<"/kpi">) {
                   <Td className="text-right">
                     <KpiScore value={avg} />
                   </Td>
-                  <Td colSpan={keys.length} />
+                  <Td colSpan={keys.length + (showBonus ? 1 : 0)} />
                 </tr>
               )}
             </tbody>

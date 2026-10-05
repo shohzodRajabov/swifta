@@ -1252,7 +1252,10 @@
       "overtimeMultiplier": "Overtime multiplier",
       "overtimeHint": "Hours above the daily norm are paid and charged with this multiplier (e.g. 1.5)",
       "maxDailyHours": "Max hours per day",
-      "require2faForAdmins": "Require two-step sign-in for administrators"
+      "require2faForAdmins": "Require two-step sign-in for administrators",
+      "kpiBonusEnabled": "Pay a KPI bonus",
+      "kpiBonusScale": "Bonus scale (KPI score : % of salary)",
+      "kpiBonusScaleHint": "E.g. \"90:20, 80:10, 70:5\": KPI 90+ gives 20% of the salary, 80+ 10%, 70+ 5%. No bonus on results with little data. Fixed when the employee KPI month is approved and added to that month's payroll"
     },
     "firms": {
       "title": "Our companies",
@@ -1540,7 +1543,9 @@
     "closed": "Month closed",
     "reopen": "Reopen",
     "pendingSessions": "{n} sessions pending",
-    "overtime": "+ overtime {h} h: {sum}"
+    "overtime": "+ overtime {h} h: {sum}",
+    "kpiBonus": "+ KPI bonus {sum} ({cost} with taxes)",
+    "kpiBonusHint": "From the approved KPI month. Not charged to projects — goes to overhead"
   },
   "tasks": {
     "title": "Tasks",
@@ -1818,7 +1823,10 @@
     "weightHint": "0 = not used. Weights need not add up to 100; they are used proportionally.",
     "saveVersion": "Save version",
     "lowCoverage": "little data ({pct}%)",
-    "lowCoverageHint": "Less than half of the formula has data — the score is not reliable"
+    "lowCoverageHint": "Less than half of the formula has data — the score is not reliable",
+    "bonus": "Bonus",
+    "bonusFixed": "Month approved: bonus fixed",
+    "bonusEstimate": "Estimate: fixed when the month is approved"
   },
   "kpiComponent": {
     "quantity": "Work quantity",

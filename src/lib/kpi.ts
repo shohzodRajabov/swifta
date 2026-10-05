@@ -133,3 +133,38 @@ export function weightedPct(items: { weight: number; good: boolean }[]) {
   const w = items.reduce((s, i) => s + Math.max(0, i.weight), 0);
   return w > 0 ? (items.filter((i) => i.good).reduce((s, i) => s + Math.max(0, i.weight), 0) / w) * 100 : null;
 }
+
+// ---- KPI bonus -------------------------------------------------------------------
+
+export type BonusStep = { min: number; pct: number };
+export const DEFAULT_BONUS_SCALE: BonusStep[] = [
+  { min: 90, pct: 20 },
+  { min: 80, pct: 10 },
+  { min: 70, pct: 5 },
+];
+
+/** Normalizes a stored or typed scale ("90:20, 80:10" or [{min, pct}]): valid steps, highest threshold first. */
+export function parseBonusScale(raw: unknown): BonusStep[] {
+  const list: unknown[] =
+    typeof raw === "string"
+      ? raw.split(/[,;\n]+/).map((p) => {
+          const [min, pct] = p.split(/[:=→>-]+/).map((x) => Number(x.trim().replace("%", "")));
+          return { min, pct };
+        })
+      : Array.isArray(raw)
+        ? raw
+        : [];
+  const steps = list
+    .map((s) => ({ min: Number((s as BonusStep)?.min), pct: Number((s as BonusStep)?.pct) }))
+    .filter((s) => Number.isFinite(s.min) && Number.isFinite(s.pct) && s.min >= 0 && s.min <= 100 && s.pct > 0 && s.pct <= 200);
+  const byMin = new Map(steps.map((s) => [s.min, s.pct]));
+  return [...byMin.entries()].map(([min, pct]) => ({ min, pct })).sort((a, b) => b.min - a.min);
+}
+
+export const formatBonusScale = (scale: BonusStep[]) => scale.map((s) => `${s.min}:${s.pct}`).join(", ");
+
+/** Bonus % of the salary for a KPI result; none when the result rests on too little data. */
+export function bonusPct(score: number | null, cov: number, scale: BonusStep[]): number {
+  if (score === null || cov < MIN_COVERAGE) return 0;
+  return scale.find((s) => score >= s.min)?.pct ?? 0;
+}

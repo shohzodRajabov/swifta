@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { fail, formObject, runAction, zNumber, zOptText, zText, type ActionState } from "@/lib/action";
 import { normalizePhone } from "@/lib/phone";
+import { parseBonusScale } from "@/lib/kpi";
 import { DEFAULT_RATING_WEIGHTS, DEFAULT_RELIABILITY_WEIGHTS, normalizeWeights } from "@/lib/contractor-score";
 
 /** Contractor score weights from the form ({prefix}{component}); invalid values fall back to defaults. */
@@ -40,10 +41,12 @@ export async function updateCompanySettings(_: ActionState, formData: FormData):
         efficiencyMinSessions: zNumber.pipe(z.number().int().min(1).max(100)),
         overtimeMultiplier: zNumber.pipe(z.number().min(1).max(5)),
         maxDailyHours: zNumber.pipe(z.number().int().min(4).max(24)),
+        kpiBonusEnabled: z.preprocess((v) => v === "on", z.boolean()),
+        kpiBonusScale: zOptText,
         contractorPhoneRequired: z.preprocess((v) => v === "on", z.boolean()),
         require2faForAdmins: z.preprocess((v) => v === "on", z.boolean()),
       })
-      .parse({ contractorPhoneRequired: formData.get("contractorPhoneRequired") ?? "", require2faForAdmins: formData.get("require2faForAdmins") ?? "", ...formObject(formData) });
+      .parse({ contractorPhoneRequired: formData.get("contractorPhoneRequired") ?? "", require2faForAdmins: formData.get("require2faForAdmins") ?? "", kpiBonusEnabled: formData.get("kpiBonusEnabled") ?? "", ...formObject(formData) });
     const before = await db.company.findUniqueOrThrow({ where: { id: user.companyId } });
     await db.$transaction(async (tx) => {
       const after = await tx.company.update({
@@ -62,6 +65,8 @@ export async function updateCompanySettings(_: ActionState, formData: FormData):
           efficiencyMinSessions: d.efficiencyMinSessions,
           overtimeMultiplier: new Prisma.Decimal(d.overtimeMultiplier),
           maxDailyHours: d.maxDailyHours,
+          kpiBonusEnabled: d.kpiBonusEnabled,
+          kpiBonusScale: parseBonusScale(d.kpiBonusScale ?? ""),
           contractorPhoneRequired: d.contractorPhoneRequired,
           require2faForAdmins: d.require2faForAdmins,
           contractorRatingConfig: weightsFrom(formData, "rw_", DEFAULT_RATING_WEIGHTS),

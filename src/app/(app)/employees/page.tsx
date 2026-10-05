@@ -449,6 +449,11 @@ async function PayrollTab({ companyId, month: raw, canClose }: { companyId: stri
                     {r.overtimeHours > 0 && (
                       <div className="text-xs text-warning">{t("payroll.overtime", { h: String(Math.round(r.overtimeHours * 10) / 10), sum: formatNumber(Math.round(r.overtimePay)) })}</div>
                     )}
+                    {r.kpiBonus > 0 && (
+                      <div className="text-xs text-success" title={t("payroll.kpiBonusHint")}>
+                        {t("payroll.kpiBonus", { sum: formatNumber(Math.round(r.kpiBonus)), cost: formatNumber(Math.round(r.kpiBonusCost)) })}
+                      </div>
+                    )}
                   </Td>
                   <Td className="num text-right">{formatNumber(Math.round(r.allocated))}</Td>
                   <Td className="num text-right">{formatNumber(Math.round(r.unallocated))}</Td>

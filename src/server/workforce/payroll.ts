@@ -14,6 +14,9 @@ export type PayrollRow = {
   earned: number;
   overtimeHours: number;
   overtimePay: number;
+  /** KPI bonus of the approved month: as entered (net/gross) and its employer cost (taxes added). */
+  kpiBonus: number;
+  kpiBonusCost: number;
   allocated: number;
   unallocated: number;
   byType: Record<string, number>;
@@ -30,7 +33,7 @@ export function monthRange(month: string) {
  */
 export async function computePayroll(companyId: string, month: string): Promise<{ rows: PayrollRow[]; pendingSessions: number }> {
   const { from, to } = monthRange(month);
-  const [company, employees, attendance, members, pendingSessions] = await Promise.all([
+  const [company, employees, attendance, members, pendingSessions, bonuses] = await Promise.all([
     db.company.findUniqueOrThrow({ where: { id: companyId } }),
     db.employee.findMany({ where: { companyId }, orderBy: { fullName: "asc" } }),
     db.attendanceDay.findMany({ where: { companyId, date: { gte: from, lte: to } } }),
@@ -39,6 +42,10 @@ export async function computePayroll(companyId: string, month: string): Promise<
       select: { employeeId: true, laborCostUzs: true, overtimeHours: true },
     }),
     db.workSession.count({ where: { companyId, status: "SUBMITTED", date: { gte: from, lte: to } } }),
+    db.kpiSnapshot.findMany({
+      where: { period: { companyId, month, subject: "EMPLOYEE", status: "APPROVED" }, bonusUzs: { not: null } },
+      select: { employeeId: true, bonusUzs: true },
+    }),
   ]);
   const rows: PayrollRow[] = [];
   for (const e of employees) {
@@ -53,8 +60,11 @@ export async function computePayroll(companyId: string, month: string): Promise<
     // Overtime (M5): hours above the daily norm are paid on top, with the company multiplier.
     const otHours = members.filter((m) => m.employeeId === e.id).reduce((x, m) => x + Number(m.overtimeHours), 0);
     const otPay = otHours * hourlyCost(company, e) * (Number(company.overtimeMultiplier) || 1);
-    const earned = daily * worked.length + otPay;
-    const allocated = Math.min(earned, sessionCost + idleCharged);
+    // KPI bonus is overhead (not charged to projects): it stays in the unallocated part.
+    const bonus = bonuses.filter((b) => b.employeeId === e.id).reduce((x, b) => x + Number(b.bonusUzs), 0);
+    const bonusCost = bonus ? employerMonthlyCost(company, bonus) : 0;
+    const earned = daily * worked.length + otPay + bonusCost;
+    const allocated = Math.min(earned - bonusCost, sessionCost + idleCharged);
     rows.push({
       employeeId: e.id,
       fullName: e.fullName,
@@ -67,6 +77,8 @@ export async function computePayroll(companyId: string, month: string): Promise<
       earned,
       overtimeHours: otHours,
       overtimePay: otPay,
+      kpiBonus: bonus,
+      kpiBonusCost: bonusCost,
       allocated,
       unallocated: Math.max(0, earned - allocated),
       byType,

@@ -5,6 +5,7 @@ import { employerMonthlyCost, grossSalary } from "@/lib/payroll";
 import { formatUzs } from "@/lib/format";
 import { Card, CardHeader, Field, Input, Notice, PageHeader, Select } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
+import { DEFAULT_BONUS_SCALE, formatBonusScale, parseBonusScale } from "@/lib/kpi";
 import { updateCompanySettings } from "../actions";
 import { DEFAULT_RATING_WEIGHTS, DEFAULT_RELIABILITY_WEIGHTS, RATING_COMPONENTS, RELIABILITY_COMPONENTS, normalizeWeights } from "@/lib/contractor-score";
 
@@ -68,6 +69,13 @@ export default async function CompanySettingsPage() {
           </Field>
           <Field label={t("settings.company.maxDailyHours")}>
             <Input name="maxDailyHours" inputMode="numeric" defaultValue={c.maxDailyHours} />
+          </Field>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <input type="checkbox" name="kpiBonusEnabled" defaultChecked={c.kpiBonusEnabled} className="size-4" />
+            {t("settings.company.kpiBonusEnabled")}
+          </label>
+          <Field label={t("settings.company.kpiBonusScale")} hint={t("settings.company.kpiBonusScaleHint")} className="sm:col-span-2">
+            <Input name="kpiBonusScale" defaultValue={formatBonusScale(c.kpiBonusScale ? parseBonusScale(c.kpiBonusScale) : DEFAULT_BONUS_SCALE)} placeholder="90:20, 80:10, 70:5" />
           </Field>
           <div className="sm:col-span-2 lg:col-span-3">
             <Notice>

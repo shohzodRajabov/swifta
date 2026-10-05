@@ -97,7 +97,7 @@ alohida hisoblanadi va hech qachon hajmni xodimlar soniga ko'paytirmaydi.
 
 - Formulalar versiyalanadi (komponentlar, og'irliklar, amal qilish davri), kodga yozilmaydi.
 - Oy oxirida natija qayd etiladi (snapshot) va tasdiqlanadi; foizdan task va sessiyagacha ochib ko'rish mumkin.
-- Bonus keyinroq.
+- Bonus: Sozlamalar → Kompaniya'da shkala (KPI ball : maoshdan %), sukut bo'yicha o'chiq; xodimlar KPI oyi tasdiqlanganda qotiriladi, shu oy ish haqiga (umumiy xarajat sifatida) qo'shiladi.
 
 ## 9. Hujjatlar va chizmalar
 

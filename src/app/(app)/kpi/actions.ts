@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { fail, formObject, runAction, zDate, zText, type ActionState } from "@/lib/action";
-import { KPI_COMPONENTS, sanitizeRule, type KpiSubjectKey, type RuleComponent } from "@/lib/kpi";
+import { bonusPct, coverage, KPI_COMPONENTS, parseBonusScale, sanitizeRule, type KpiSubjectKey, type RuleComponent, type SnapshotComponent } from "@/lib/kpi";
+import { Prisma } from "@prisma/client";
 import { toDateOnly } from "@/lib/utils";
 import { calculatePeriod } from "@/server/kpi/compute";
 
@@ -35,6 +36,20 @@ export async function setKpiPeriodStatus(formData: FormData) {
         where: { id: p.id },
         data: d.to === "APPROVED" ? { status: "APPROVED", approvedById: user.id, approvedAt: new Date() } : { status: "CALCULATED", approvedById: null, approvedAt: null },
       });
+      // KPI bonus: fixed when an employee month is approved (salary × % of the reached step), cleared on reopening.
+      if (p.subject === "EMPLOYEE") {
+        const company = await tx.company.findUniqueOrThrow({ where: { id: user.companyId }, select: { kpiBonusEnabled: true, kpiBonusScale: true } });
+        const scale = company.kpiBonusEnabled ? parseBonusScale(company.kpiBonusScale) : [];
+        const snaps = await tx.kpiSnapshot.findMany({ where: { periodId: p.id }, include: { employee: { select: { salary: true } } } });
+        for (const s of snaps) {
+          const pct = d.to === "APPROVED" && scale.length ? bonusPct(Number(s.score), coverage(s.components as SnapshotComponent[]), scale) : 0;
+          const amount = pct ? (Number(s.employee?.salary ?? 0) * pct) / 100 : 0;
+          await tx.kpiSnapshot.update({
+            where: { id: s.id },
+            data: pct ? { bonusPct: new Prisma.Decimal(pct), bonusUzs: new Prisma.Decimal(amount.toFixed(2)) } : { bonusPct: null, bonusUzs: null },
+          });
+        }
+      }
       await audit(tx, { companyId: user.companyId, userId: user.id }, "KpiPeriod", p.id, "update", { status: p.status }, { status: d.to });
     });
   });

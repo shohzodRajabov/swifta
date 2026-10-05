@@ -425,6 +425,10 @@ model Company {
   /// Administrators must use two-factor authentication.
   require2faForAdmins Boolean @default(false)
 
+  // KPI bonus: [{min: score, pct: % of the monthly salary}], applied when an employee KPI month is approved
+  kpiBonusEnabled Boolean @default(false)
+  kpiBonusScale   Json?
+
   // AI translation of user-entered texts
   /// NONE | GEMINI | ANTHROPIC
   aiProvider      String  @default("NONE")
@@ -1905,6 +1909,9 @@ model KpiSnapshot {
   contractorId String?
   contractor   Contractor? @relation(fields: [contractorId], references: [id])
   score        Decimal     @db.Decimal(6, 2)
+  /// Bonus fixed at approval (employees): % of the salary and the amount in the salary's terms (net/gross as entered).
+  bonusPct     Decimal?    @db.Decimal(6, 2)
+  bonusUzs     Decimal?    @db.Decimal(18, 2)
   /// [{key, value, weight, weighted, raw, sources: [{type, id}]}]
   components   Json
   createdAt    DateTime    @default(now())
