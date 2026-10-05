@@ -5,6 +5,7 @@
 import type { BomKind, Prisma, PrismaClient } from "@prisma/client";
 import { LEGACY_ROLE_MAP, SYSTEM_ROLES } from "../lib/permissions";
 import { DEFAULT_STATUS_GROUPS, LEGACY_STAGE_TO_STATUS } from "../lib/statuses";
+import { DEFAULT_KPI_RULES } from "../lib/kpi";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
@@ -135,5 +136,14 @@ export async function ensureCompanyDefaults(db: Db, companyId: string) {
     await db.workType.createMany({
       data: DEFAULT_WORK_TYPES.map(([name, unit], i) => ({ companyId, name, unit, sortOrder: i })),
     });
+  }
+  // KPI: version 1 of each formula (the admin edits them as new versions).
+  for (const subject of ["EMPLOYEE", "GROUP", "CONTRACTOR"] as const) {
+    if ((await db.kpiRule.count({ where: { companyId, subject } })) === 0) {
+      const def = DEFAULT_KPI_RULES[subject];
+      await db.kpiRule.create({
+        data: { companyId, subject, name: def.name, version: 1, effectiveFrom: new Date(Date.UTC(2020, 0, 1)), components: def.components, status: "ACTIVE" },
+      });
+    }
   }
 }

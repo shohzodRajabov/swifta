@@ -1,0 +1,1 @@
+T = {'kpi.lowCoverage': ("kam ma'lumot ({pct}%)", 'мало данных ({pct}%)', 'little data ({pct}%)'), 'kpi.lowCoverageHint': ("Formula komponentlarining yarmidan kamida ma'lumot bor — natija ishonchli emas", 'Данные есть менее чем по половине компонентов — результат ненадёжен', 'Less than half of the formula has data — the score is not reliable')}

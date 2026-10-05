@@ -14,6 +14,8 @@ import { deadlineState } from "@/server/workforce/tasks";
 import { efficiencyIndexes } from "@/server/workforce/efficiency";
 import { taskPercent } from "@/server/projects/progress";
 import { confirmSession, workerAct } from "@/app/(app)/tasks/actions";
+import { kpiHistory } from "@/server/kpi/view";
+import { KpiScore } from "@/components/kpi-bits";
 
 export default async function MePage() {
   const user = await requireAnyPermission("worker.self", "tasks.view");
@@ -51,6 +53,7 @@ export default async function MePage() {
       : [],
     emp ? efficiencyIndexes(user.companyId, [emp.id]).then((m) => m.get(emp.id)) : undefined,
   ]);
+  const lastKpi = emp ? (await kpiHistory(user.companyId, "EMPLOYEE", emp.id, 1))[0] : undefined;
   const done = await db.workSession.groupBy({ by: ["taskId"], where: { taskId: { in: tasks.map((x) => x.id) }, status: { not: "REJECTED" } }, _sum: { quantity: true } });
   const doneMap = new Map(done.map((d) => [d.taskId, Number(d._sum.quantity ?? 0)]));
   const worked = days.filter((d) => (WORKED_DAY_TYPES as readonly string[]).includes(d.type)).length;
@@ -93,6 +96,11 @@ export default async function MePage() {
             <div className="mt-2">
               <EfficiencyBadge index={eff?.index} reliable={eff?.reliable} />
             </div>
+            {lastKpi && (
+              <Link href={`/kpi/EMPLOYEE/${emp.id}?month=${lastKpi.month}`} className="mt-2 block text-xs text-primary">
+                KPI {lastKpi.month}: <KpiScore value={lastKpi.score} />
+              </Link>
+            )}
           </Card>
         </div>
       )}

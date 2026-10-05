@@ -13,6 +13,8 @@ import { Badge, Card, CardHeader, Empty, Field, Input, PageHeader, Select, Table
 import { EfficiencyBadge, TaskStatusBadge } from "@/components/task-bits";
 import { CreateUserForm } from "@/app/(app)/settings/users/otp-forms";
 import { efficiencyIndexes } from "@/server/workforce/efficiency";
+import { kpiHistory } from "@/server/kpi/view";
+import { KpiScore } from "@/components/kpi-bits";
 import { EmployeeForm } from "../employee-form";
 import { grantLogin, saveEmployee } from "../actions";
 
@@ -51,6 +53,7 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
     can(user, "users.manage") ? db.roleDef.findMany({ where: { companyId: user.companyId }, orderBy: { name: "asc" } }) : [],
     db.workType.findMany({ where: { companyId: user.companyId }, select: { id: true, name: true, unit: true } }),
   ]);
+  const kpi = can(user, "kpi.view") ? await kpiHistory(user.companyId, "EMPLOYEE", id, 3) : [];
   const wtName = (wid: string | null) => workTypes.find((w) => w.id === wid)?.name ?? t("employees.noWorkType");
   const wtUnit = (wid: string | null) => workTypes.find((w) => w.id === wid)?.unit ?? "";
 
@@ -77,6 +80,15 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
           <div className="mt-1 text-xs text-muted">
             {t("employees.efficiencyBasis", { sessions: String(eff?.sessions ?? 0), hours: formatNumber(eff?.hours ?? 0) })}
           </div>
+          {kpi.length > 0 && (
+            <Link href={`/kpi/EMPLOYEE/${employee.id}?month=${kpi[0].month}`} className="mt-2 flex flex-wrap gap-x-3 text-xs">
+              {kpi.map((k) => (
+                <span key={k.month}>
+                  <span className="text-muted">KPI {k.month}:</span> <KpiScore value={k.score} />
+                </span>
+              ))}
+            </Link>
+          )}
           {eff && eff.byWorkType.length > 0 && (
             <ul className="mt-3 space-y-1 text-sm">
               {eff.byWorkType.map((w) => (
