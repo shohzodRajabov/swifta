@@ -17,7 +17,7 @@ import { seedService } from "./service";
 
 export const DEMO_RATE = new Prisma.Decimal("11772.95");
 /** Bump when the demo data changes: deployed instances rebuild the demo workspace on start. */
-export const DEMO_VERSION = 6;
+export const DEMO_VERSION = 7;
 const DAY = 86400000;
 
 export type DemoCtx = {
@@ -178,7 +178,7 @@ async function seedCore(ctx: DemoCtx) {
   const products: [string, string, string, string | null, string, string, number, Currency, number][] = [
     ["AHU-001", "Havo ishlov berish qurilmasi 10000 m³/h", "Systemair", "Topvex SR11", "AHU", "dona", 18500, "USD", 0],
     ["VRF-OUT-01", "VRF tashqi blok 28 kW", "LG", "ARUM100LTE6", "VRF_OUTDOOR", "dona", 9800, "USD", 0],
-    ["VRF-IN-01", "VRF kasseta ichki blok 5.6 kW", "LG", "ARNU18GTRD4", "VRF_INDOOR", "dona", 950, "USD", 4],
+    ["VRF-IN-01", "VRF kasseta ichki blok 5.6 kW", "LG", "ARNU18GTRD4", "VRF_INDOOR", "dona", 950, "USD", 0],
     ["DUCT-500x300", "Havo kanali 500×300, 0.7 mm", "Mahalliy", null, "DUCT", "m", 185000, "UZS", 0],
     ["PIPE-CU-12", "Mis quvur 12.7 mm", "Halcor", null, "PIPE", "m", 62000, "UZS", 0],
     ["INS-K-19", "Kauchuk izolyatsiya 19 mm", "K-Flex", "ST", "INSULATION", "m²", 48000, "UZS", 0],
@@ -189,11 +189,11 @@ async function seedCore(ctx: DemoCtx) {
     ["FCU-4T", "Fankoyl 4 trubali 3.5 kW", "Daikin", "FWB04", "FCU", "dona", 780, "USD", 0],
     ["VRF-OUT-02", "VRF tashqi blok 45 kW", "Midea", "MV6-450WV2GN1", "VRF_OUTDOOR", "dona", 13800, "USD", 0],
     ["VRF-IN-02", "VRF kanalli ichki blok 7.1 kW", "Midea", "MI2-71T2DHN1", "VRF_INDOOR", "dona", 1150, "USD", 0],
-    ["SPL-24", "Split konditsioner 24000 BTU", "Gree", "GWH24", "SPLIT", "dona", 6_900_000, "UZS", 2],
-    ["SPL-12", "Split konditsioner 12000 BTU", "Gree", "GWH12", "SPLIT", "dona", 4_100_000, "UZS", 4],
+    ["SPL-24", "Split konditsioner 24000 BTU", "Gree", "GWH24", "SPLIT", "dona", 6_900_000, "UZS", 0],
+    ["SPL-12", "Split konditsioner 12000 BTU", "Gree", "GWH12", "SPLIT", "dona", 4_100_000, "UZS", 0],
     ["CAS-36", "Kasseta konditsioner 36000 BTU", "Midea", "MCD-36", "CASSETTE", "dona", 14_500_000, "UZS", 0],
     ["RTU-20", "Rooftop 20 kW", "Lennox", "Energence", "ROOFTOP", "dona", 21000, "USD", 0],
-    ["FAN-SUP-3000", "Kanal ventilyatori 3000 m³/h", "Systemair", "KVK 315", "SUPPLY_FAN", "dona", 5_600_000, "UZS", 2],
+    ["FAN-SUP-3000", "Kanal ventilyatori 3000 m³/h", "Systemair", "KVK 315", "SUPPLY_FAN", "dona", 5_600_000, "UZS", 0],
     ["FAN-SMK-01", "Tutun chiqarish ventilyatori", "Vents", "VKRF 450", "SMOKE_FAN", "dona", 24_000_000, "UZS", 0],
     ["PUMP-CH-01", "Sirkulyatsion nasos 18 m³/h", "Grundfos", "TP 65-180", "PUMP", "dona", 2900, "USD", 0],
     ["VLV-BAL-50", "Balansirovka klapani DN50", "Danfoss", "MSV-F2", "VALVE", "dona", 1_850_000, "UZS", 6],
@@ -249,17 +249,17 @@ async function seedCore(ctx: DemoCtx) {
   };
   const specs: Spec[] = [
     { key: "brb", name: "BRB ma'muriy binosi — ventilyatsiya va VRF", customer: "invest", owner: "brb", entity: "general", statusCode: "D3", objectType: "Ma'muriy bino", contract: [210000, "USD"], vat: 12, start: -180, end: 60, pm: "pm1", priority: "HIGH", warrantyMonths: 24, address: "Toshkent sh., Shayxontohur t." },
-    { key: "mall", name: "Tashkent City Mall — chiller tizimi", customer: "mall", entity: "general", statusCode: "C2", objectType: "Savdo markazi", contract: [3_400_000_000, "UZS"], vat: 12, start: -90, end: 180, pm: "pm2", warrantyMonths: 24, address: "Toshkent sh., Olmazor t." },
-    { key: "bomi", name: "Bomi Kimyo — ishlab chiqarish sexi ventilyatsiyasi", customer: "bomi", entity: "turnover", statusCode: "E2", objectType: "Ishlab chiqarish", contract: [1_850_000_000, "UZS"], vat: 0, start: -240, end: -15, pm: "pm1", warrantyMonths: 12, address: "Toshkent viloyati, Chirchiq" },
+    { key: "mall", name: "Tashkent City Mall — chiller tizimi", customer: "mall", entity: "general", statusCode: "C2", objectType: "Savdo markazi", contract: [3_950_000_000, "UZS"], vat: 12, start: -90, end: 180, pm: "pm2", warrantyMonths: 24, address: "Toshkent sh., Olmazor t." },
+    { key: "bomi", name: "Bomi Kimyo — ishlab chiqarish sexi ventilyatsiyasi", customer: "bomi", entity: "turnover", statusCode: "E2", objectType: "Ishlab chiqarish", contract: [1_150_000_000, "UZS"], vat: 0, start: -240, end: -15, pm: "pm1", warrantyMonths: 12, address: "Toshkent viloyati, Chirchiq" },
     { key: "hotel", name: "Samarqand Plaza — VRF tizimi", customer: "hotel", entity: "general", statusCode: "B1", objectType: "Mehmonxona", contract: [0, "UZS"], vat: 12, start: 20, end: 200, pm: "pm2", address: "Samarqand sh." },
-    { key: "hospital", name: "Navoiy shifoxonasi — operatsiya bloki ventilyatsiyasi", customer: "invest", owner: "hospital", entity: "general", statusCode: "G1", objectType: "Shifoxona", contract: [980_000_000, "UZS"], vat: 12, start: -420, end: -75, actualEnd: -60, pm: "pm1", warrantyMonths: 12, address: "Navoiy sh." },
+    { key: "hospital", name: "Navoiy shifoxonasi — operatsiya bloki ventilyatsiyasi", customer: "invest", owner: "hospital", entity: "general", statusCode: "G1", objectType: "Shifoxona", contract: [820_000_000, "UZS"], vat: 12, start: -420, end: -75, actualEnd: -60, pm: "pm1", warrantyMonths: 12, address: "Navoiy sh." },
     { key: "textile", name: "Andijon Tekstil — sex konditsionerlash", customer: "textile", entity: "general", statusCode: "A3", objectType: "Ishlab chiqarish", contract: [0, "UZS"], vat: 12, start: 45, end: 240, pm: "pm2", address: "Andijon sh." },
     { key: "nest", name: "Nest One biznes markazi — VRF tizimi", customer: "nest", entity: "general", statusCode: "D2", objectType: "Biznes markaz", contract: [365000, "USD"], vat: 12, start: -70, end: 150, pm: "pm2", priority: "HIGH", warrantyMonths: 36, address: "Toshkent sh., Yunusobod t." },
     { key: "school", name: "110-maktab — ventilyatsiya rekonstruksiyasi", customer: "school", entity: "general", statusCode: "C4", objectType: "Ta'lim muassasasi", contract: [1_250_000_000, "UZS"], vat: 12, start: -25, end: 95, pm: "pm1", warrantyMonths: 24, address: "Toshkent sh., Chilonzor t." },
-    { key: "pharm", name: "Nika Farm ombori — konditsionerlash", customer: "nika", entity: "general", statusCode: "E1", objectType: "Ombor (farmatsevtika)", contract: [780_000_000, "UZS"], vat: 12, start: -150, end: 5, pm: "pm2", warrantyMonths: 24, address: "Toshkent viloyati, Zangiota" },
+    { key: "pharm", name: "Nika Farm ombori — konditsionerlash", customer: "nika", entity: "general", statusCode: "E1", objectType: "Ombor (farmatsevtika)", contract: [1_250_000_000, "UZS"], vat: 12, start: -150, end: 5, pm: "pm2", warrantyMonths: 24, address: "Toshkent viloyati, Zangiota" },
     { key: "resto", name: "Afsona restorani — oshxona so'rish tizimi", customer: "afsona", entity: "turnover", statusCode: "F3", objectType: "Restoran", contract: [295_000_000, "UZS"], vat: 0, start: -120, end: -20, actualEnd: -18, pm: "pm1", warrantyMonths: 12, address: "Toshkent sh., Mirobod t." },
-    { key: "hamkor", name: "Hamkorbank Farg'ona filiali — split tizimlar", customer: "hamkor", entity: "turnover", statusCode: "G1", objectType: "Bank filiali", contract: [186_000_000, "UZS"], vat: 0, start: -300, end: -200, actualEnd: -205, pm: "pm2", warrantyMonths: 12, address: "Farg'ona sh." },
-    { key: "arena", name: "Humo Arena — chiller servis xizmati", customer: "humo", entity: "general", statusCode: "H", objectType: "Sport majmuasi", contract: [420_000_000, "UZS"], vat: 12, start: -500, end: -380, actualEnd: -380, pm: "pm1", warrantyMonths: 24, address: "Toshkent sh., Olmazor t." },
+    { key: "hamkor", name: "Hamkorbank Farg'ona filiali — split tizimlar", customer: "hamkor", entity: "turnover", statusCode: "G1", objectType: "Bank filiali", contract: [228_000_000, "UZS"], vat: 0, start: -300, end: -200, actualEnd: -205, pm: "pm2", warrantyMonths: 12, address: "Farg'ona sh." },
+    { key: "arena", name: "Humo Arena — chiller servis xizmati", customer: "humo", entity: "general", statusCode: "H", objectType: "Sport majmuasi", contract: [300_000_000, "UZS"], vat: 12, start: -500, end: -380, actualEnd: -380, pm: "pm1", warrantyMonths: 24, address: "Toshkent sh., Olmazor t." },
     { key: "utel", name: "Uzbektelecom ma'lumotlar markazi — presizion konditsionerlar", customer: "utel", entity: "general", statusCode: "B3", objectType: "Data-markaz", contract: [0, "UZS"], vat: 12, start: 30, end: 210, pm: "pm2", priority: "HIGH", address: "Toshkent sh., Mirzo Ulug'bek t." },
   ];
 
@@ -435,7 +435,7 @@ async function seedCore(ctx: DemoCtx) {
     ["Montaj tugaganda", 20, 150],
     ["Yakuniy topshirish", 10, 190],
   ]);
-  await pay("mall", -82, 1_020_000_000, "UZS", mallMs[0]);
+  await pay("mall", -82, 1_185_000_000, "UZS", mallMs[0]);
 
   const bomiMs = await schedule("bomi", [
     ["Avans", 30, -230],
@@ -443,17 +443,17 @@ async function seedCore(ctx: DemoCtx) {
     ["Montaj tugaganda", 20, -40],
     ["Yakuniy topshirish", 10, -10],
   ]);
-  await pay("bomi", -228, 555_000_000, "UZS", bomiMs[0]);
-  await pay("bomi", -160, 740_000_000, "UZS", bomiMs[1]);
-  await act("bomi", "AKT-1", -60, 1_200_000_000, "UZS", 0);
+  await pay("bomi", -228, 345_000_000, "UZS", bomiMs[0]);
+  await pay("bomi", -160, 460_000_000, "UZS", bomiMs[1]);
+  await act("bomi", "AKT-1", -60, 750_000_000, "UZS", 0);
 
   const hospMs = await schedule("hospital", [
     ["Avans", 50, -410],
     ["Yakuniy", 50, -55],
   ]);
-  await pay("hospital", -405, 490_000_000, "UZS", hospMs[0]);
-  await pay("hospital", -50, 490_000_000, "UZS", hospMs[1]);
-  await act("hospital", "AKT-1", -70, 980_000_000, "UZS", 12);
+  await pay("hospital", -405, 410_000_000, "UZS", hospMs[0]);
+  await pay("hospital", -50, 410_000_000, "UZS", hospMs[1]);
+  await act("hospital", "AKT-1", -70, 820_000_000, "UZS", 12);
 
   const expense = (projectKey: string, category: CostCategory, description: string, amount: number, currency: Currency, date: number, vat = 0, approval: "APPROVED" | "PENDING" = "APPROVED") =>
     db.expense.create({
@@ -520,7 +520,8 @@ async function seedCore(ctx: DemoCtx) {
       budget: [["LABOR", 110_000_000, "Montaj"], ["TRANSPORT", 15_000_000, "Kran va tashish"]],
       ms: [["Avans", 40, -148, -146], ["Uskuna yetkazilganda", 40, -80, -76], ["Topshirish", 20, 10, null]],
       acts: [[-75, 40, true], [-15, 45, true]],
-      exp: [["EQUIPMENT", "Rooftop 3 dona (Lennox)", 63000 * 11772.95, -95], ["MATERIAL", "Havo kanallari va diffuzorlar", 51_000_000, -90], ["LABOR", "Montaj brigadasi (iyul–sentabr)", 96_000_000, -20], ["TRANSPORT", "Kran ijarasi", 7_500_000, -88]],
+      // Ducts/diffusers come through purchase order 008 and labour through work sessions (no duplicate expenses).
+      exp: [["EQUIPMENT", "Rooftop 3 dona (Lennox)", 63000 * 11772.95, -95], ["TRANSPORT", "Kran ijarasi", 7_500_000, -88]],
       docs: ["SIGNED_CONTRACT", "SMETA", "HIDDEN_WORKS_ACT", "TEST_ACT"],
     },
     {
@@ -529,7 +530,7 @@ async function seedCore(ctx: DemoCtx) {
       budget: [["LABOR", 55_000_000, "Montaj"]],
       ms: [["Avans", 50, -118, -117], ["Yakuniy", 50, -15, null]],
       acts: [[-20, 100, true]],
-      exp: [["MATERIAL", "Ventilyatorlar va kanallar", 79_000_000, -100], ["LABOR", "Montaj", 48_000_000, -25]],
+      exp: [["MATERIAL", "Ventilyatorlar va kanallar", 79_000_000, -100]], // labour: work sessions
       docs: ["SIGNED_CONTRACT", "COMPLETION_ACT"],
     },
     {
@@ -538,7 +539,7 @@ async function seedCore(ctx: DemoCtx) {
       budget: [["LABOR", 22_000_000, "Montaj"], ["HOTEL", 6_000_000, "Farg'onada yashash"]],
       ms: [["Avans", 50, -298, -296], ["Yakuniy", 50, -200, -195]],
       acts: [[-205, 100, true]],
-      exp: [["EQUIPMENT", "Split konditsionerlar 24 dona", 137_600_000, -290], ["HOTEL", "Mehmonxona", 5_400_000, -240], ["LABOR", "Montaj", 20_000_000, -205]],
+      exp: [["HOTEL", "Mehmonxona", 5_400_000, -240], ["LABOR", "Montaj", 20_000_000, -205]], // split units: purchase order 009
       docs: ["SIGNED_CONTRACT", "COMPLETION_ACT", "PAYMENT_PROOF", "FINAL_DOCS", "WARRANTY"],
     },
     {
@@ -709,6 +710,11 @@ async function seedCore(ctx: DemoCtx) {
     ["GRL-400", 12, 145000],
     ["DMP-315", 6, 410000],
     ["VRF-IN-01", 2, 950 * 11772.95],
+    // consumables kept in stock (minimum levels apply to these, not to project equipment)
+    ["PIPE-CU-19", 180, 98000],
+    ["DUCT-FLEX-200", 120, 42000],
+    ["INS-K-13", 260, 14000],
+    ["FST-ANCH", 45, 85000],
   ] as const) {
     const p = await db.product.findUniqueOrThrow({ where: { id: ctx.products[sku] } });
     const uzs = new Prisma.Decimal(price);

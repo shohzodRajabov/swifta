@@ -27,12 +27,13 @@ Kelishilgan arxitektura va ochiq savollar: [docs/KONSEPT.md](docs/KONSEPT.md). Y
 Saytga (`railway up`) faqat foydalanuvchi aniq ruxsat bergandan keyin chiqariladi.
 
 ## Holat
-Saytda (swifta.uz): obyektlar, mijozlar, katalog, moliya, xarid, ombor, yetkazib beruvchilar, material nazorati, bildirishnomalar; 1-bosqich (asos) va 2-bosqich (xodimlar, guruhlar, vazifalar, sessiyalar, kamchiliklar, davomat, oylik, smeta importi, /me); 3-bosqich (contractorlar, tashqi ishlar, rating/reliability); 4-bosqich (KPI); 5-bosqich (chizmalar); 6-bosqich (servis va kafolat); 7-bosqich (hisobotlar, Excel eksport, rollarga mos bosh sahifa).
+Saytda (swifta.uz): obyektlar, mijozlar, katalog, moliya, xarid, ombor, yetkazib beruvchilar, material nazorati, bildirishnomalar; 1-bosqich (asos) va 2-bosqich (xodimlar, guruhlar, vazifalar, sessiyalar, kamchiliklar, davomat, oylik, smeta importi, /me); 3-bosqich (contractorlar, tashqi ishlar, rating/reliability); 4-bosqich (KPI); 5-bosqich (chizmalar); 6-bosqich (servis va kafolat); 7-bosqich (hisobotlar, Excel eksport, rollarga mos bosh sahifa); xavfsizlik 1–3 (login cheklovi, sessiya versiyasi, CSP, shifrlangan backup/kalitlar, TOTP 2FA, audit maskalash); foydalanuvchi matnlarini AI tarjimasi (Sozlamalar → AI tarjima, `<UT>` komponenti, kalitni admin kiritadi).
 Barcha rejalashtirilgan bosqichlar bajarilgan; keyingi ishlar foydalanuvchi bilan kelishiladi.
 Hisobot qo'shish: src/server/reports/defs.ts (REPORTS) + scripts/i18n tarjimalar.
 pdf.js worker: `public/pdf.worker.min.mjs` (pdfjs-dist yangilansa qayta nusxalang).
 Demo ma'lumot o'zgarsa `DEMO_VERSION` (src/server/demo/generate.ts) ni oshiring — sayt demo'ni qayta yaratadi.
-Lokal: `pnpm local` (yoki `pnpm dev --port 3100`); `pnpm db:seed`, `pnpm db:demo` (faqat lokal demo, parol demo12345).
+Lokal: `pnpm local` (yoki `pnpm dev --port 3100`); `pnpm db:seed`, `pnpm db:demo` (demo ish maydonini qayta yaratadi; demo foydalanuvchilar to'g'ridan-to'g'ri kira olmaydi — asosiy hisobdan "Demo" orqali).
+Maxfiy qiymatlar (Telegram token, AI kalit) `sealSecret` bilan `ENCRYPTION_KEY` orqali shifrlanadi; server-only modullarni tsx'da sinash: `NODE_OPTIONS=--conditions=react-server`.
 Konteyner start: `prisma migrate deploy` → idempotent seed → `next start`.
 Railway sozlamasi: `.railway/railway.ts` (IaC, railway.json o'rniga). O'zgaruvchilar `preserve()` bilan — `railway config apply` ularni o'chirmasligi uchun; yangi o'zgaruvchi qo'shilsa ro'yxatga ham yozing. `railway config plan/apply` uchun Node 22+ kerak (`~/.nvm/versions/node/v22.*`).
 
