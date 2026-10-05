@@ -646,7 +646,10 @@
     "drawingOldVersion": "Zones can only be edited on the latest version",
     "ticketClientRequired": "Choose a client or a project",
     "ticketSolutionRequired": "Describe the solution first",
-    "passwordShort": "The password must be at least 8 characters"
+    "passwordShort": "The password must be at least 8 characters",
+    "qtyOverPlan": "Quantity exceeds the planned remainder ({remaining} {unit} left). State the reason",
+    "tooManyHours": "{name}: no more than {max} h per day ({already} h already recorded)",
+    "passportType": "Passport: PDF or image only (JPG, PNG, WEBP)"
   },
   "poStatus": {
     "DRAFT": "Draft",
@@ -1222,7 +1225,10 @@
       "contractorRating": "Contractor rating formula (weights)",
       "contractorRatingHint": "Rating 0–5: each component is computed from facts only (quality score, delays, rework, price overrun, remarks) and combined with these weights",
       "contractorReliability": "Reliability formula",
-      "contractorReliabilityHint": "Reliability %: on-time delivery, share of accepted work, rework and cancellations"
+      "contractorReliabilityHint": "Reliability %: on-time delivery, share of accepted work, rework and cancellations",
+      "overtimeMultiplier": "Overtime multiplier",
+      "overtimeHint": "Hours above the daily norm are paid and charged with this multiplier (e.g. 1.5)",
+      "maxDailyHours": "Max hours per day"
     },
     "firms": {
       "title": "Our companies",
@@ -1310,7 +1316,9 @@
     "schedule": "Scheduled",
     "status_SUCCESS": "Success",
     "status_FAILED": "Failed",
-    "status_RUNNING": "Running"
+    "status_RUNNING": "Running",
+    "encrypted": "Backups are AES-256 encrypted and decrypted on download. Keep a copy of the key (ENCRYPTION_KEY, in Railway) somewhere safe",
+    "notEncrypted": "Warning: no encryption key — backups are stored unencrypted"
   },
   "telegram": {
     "settings": "Bot & group",
@@ -1457,7 +1465,11 @@
     "awaitingFirstLogin": "awaiting first login",
     "openTasks": "Open tasks",
     "membershipHistory": "Group history",
-    "recentSessions": "Recent work sessions"
+    "recentSessions": "Recent work sessions",
+    "passport": "Passport",
+    "passportNumber": "Passport series and number",
+    "passportHint": "Upload the passport scan (PDF or image) on the employee card after saving",
+    "passportPrivacy": "Personal data: visible only to HR editors; every view is logged in the audit log"
   },
   "groups": {
     "new": "New group",
@@ -1498,7 +1510,8 @@
     "closeHint": "Closing saves the lines and posts the unallocated amount to overhead",
     "closed": "Month closed",
     "reopen": "Reopen",
-    "pendingSessions": "{n} sessions pending"
+    "pendingSessions": "{n} sessions pending",
+    "overtime": "+ overtime {h} h: {sum}"
   },
   "tasks": {
     "title": "Tasks",
@@ -1561,7 +1574,8 @@
     "locationKind": "Kind",
     "locationParent": "Inside",
     "locationPlaceholder": "e.g. Floor 3",
-    "noLocation": "No location"
+    "noLocation": "No location",
+    "pendingQty": "Pending approval"
   },
   "sessions": {
     "title": "Work sessions",
@@ -1595,7 +1609,9 @@
     "share": "Share",
     "contribution": "Contribution",
     "laborCost": "Cost",
-    "confirmation": "Confirmation"
+    "confirmation": "Confirmation",
+    "overReason": "Reason for exceeding the plan",
+    "overReasonHint": "Planned remainder: {qty} {unit}. E.g. under-estimated quantity, extra work"
   },
   "remarks": {
     "title": "Remarks",

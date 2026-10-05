@@ -11,6 +11,7 @@ import { formatPhone } from "@/lib/phone";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { Badge, Card, CardHeader, Empty, Field, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
 import { EfficiencyBadge, TaskStatusBadge } from "@/components/task-bits";
+import { Attachments } from "@/components/attachments";
 import { CreateUserForm } from "@/app/(app)/settings/users/otp-forms";
 import { efficiencyIndexes } from "@/server/workforce/efficiency";
 import { kpiHistory } from "@/server/kpi/view";
@@ -255,6 +256,19 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
           </Table>
         )}
       </Card>
+
+      {can(user, "employees.edit") && (
+        <Card className="mt-6">
+          <CardHeader title={t("employees.passport")} subtitle={t("employees.passportPrivacy")} />
+          <div className="p-5">
+            <div className="mb-3 text-sm">
+              <span className="text-muted">{t("employees.passportNumber")}: </span>
+              <span className="num font-medium">{employee.passportNumber ?? "—"}</span>
+            </div>
+            <Attachments entityType="employee_passport" entityId={employee.id} canUpload />
+          </div>
+        </Card>
+      )}
 
       {can(user, "employees.edit") && (
         <Card className="mt-6">

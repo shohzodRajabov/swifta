@@ -38,6 +38,9 @@ export function SessionForm({
   const groupMembers = useMemo(() => groups.find((g) => g.id === groupId)?.members ?? [], [groups, groupId]);
   const [selected, setSelected] = useState<Set<string>>(new Set(groupMembers.map((m) => m.employeeId)));
   const [matRows, setMatRows] = useState(1);
+  const [qty, setQty] = useState("");
+  const qtyNum = Number(qty.replace(",", "."));
+  const over = remaining !== null && Number.isFinite(qtyNum) && qtyNum > remaining + 1e-9;
 
   const ordered = [...people].sort((a, b) => {
     const ia = groupMembers.findIndex((m) => m.employeeId === a.id);
@@ -86,8 +89,13 @@ export function SessionForm({
         required
         hint={remaining !== null ? t("sessions.remaining", { qty: String(Math.round(remaining * 100) / 100), unit: unit ?? "" }) : undefined}
       >
-        <Input name="quantity" inputMode="decimal" required />
+        <Input name="quantity" inputMode="decimal" required value={qty} onChange={(e) => setQty(e.target.value)} />
       </Field>
+      {over && (
+        <Field label={t("sessions.overReason")} required hint={t("sessions.overReasonHint", { qty: String(Math.round((remaining ?? 0) * 100) / 100), unit: unit ?? "" })} className="sm:col-span-2 xl:col-span-4">
+          <Input name="overReason" required />
+        </Field>
+      )}
 
       <fieldset className="sm:col-span-2 xl:col-span-4">
         <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">

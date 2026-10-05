@@ -52,3 +52,17 @@ export const WORKED_DAY_TYPES = [
   "IDLE_CLIENT",
   "IDLE_OTHER",
 ] as const;
+
+/**
+ * Overtime part of a session's hours: `before` hours were already recorded for the person that day; hours
+ * beyond the daily `norm` are overtime. Returns the regular and overtime hours of this session.
+ */
+export function splitOvertime(before: number, hours: number, norm: number) {
+  const overtime = Math.max(0, before + hours - norm) - Math.max(0, before - norm);
+  return { regular: hours - overtime, overtime };
+}
+
+/** Labour cost of a session member: regular hours at the hourly rate, overtime with the multiplier. */
+export function sessionLaborCost(rate: number, split: { regular: number; overtime: number }, multiplier: number) {
+  return rate * split.regular + rate * multiplier * split.overtime;
+}

@@ -411,6 +411,10 @@ model Company {
   contributionWeights   Json?
   defaultContribution   ContributionMethod @default(EQUAL)
   efficiencyMinSessions Int                @default(5)
+  /// Hours above the norm in one day are paid (and charged to projects) with this multiplier.
+  overtimeMultiplier    Decimal            @default(1.5) @db.Decimal(4, 2)
+  /// Upper limit of hours a person can be recorded for in one day.
+  maxDailyHours         Int                @default(14)
 
   // Contractors: configurable formulas (component -> weight)
   contractorRatingConfig      Json?
@@ -1327,6 +1331,9 @@ model Employee {
   /// Overrides Company.normWorkDays for this employee.
   normDays   Int?
   hireDate   DateTime? @db.Date
+  /// Passport series and number (personal data: visible only with employees.edit); scans are attachments
+  /// with entityType "employee_passport".
+  passportNumber String?
   active     Boolean   @default(true)
   userId     String?   @unique
   user       User?     @relation(fields: [userId], references: [id])
@@ -1599,6 +1606,8 @@ model WorkSessionMember {
   hours           Decimal      @db.Decimal(5, 2)
   sharePercent    Decimal      @db.Decimal(7, 4)
   contributionQty Decimal      @db.Decimal(14, 3)
+  /// Part of `hours` above the daily norm (paid with Company.overtimeMultiplier).
+  overtimeHours   Decimal      @default(0) @db.Decimal(5, 2)
   hourlyCostUzs   Decimal      @default(0) @db.Decimal(18, 2)
   laborCostUzs    Decimal      @default(0) @db.Decimal(18, 2)
   confirmation    Confirmation @default(PENDING)

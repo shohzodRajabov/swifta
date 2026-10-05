@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Download } from "lucide-react";
 import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { encryptionKey } from "@/lib/crypto-box";
 import { formatDateTime } from "@/lib/utils";
 import { Badge, Card, CardHeader, Empty, Notice, PageHeader, Table, Td, Th } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
@@ -19,6 +20,7 @@ export default async function BackupsPage() {
       <PageHeader title={t("settings.backups.title")} subtitle={t("backups.subtitle")} back={{ href: "/settings", label: t("settings.title") }} />
       <div className="flex max-w-4xl flex-col gap-6">
         <Notice tone="primary">{t("backups.explain")}</Notice>
+        {encryptionKey() ? <Notice tone="success">{t("backups.encrypted")}</Notice> : <Notice tone="warning">{t("backups.notEncrypted")}</Notice>}
         <Card>
           <CardHeader
             title={t("backups.history")}

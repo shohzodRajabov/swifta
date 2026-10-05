@@ -1,11 +1,14 @@
 /**
  * Database backups: pg_dump (custom format) uploaded to object storage, recorded in BackupRun.
+ * Backups are encrypted (AES-256-GCM, ENCRYPTION_KEY) when the key is configured; downloads are decrypted for
+ * admins. Offline: `pnpm tsx scripts/decrypt-backup.ts file.dump.enc > backup.dump`.
  * Restore: pg_restore --clean --no-owner -d "$DATABASE_URL" backup.dump
  * No "server-only" import: used by the background scheduler (instrumentation) too.
  */
 import { spawn } from "node:child_process";
 import { db } from "@/lib/db";
 import { deleteObject, putObject } from "./files/storage";
+import { encrypt, encryptionKey } from "@/lib/crypto-box";
 
 function pgDump(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -24,9 +27,11 @@ export async function runBackup(trigger: "SCHEDULE" | "MANUAL", createdById?: st
   try {
     const url = process.env.DATABASE_URL;
     if (!url) throw new Error("DATABASE_URL is not set");
-    const dump = await pgDump(url);
+    const plain = await pgDump(url);
+    const secret = encryptionKey();
+    const dump = secret ? encrypt(plain, secret) : plain;
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const key = `backups/${stamp}.dump`;
+    const key = `backups/${stamp}.dump${secret ? ".enc" : ""}`;
     await putObject(key, dump, "application/octet-stream");
     await db.backupRun.update({
       where: { id: run.id },

@@ -80,7 +80,7 @@ export async function taskSummaries(taskIds: string[]): Promise<Map<string, Task
         _count: { select: { remarks: { where: { status: { not: "ACCEPTED" } } } } },
       },
     }),
-    db.workSession.groupBy({ by: ["taskId"], where: { taskId: { in: taskIds }, status: { not: "REJECTED" } }, _sum: { quantity: true } }),
+    db.workSession.groupBy({ by: ["taskId"], where: { taskId: { in: taskIds }, status: "APPROVED" }, _sum: { quantity: true } }),
     db.taskAssignment.groupBy({ by: ["taskId"], where: { taskId: { in: taskIds }, kind: "CONTRACTOR", outsourceStatus: { in: ["COMPLETED", "VERIFIED"] } }, _sum: { completedQty: true } }),
     db.attachment.groupBy({ by: ["entityId"], where: { entityType: "task", entityId: { in: taskIds } }, _count: { _all: true } }),
   ]);

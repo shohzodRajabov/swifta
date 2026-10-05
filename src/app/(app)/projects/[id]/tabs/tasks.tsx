@@ -39,7 +39,7 @@ export async function TasksTab({ user, projectId }: { user: CurrentUser; project
     db.workSession.aggregate({ where: { projectId, status: { not: "REJECTED" } }, _sum: { laborCostUzs: true, hours: true }, _count: { _all: true } }),
     can(user, "import.manage") || can(user, "import.approve") ? db.smetaImport.count({ where: { projectId, status: "DRAFT" } }) : Promise.resolve(0),
   ]);
-  const done = await db.workSession.groupBy({ by: ["taskId"], where: { projectId, status: { not: "REJECTED" } }, _sum: { quantity: true } });
+  const done = await db.workSession.groupBy({ by: ["taskId"], where: { projectId, status: "APPROVED" }, _sum: { quantity: true } });
   const doneMap = new Map(done.map((d) => [d.taskId, Number(d._sum.quantity ?? 0)]));
   const byStatus = new Map<string, number>();
   for (const tk of tasks) byStatus.set(tk.status, (byStatus.get(tk.status) ?? 0) + 1);

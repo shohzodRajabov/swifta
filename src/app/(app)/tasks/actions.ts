@@ -9,7 +9,7 @@ import { audit } from "@/lib/audit";
 import { can } from "@/lib/permissions";
 import { fail, formObject, runAction, zDate, zNumber, zOptDate, zOptId, zOptNumber, zOptText, zText, type ActionState } from "@/lib/action";
 import type { CurrentUser } from "@/lib/auth";
-import { accessibleProject } from "@/server/projects/access";
+import { accessibleProject, projectWhere } from "@/server/projects/access";
 import { approveTask, changeTaskStatus, inspectTask, nextRemarkNumber, nextTaskNumber, workerAction } from "@/server/workforce/tasks";
 import { recordSession } from "@/server/workforce/sessions";
 
@@ -123,7 +123,7 @@ export async function createTask(_: ActionState, formData: FormData): Promise<Ac
 
 export async function updateTask(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
   const res = await runAction("tasks.manage", async (user) => {
-    const before = await db.task.findFirst({ where: { id, companyId: user.companyId } });
+    const before = await db.task.findFirst({ where: { id, companyId: user.companyId, project: projectWhere(user) } });
     if (!before) fail("invalid");
     const d = taskSchema.parse({ ...formObject(formData), projectId: before.projectId });
     if (d.parentId === id) fail("invalid");
@@ -142,7 +142,7 @@ export async function updateTask(id: string, _: ActionState, formData: FormData)
 export async function addAssignment(taskId: string, _: ActionState, formData: FormData): Promise<ActionState> {
   const res = await runAction("tasks.manage", async (user) => {
     const d = z.object({ who: zText, plannedQty: zOptNumber, note: zOptText }).parse(formObject(formData));
-    const task = await db.task.findFirst({ where: { id: taskId, companyId: user.companyId } });
+    const task = await db.task.findFirst({ where: { id: taskId, companyId: user.companyId, project: projectWhere(user) } });
     if (!task) fail("invalid");
     const [kind, refId] = d.who.split(":");
     const data: Prisma.TaskAssignmentUncheckedCreateInput = {
@@ -177,7 +177,7 @@ export async function removeAssignment(formData: FormData) {
   let taskId = "";
   await runAction("tasks.manage", async (user) => {
     const id = String(formData.get("id"));
-    const a = await db.taskAssignment.findFirst({ where: { id, task: { companyId: user.companyId } } });
+    const a = await db.taskAssignment.findFirst({ where: { id, task: { companyId: user.companyId, project: projectWhere(user) } } });
     if (!a || a.kind === "CONTRACTOR") fail("invalid");
     if (a.groupId && (await db.workSession.count({ where: { taskId: a.taskId, groupId: a.groupId } }))) fail("inUse");
     taskId = a.taskId;
@@ -243,6 +243,7 @@ export async function addSession(taskId: string, _: ActionState, formData: FormD
         method: z.enum(["EQUAL", "LEADER", "RULE", "EFFICIENCY", ""]).optional(),
         note: zOptText,
         problems: zOptText,
+        overReason: zOptText,
       })
       .parse(formObject(formData));
     if (d.hours <= 0 || d.hours > 24 || d.quantity < 0) fail("invalid");
@@ -271,6 +272,7 @@ export async function addSession(taskId: string, _: ActionState, formData: FormD
       method: d.method ? d.method : null,
       members,
       materials,
+      overReason: d.overReason,
     });
   });
   if (res?.ok) revalidatePath(`/tasks/${taskId}`);
@@ -280,7 +282,7 @@ export async function addSession(taskId: string, _: ActionState, formData: FormD
 export async function decideSession(formData: FormData) {
   await runAction("sessions.approve", async (user) => {
     const d = z.object({ id: zText, decision: z.enum(["APPROVED", "REJECTED"]), reason: zOptText }).parse(formObject(formData));
-    const s = await db.workSession.findFirst({ where: { id: d.id, companyId: user.companyId } });
+    const s = await db.workSession.findFirst({ where: { id: d.id, companyId: user.companyId, project: projectWhere(user) } });
     if (!s || s.status !== "SUBMITTED") fail("invalid");
     await db.$transaction(async (tx) => {
       const after = await tx.workSession.update({
@@ -363,7 +365,7 @@ export async function setRemarkStatus(id: string, _: ActionState, formData: Form
     const d = z
       .object({ to: z.enum(["NEW", "ASSIGNED", "IN_PROGRESS", "FIXED", "REINSPECTION", "ACCEPTED"]), responsibleUserId: zOptId, note: zOptText })
       .parse(formObject(formData));
-    const r = await db.remark.findFirst({ where: { id, companyId: user.companyId } });
+    const r = await db.remark.findFirst({ where: { id, companyId: user.companyId, project: projectWhere(user) } });
     if (!r) fail("invalid");
     if (!REMARK_FLOW[r.status]?.includes(d.to)) fail("badTransition");
     const manager = can(user, "remarks.manage");
@@ -404,7 +406,7 @@ export async function deleteLocation(formData: FormData) {
   let projectId = "";
   await runAction("tasks.manage", async (user) => {
     const id = String(formData.get("id"));
-    const loc = await db.projectLocation.findFirst({ where: { id, project: { companyId: user.companyId } }, include: { _count: { select: { tasks: true } } } });
+    const loc = await db.projectLocation.findFirst({ where: { id, project: projectWhere(user) }, include: { _count: { select: { tasks: true } } } });
     if (!loc) fail("invalid");
     if (loc._count.tasks > 0) fail("inUse");
     projectId = loc.projectId;

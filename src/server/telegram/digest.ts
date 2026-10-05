@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { formatNumber } from "@/lib/format";
 import { tashkentDayStart, tashkentHour } from "../backup";
 import { escapeHtml as e, sendLongMessage } from "./api";
+import { openSecret } from "@/lib/crypto-box";
 
 function fmtDate(d: Date) {
   const local = new Date(d.getTime() + 5 * 3600000);
@@ -90,7 +91,7 @@ export async function buildDigest(companyId: string, now = new Date()): Promise<
 export async function sendDigest(companyId: string) {
   const c = await db.company.findUniqueOrThrow({ where: { id: companyId } });
   if (!c.telegramBotToken || !c.telegramChatId) throw new Error("Telegram is not configured");
-  await sendLongMessage(c.telegramBotToken, c.telegramChatId, await buildDigest(companyId));
+  await sendLongMessage(openSecret(c.telegramBotToken)!, c.telegramChatId, await buildDigest(companyId));
   await db.company.update({ where: { id: companyId }, data: { telegramLastDigestAt: new Date() } });
 }
 

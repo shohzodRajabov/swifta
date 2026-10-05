@@ -25,6 +25,7 @@ const employeeSchema = z.object({
   salary: zOptNumber,
   normDays: zOptNumber,
   hireDate: zOptDate,
+  passportNumber: zOptText,
   note: zOptText,
   active: z.preprocess((v) => v === "on", z.boolean()),
 });
@@ -47,6 +48,7 @@ export async function saveEmployee(id: string | null, _: ActionState, formData: 
       salary,
       normDays: d.normDays ? Math.round(d.normDays) : null,
       hireDate: d.hireDate,
+      passportNumber: d.passportNumber ? d.passportNumber.toUpperCase().replace(/\s+/g, " ") : null,
       note: d.note,
       active: d.active,
     };

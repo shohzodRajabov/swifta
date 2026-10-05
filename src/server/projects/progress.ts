@@ -16,7 +16,8 @@ export function taskPercent(t: {
 
 /**
  * Weighted physical progress per project. Weight = the task's estimate value; tasks without a value use their
- * manual weight relative to an average valued task. Quantities come from work sessions (not rejected) and
+ * manual weight relative to an average valued task. Quantities come from APPROVED work sessions (M4: the same
+ * sessions that carry labour cost; pending ones are shown separately) and
  * completed contractor work — never from manual percentages when a quantity exists.
  */
 export async function projectProgress(projectIds: string[]) {
@@ -30,7 +31,7 @@ export async function projectProgress(projectIds: string[]) {
   const [sessions, outsourced] = await Promise.all([
     db.workSession.groupBy({
       by: ["taskId"],
-      where: { taskId: { in: ids }, status: { not: "REJECTED" } },
+      where: { taskId: { in: ids }, status: "APPROVED" },
       _sum: { quantity: true },
     }),
     db.taskAssignment.groupBy({

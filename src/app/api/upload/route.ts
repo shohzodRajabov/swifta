@@ -21,7 +21,7 @@ const documentSchema = z.object({
 });
 const attachmentSchema = z.object({
   purpose: z.literal("attachment"),
-  entityType: z.enum(["expense", "task", "session", "remark", "ticket", "contractor"]),
+  entityType: z.enum(["expense", "task", "session", "remark", "ticket", "contractor", "employee_passport"]),
   entityId: z.string().min(1),
 });
 
@@ -93,6 +93,11 @@ export async function POST(request: Request) {
     if (projectId) {
       const visible = await db.project.findFirst({ where: { AND: [{ id: projectId }, projectWhere(user)] }, select: { id: true } });
       if (!visible) return json({ error: "forbidden" }, 403);
+    } else if (data.data.entityType === "employee_passport") {
+      // Personal data: only HR editors, only PDF or images.
+      if (!can(user, "employees.edit")) return json({ error: "forbidden" }, 403);
+      if (!(await db.employee.findFirst({ where: { id: data.data.entityId, companyId: user.companyId } }))) return json({ error: "invalid" }, 400);
+      if (!/\.(pdf|jpe?g|png|webp)$/i.test(file.name)) return json({ error: "passportType" }, 400);
     } else if (data.data.entityType === "contractor") {
       if (!can(user, "contractors.edit")) return json({ error: "forbidden" }, 403);
       if (!(await db.contractor.findFirst({ where: { id: data.data.entityId, companyId: user.companyId } }))) return json({ error: "invalid" }, 400);

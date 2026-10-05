@@ -646,7 +646,10 @@
     "drawingOldVersion": "Zonalar faqat oxirgi versiyada o'zgartiriladi",
     "ticketClientRequired": "Mijoz yoki obyektni tanlang",
     "ticketSolutionRequired": "Avval yechimni yozing (nima qilindi)",
-    "passwordShort": "Parol kamida 8 belgidan iborat bo'lsin"
+    "passwordShort": "Parol kamida 8 belgidan iborat bo'lsin",
+    "qtyOverPlan": "Hajm rejadagi qoldiqdan oshib ketdi (qolgan: {remaining} {unit}). Sababini yozing",
+    "tooManyHours": "{name}: bir kunda {max} soatdan ko'p yozib bo'lmaydi (shu kunga allaqachon {already} soat yozilgan)",
+    "passportType": "Pasport uchun faqat PDF yoki rasm (JPG, PNG, WEBP)"
   },
   "poStatus": {
     "DRAFT": "Qoralama",
@@ -1222,7 +1225,10 @@
       "contractorRating": "Contractor rating formulasi (og'irliklar)",
       "contractorRatingHint": "Rating 0–5: har bir ko'rsatkich faqat faktlardan (sifat bahosi, kechikish, qayta ishlash, narx oshishi, kamchiliklar) hisoblanadi va shu og'irliklar bilan qo'shiladi",
       "contractorReliability": "Reliability (ishonchlilik) formulasi",
-      "contractorReliabilityHint": "Ishonchlilik %: o'z vaqtida bajarish, qabul qilingan ishlar ulushi, qayta ishlash va bekor qilishlar"
+      "contractorReliabilityHint": "Ishonchlilik %: o'z vaqtida bajarish, qabul qilingan ishlar ulushi, qayta ishlash va bekor qilishlar",
+      "overtimeMultiplier": "Overtime koeffitsiyenti",
+      "overtimeHint": "Kunlik normadan ortiq soatlar shu koeffitsiyent bilan to'lanadi va obyektga yoziladi (masalan 1.5)",
+      "maxDailyHours": "Bir kunda maksimal soat"
     },
     "firms": {
       "title": "Bizning firmalar",
@@ -1310,7 +1316,9 @@
     "schedule": "Avtomatik",
     "status_SUCCESS": "Muvaffaqiyatli",
     "status_FAILED": "Xato",
-    "status_RUNNING": "Jarayonda"
+    "status_RUNNING": "Jarayonda",
+    "encrypted": "Backup'lar AES-256 bilan shifrlanadi. Yuklab olishda avtomatik ochiladi. Shifrlash kaliti (ENCRYPTION_KEY) Railway'da — uning nusxasini xavfsiz joyda saqlang",
+    "notEncrypted": "Diqqat: shifrlash kaliti sozlanmagan — backup'lar shifrlanmagan holda saqlanadi"
   },
   "telegram": {
     "settings": "Bot va guruh",
@@ -1457,7 +1465,11 @@
     "awaitingFirstLogin": "birinchi kirish kutilmoqda",
     "openTasks": "Ochiq vazifalar",
     "membershipHistory": "Guruhlardagi tarix",
-    "recentSessions": "So'nggi ish sessiyalari"
+    "recentSessions": "So'nggi ish sessiyalari",
+    "passport": "Pasport",
+    "passportNumber": "Pasport seriyasi va raqami",
+    "passportHint": "Pasport nusxasini (PDF yoki rasm) saqlangandan keyin xodim kartasida yuklaysiz",
+    "passportPrivacy": "Shaxsiy ma'lumot: faqat xodimlarni tahrirlash huquqi borlar ko'radi, har bir ochilish audit jurnalga yoziladi"
   },
   "groups": {
     "new": "Yangi guruh",
@@ -1498,7 +1510,8 @@
     "closeHint": "Oy yopilganda qatorlar saqlanadi va taqsimlanmagan summa \"Umumiy xarajatlar\"ga yoziladi",
     "closed": "Oy yopilgan",
     "reopen": "Qayta ochish",
-    "pendingSessions": "{n} ta sessiya tasdiq kutmoqda"
+    "pendingSessions": "{n} ta sessiya tasdiq kutmoqda",
+    "overtime": "+ overtime {h} soat: {sum}"
   },
   "tasks": {
     "title": "Vazifalar",
@@ -1561,7 +1574,8 @@
     "locationKind": "Turi",
     "locationParent": "Ichida",
     "locationPlaceholder": "Masalan: 3-qavat",
-    "noLocation": "Joy ko'rsatilmagan"
+    "noLocation": "Joy ko'rsatilmagan",
+    "pendingQty": "Tasdiq kutmoqda"
   },
   "sessions": {
     "title": "Ish sessiyalari",
@@ -1595,7 +1609,9 @@
     "share": "Ulush",
     "contribution": "Hissa",
     "laborCost": "Xarajat",
-    "confirmation": "Tasdiq"
+    "confirmation": "Tasdiq",
+    "overReason": "Rejadan oshish sababi",
+    "overReasonHint": "Rejada qolgan: {qty} {unit}. Masalan: smetada hajm kam ko'rsatilgan, qo'shimcha ish"
   },
   "remarks": {
     "title": "Kamchiliklar",

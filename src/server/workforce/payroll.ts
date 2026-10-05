@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { dailyCost, employerMonthlyCost, grossSalary, normDaysFor, WORKED_DAY_TYPES } from "@/lib/payroll";
+import { dailyCost, employerMonthlyCost, grossSalary, hourlyCost, normDaysFor, WORKED_DAY_TYPES } from "@/lib/payroll";
 
 export type PayrollRow = {
   employeeId: string;
@@ -12,6 +12,8 @@ export type PayrollRow = {
   workedDays: number;
   dailyRate: number;
   earned: number;
+  overtimeHours: number;
+  overtimePay: number;
   allocated: number;
   unallocated: number;
   byType: Record<string, number>;
@@ -34,7 +36,7 @@ export async function computePayroll(companyId: string, month: string): Promise<
     db.attendanceDay.findMany({ where: { companyId, date: { gte: from, lte: to } } }),
     db.workSessionMember.findMany({
       where: { session: { companyId, status: "APPROVED", date: { gte: from, lte: to } } },
-      select: { employeeId: true, laborCostUzs: true },
+      select: { employeeId: true, laborCostUzs: true, overtimeHours: true },
     }),
     db.workSession.count({ where: { companyId, status: "SUBMITTED", date: { gte: from, lte: to } } }),
   ]);
@@ -48,7 +50,10 @@ export async function computePayroll(companyId: string, month: string): Promise<
     const daily = dailyCost(company, e);
     const idleCharged = worked.filter((d) => d.type !== "OBJECT" && d.projectId).length * daily;
     const sessionCost = members.filter((m) => m.employeeId === e.id).reduce((s, m) => s + Number(m.laborCostUzs), 0);
-    const earned = daily * worked.length;
+    // Overtime (M5): hours above the daily norm are paid on top, with the company multiplier.
+    const otHours = members.filter((m) => m.employeeId === e.id).reduce((x, m) => x + Number(m.overtimeHours), 0);
+    const otPay = otHours * hourlyCost(company, e) * (Number(company.overtimeMultiplier) || 1);
+    const earned = daily * worked.length + otPay;
     const allocated = Math.min(earned, sessionCost + idleCharged);
     rows.push({
       employeeId: e.id,
@@ -60,6 +65,8 @@ export async function computePayroll(companyId: string, month: string): Promise<
       workedDays: worked.length,
       dailyRate: daily,
       earned,
+      overtimeHours: otHours,
+      overtimePay: otPay,
       allocated,
       unallocated: Math.max(0, earned - allocated),
       byType,

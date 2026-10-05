@@ -59,6 +59,12 @@ export default async function CompanySettingsPage() {
           <Field label={t("settings.company.socialTaxRate")}>
             <Input name="socialTaxRate" inputMode="decimal" defaultValue={Number(c.socialTaxRate)} />
           </Field>
+          <Field label={t("settings.company.overtimeMultiplier")} hint={t("settings.company.overtimeHint")}>
+            <Input name="overtimeMultiplier" inputMode="decimal" defaultValue={Number(c.overtimeMultiplier)} />
+          </Field>
+          <Field label={t("settings.company.maxDailyHours")}>
+            <Input name="maxDailyHours" inputMode="numeric" defaultValue={c.maxDailyHours} />
+          </Field>
           <div className="sm:col-span-2 lg:col-span-3">
             <Notice>
               {t("settings.company.payrollExample", {

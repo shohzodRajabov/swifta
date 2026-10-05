@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { openSecret, sealSecret } from "@/lib/crypto-box";
 import { audit } from "@/lib/audit";
 import { fail, formObject, runAction, zNumber, zOptText, type ActionState } from "@/lib/action";
 import { tgCall } from "@/server/telegram/api";
@@ -21,7 +22,7 @@ export async function saveTelegram(_: ActionState, formData: FormData): Promise<
     else if (d.token) {
       if (!/^\d+:[\w-]{30,}$/.test(d.token)) fail("telegramToken");
       await tgCall(d.token, "getMe").catch(() => fail("telegramToken"));
-      data.telegramBotToken = d.token;
+      data.telegramBotToken = sealSecret(d.token); // stored encrypted (X8)
     }
     await db.$transaction(async (tx) => {
       await tx.company.update({ where: { id: user.companyId }, data });
@@ -42,7 +43,7 @@ export async function findChats(_: ActionState): Promise<ActionState> {
     const c = await db.company.findUniqueOrThrow({ where: { id: user.companyId } });
     if (!c.telegramBotToken) fail("telegramToken");
     const updates = await tgCall<{ message?: { chat: { id: number; title?: string; type: string } }; my_chat_member?: { chat: { id: number; title?: string; type: string } } }[]>(
-      c.telegramBotToken,
+      openSecret(c.telegramBotToken)!,
       "getUpdates",
       { allowed_updates: ["message", "my_chat_member"] },
     );

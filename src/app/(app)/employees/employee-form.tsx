@@ -40,6 +40,9 @@ export async function EmployeeForm({
       <Field label={t("employees.normDays")} hint={t("employees.normDaysHint", { n: String(normDays) })}>
         <Input name="normDays" type="number" min={1} max={31} defaultValue={employee?.normDays ?? ""} />
       </Field>
+      <Field label={t("employees.passportNumber")} hint={t("employees.passportHint")}>
+        <Input name="passportNumber" defaultValue={employee?.passportNumber ?? ""} placeholder="AA 1234567" autoComplete="off" />
+      </Field>
       <Field label={t("employees.hireDate")}>
         <Input name="hireDate" type="date" defaultValue={isoDate(employee?.hireDate)} />
       </Field>

@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { audit } from "@/lib/audit";
 import { canReadFile } from "@/server/files/access";
 import { getObject, signedUrl } from "@/server/files/storage";
 
@@ -12,6 +13,9 @@ export async function GET(request: Request, { params }: RouteContext<"/api/files
   if (!user) return new Response("Unauthorized", { status: 401 });
   if (!(await canReadFile(user, id))) return new Response("Forbidden", { status: 403 });
   const file = await db.fileObject.findUniqueOrThrow({ where: { id } });
+  const passport = await db.attachment.findFirst({ where: { fileId: id, entityType: "employee_passport" }, select: { entityId: true } });
+  if (passport)
+    await db.$transaction((tx) => audit(tx, { companyId: user.companyId, userId: user.id }, "Employee", passport.entityId, "update", null, { passportFileViewed: file.fileName }));
   const search = new URL(request.url).searchParams;
   const download = search.has("download");
   const inline = !download && (file.mime.startsWith("image/") || file.mime === "application/pdf");

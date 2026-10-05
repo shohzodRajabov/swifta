@@ -6,6 +6,7 @@ import { fail } from "@/lib/action";
 import { audit } from "@/lib/audit";
 import { toDateOnly } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/auth";
+import { projectWhere } from "@/server/projects/access";
 
 type Tx = Prisma.TransactionClient;
 
@@ -66,7 +67,8 @@ export async function isPerformer(user: CurrentUser, taskId: string): Promise<bo
 }
 
 async function loadTask(user: CurrentUser, taskId: string) {
-  const task = await db.task.findFirst({ where: { id: taskId, companyId: user.companyId } });
+  // Scoped to the projects the user may access (X5), not just the company.
+  const task = await db.task.findFirst({ where: { id: taskId, companyId: user.companyId, project: projectWhere(user) } });
   if (!task) fail("invalid");
   return task;
 }

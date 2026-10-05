@@ -444,7 +444,12 @@ async function PayrollTab({ companyId, month: raw, canClose }: { companyId: stri
                     {r.workedDays} / {r.normDays}
                   </Td>
                   <Td className="num text-right">{formatNumber(Math.round(r.dailyRate))}</Td>
-                  <Td className="num text-right">{formatNumber(Math.round(r.earned))}</Td>
+                  <Td className="num text-right">
+                    {formatNumber(Math.round(r.earned))}
+                    {r.overtimeHours > 0 && (
+                      <div className="text-xs text-warning">{t("payroll.overtime", { h: String(Math.round(r.overtimeHours * 10) / 10), sum: formatNumber(Math.round(r.overtimePay)) })}</div>
+                    )}
+                  </Td>
                   <Td className="num text-right">{formatNumber(Math.round(r.allocated))}</Td>
                   <Td className="num text-right">{formatNumber(Math.round(r.unallocated))}</Td>
                 </tr>

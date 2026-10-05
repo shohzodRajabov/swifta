@@ -60,7 +60,7 @@ export default async function MePage() {
     emp ? efficiencyIndexes(user.companyId, [emp.id]).then((m) => m.get(emp.id)) : undefined,
   ]);
   const lastKpi = emp ? (await kpiHistory(user.companyId, "EMPLOYEE", emp.id, 1))[0] : undefined;
-  const done = await db.workSession.groupBy({ by: ["taskId"], where: { taskId: { in: tasks.map((x) => x.id) }, status: { not: "REJECTED" } }, _sum: { quantity: true } });
+  const done = await db.workSession.groupBy({ by: ["taskId"], where: { taskId: { in: tasks.map((x) => x.id) }, status: "APPROVED" }, _sum: { quantity: true } });
   const doneMap = new Map(done.map((d) => [d.taskId, Number(d._sum.quantity ?? 0)]));
   // Today's view (§51): overdue, today (due today or in progress), next.
   const sections = {

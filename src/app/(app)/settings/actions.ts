@@ -38,6 +38,8 @@ export async function updateCompanySettings(_: ActionState, formData: FormData):
         weightSenior: zNumber.pipe(z.number().min(0).max(10)),
         weightWorker: zNumber.pipe(z.number().min(0).max(10)),
         efficiencyMinSessions: zNumber.pipe(z.number().int().min(1).max(100)),
+        overtimeMultiplier: zNumber.pipe(z.number().min(1).max(5)),
+        maxDailyHours: zNumber.pipe(z.number().int().min(4).max(24)),
         contractorPhoneRequired: z.preprocess((v) => v === "on", z.boolean()),
       })
       .parse({ contractorPhoneRequired: formData.get("contractorPhoneRequired") ?? "", ...formObject(formData) });
@@ -57,6 +59,8 @@ export async function updateCompanySettings(_: ActionState, formData: FormData):
           defaultContribution: d.defaultContribution,
           contributionWeights: { LEADER: d.weightLeader, SENIOR: d.weightSenior, WORKER: d.weightWorker },
           efficiencyMinSessions: d.efficiencyMinSessions,
+          overtimeMultiplier: new Prisma.Decimal(d.overtimeMultiplier),
+          maxDailyHours: d.maxDailyHours,
           contractorPhoneRequired: d.contractorPhoneRequired,
           contractorRatingConfig: weightsFrom(formData, "rw_", DEFAULT_RATING_WEIGHTS),
           contractorReliabilityConfig: weightsFrom(formData, "lw_", DEFAULT_RELIABILITY_WEIGHTS),

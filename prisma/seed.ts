@@ -10,6 +10,7 @@ import { randomBytes } from "node:crypto";
 import { ensureCompanyDefaults } from "../src/server/bootstrap";
 import { normalizePhone } from "../src/lib/phone";
 import { DEMO_VERSION, generateDemo } from "../src/server/demo/generate";
+import { encryptionKey, sealSecret } from "../src/lib/crypto-box";
 
 const db = new PrismaClient();
 
@@ -22,6 +23,13 @@ async function main() {
 
   for (const c of await db.company.findMany()) {
     await ensureCompanyDefaults(db, c.id);
+  }
+
+  // Secrets stored before encryption was enabled are sealed once the key is configured (X8).
+  if (encryptionKey()) {
+    for (const c of await db.company.findMany({ where: { telegramBotToken: { not: null } } })) {
+      if (!c.telegramBotToken!.startsWith("enc:")) await db.company.update({ where: { id: c.id }, data: { telegramBotToken: sealSecret(c.telegramBotToken) } });
+    }
   }
 
   const adminRole = await db.roleDef.findFirstOrThrow({ where: { companyId: company.id, key: "ADMIN" } });

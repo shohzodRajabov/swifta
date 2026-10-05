@@ -67,7 +67,9 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
   const canSeeCost = can(user, "salaries.view") || can(user, "finance.view");
   const closed = task.status === "APPROVED" || task.status === "CANCELLED";
 
-  const doneQty = task.sessions.filter((s) => s.status !== "REJECTED").reduce((s, x) => s + Number(x.quantity), 0);
+  // M4: official progress counts approved sessions (they also carry the labour cost); pending is shown apart.
+  const doneQty = task.sessions.filter((s) => s.status === "APPROVED").reduce((s, x) => s + Number(x.quantity), 0);
+  const pendingQty = task.sessions.filter((s) => s.status === "SUBMITTED").reduce((s, x) => s + Number(x.quantity), 0);
   const planned = task.plannedQty ? Number(task.plannedQty) : null;
   const percent = taskPercent({ plannedQty: planned, doneQty, status: task.status, reportedPercent: task.reportedPercent });
   const dl = deadlineState(task);
@@ -233,7 +235,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                   defaultGroupId={myGroup?.id ?? groups[0]?.id ?? null}
                   defaultMethod={company!.defaultContribution}
                   unit={task.unit}
-                  remaining={planned !== null ? Math.max(0, planned - doneQty) : null}
+                  remaining={planned !== null ? Math.max(0, planned - doneQty - pendingQty) : null}
                   today={isoDate(new Date())}
                 />
               </details>
@@ -391,6 +393,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                 [t("tasks.workType"), task.workType?.name],
                 [t("tasks.plannedQty"), planned !== null ? `${formatQty(planned)} ${task.unit ?? ""}` : null],
                 [t("tasks.doneQty"), `${formatQty(doneQty)} ${task.unit ?? ""}`],
+                ...(pendingQty > 0 ? [[t("tasks.pendingQty"), `${formatQty(pendingQty)} ${task.unit ?? ""}`]] : []),
                 [t("tasks.reported"), task.reportedPercent !== null ? `${task.reportedPercent}%` : null],
                 [t("tasks.startDate"), formatDate(task.startDate)],
                 [t("tasks.deadline"), formatDate(task.deadline)],

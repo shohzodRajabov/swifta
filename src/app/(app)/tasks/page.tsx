@@ -55,7 +55,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   ]);
   const done = await db.workSession.groupBy({
     by: ["taskId"],
-    where: { taskId: { in: tasks.map((x) => x.id) }, status: { not: "REJECTED" } },
+    where: { taskId: { in: tasks.map((x) => x.id) }, status: "APPROVED" },
     _sum: { quantity: true },
   });
   const doneMap = new Map(done.map((d) => [d.taskId, Number(d._sum.quantity ?? 0)]));

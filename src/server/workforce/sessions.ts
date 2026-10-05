@@ -5,9 +5,10 @@ import { can } from "@/lib/permissions";
 import { fail } from "@/lib/action";
 import { audit } from "@/lib/audit";
 import { getUsdRate } from "@/lib/fx";
-import { hourlyCost } from "@/lib/payroll";
+import { hourlyCost, sessionLaborCost, splitOvertime } from "@/lib/payroll";
 import { toDateOnly } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/auth";
+import { projectWhere } from "@/server/projects/access";
 import { computeShares } from "./contribution";
 import { membersAt } from "./groups";
 import { efficiencyIndexes } from "./efficiency";
@@ -39,11 +40,13 @@ export type SessionInput = {
   /** explicit members (otherwise the group composition on that date) */
   members?: { employeeId: string; hours?: number | null; percent?: number | null }[];
   materials?: { item: string; qty: number }[];
+  /** Required when the quantity goes beyond the planned remainder (M3). */
+  overReason?: string | null;
 };
 
 export async function recordSession(user: CurrentUser, input: SessionInput) {
   const task = await db.task.findFirst({
-    where: { id: input.taskId, companyId: user.companyId },
+    where: { id: input.taskId, companyId: user.companyId, project: projectWhere(user) },
     include: { project: { select: { id: true, companyId: true } } },
   });
   if (!task) fail("invalid");
@@ -51,6 +54,14 @@ export async function recordSession(user: CurrentUser, input: SessionInput) {
   if (!(await canRecordSession(user, task, input.groupId))) fail("forbidden");
   const company = await db.company.findUniqueOrThrow({ where: { id: user.companyId } });
   const date = toDateOnly(input.date);
+
+  // M3: the recorded quantity may not silently exceed the plan; going over needs a stated reason.
+  if (task.plannedQty && input.quantity > 0) {
+    const done = await db.workSession.aggregate({ where: { taskId: task.id, status: { not: "REJECTED" } }, _sum: { quantity: true } });
+    const remaining = Number(task.plannedQty) - Number(done._sum.quantity ?? 0);
+    if (input.quantity > remaining + 1e-9 && !input.overReason?.trim())
+      fail("qtyOverPlan", { remaining: String(Math.max(0, Math.round(remaining * 1000) / 1000)), unit: task.unit ?? "" });
+  }
 
   // Members: explicit list or the group's composition on that day.
   let roster: { employeeId: string; role: GroupRole; hours: number; percent?: number | null }[] = [];
@@ -86,11 +97,24 @@ export async function recordSession(user: CurrentUser, input: SessionInput) {
   const quote = await getUsdRate(date).catch(() => null);
   const leader = roster.find((r) => r.role === "LEADER")?.employeeId ?? (user.employee && roster.some((r) => r.employeeId === user.employee!.id) ? user.employee.id : null);
 
+  // M5: hours above the daily norm (counting the person's other sessions that day) are overtime, paid with the
+  // company multiplier; more than the daily maximum cannot be recorded.
+  const sameDay = await db.workSessionMember.groupBy({
+    by: ["employeeId"],
+    where: { employeeId: { in: roster.map((r) => r.employeeId) }, session: { date, status: { not: "REJECTED" } } },
+    _sum: { hours: true },
+  });
+  const norm = Number(company.normHoursPerDay) || 8;
+  const mult = Number(company.overtimeMultiplier) || 1;
   let laborUzs = 0;
   const memberRows = roster.map((r) => {
     const e = employees.find((x) => x.id === r.employeeId)!;
+    const before = Number(sameDay.find((x) => x.employeeId === r.employeeId)?._sum.hours ?? 0);
+    if (before + r.hours > company.maxDailyHours) fail("tooManyHours", { name: e.fullName, max: String(company.maxDailyHours), already: String(before) });
+    const split = splitOvertime(before, r.hours, norm);
+    const overtime = split.overtime;
     const rate = hourlyCost(company, e);
-    const cost = rate * r.hours;
+    const cost = sessionLaborCost(rate, split, mult);
     laborUzs += cost;
     const share = shares.find((s) => s.employeeId === r.employeeId)!;
     return {
@@ -99,6 +123,7 @@ export async function recordSession(user: CurrentUser, input: SessionInput) {
       hours: new Prisma.Decimal(r.hours),
       sharePercent: new Prisma.Decimal(share.sharePercent),
       contributionQty: new Prisma.Decimal(share.contributionQty),
+      overtimeHours: new Prisma.Decimal(overtime.toFixed(2)),
       hourlyCostUzs: new Prisma.Decimal(rate.toFixed(2)),
       laborCostUzs: new Prisma.Decimal(cost.toFixed(2)),
       confirmation: user.employee?.id === r.employeeId ? ("CONFIRMED" as const) : ("PENDING" as const),
@@ -118,7 +143,7 @@ export async function recordSession(user: CurrentUser, input: SessionInput) {
         hours: new Prisma.Decimal(input.hours),
         quantity: new Prisma.Decimal(input.quantity),
         unit: task.unit,
-        note: input.note,
+        note: input.overReason?.trim() ? `${input.note ? `${input.note} · ` : ""}⚠ ${input.overReason.trim()}` : input.note,
         problems: input.problems,
         method,
         recordedById: user.id,
