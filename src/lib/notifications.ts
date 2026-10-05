@@ -8,6 +8,7 @@ import { projectMaterials } from "./materials";
 import { toDateOnly } from "./utils";
 import { projectWhere } from "@/server/projects/access";
 import { missingDocsByProject } from "@/server/projects/missing-docs";
+import { slaHours, slaStatus, type Prio } from "./sla";
 
 /**
  * Notifications are derived from the current data on every request, so they are always accurate
@@ -221,6 +222,33 @@ export async function getNotifications(user: CurrentUser): Promise<Notification[
           });
       }
     }
+  }
+
+  // Service: SLA breaches, visits due soon (mine), contracts ending.
+  if (can(user, "service.view")) {
+    const tickets = await db.serviceTicket.findMany({
+      where: { companyId, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS"] } },
+      select: { id: true, number: true, title: true, planned: true, priority: true, reportedAt: true, respondedAt: true, resolvedAt: true, dueAt: true, responsibleUserId: true, serviceContract: { select: { slaResponseHours: true, slaResolveHours: true } } },
+    });
+    for (const x of tickets) {
+      const params = { ticket: `S-${x.number} ${x.title}` };
+      if (x.planned) {
+        if (x.responsibleUserId === user.id && x.dueAt && x.dueAt.getTime() - today.getTime() <= 3 * DAY)
+          out.push({ key: `visit:${x.id}`, severity: "warning", message: "serviceVisitDue", params, href: `/service/tickets/${x.id}`, date: x.dueAt });
+        continue;
+      }
+      const sla = slaStatus(x, slaHours(x.priority as Prio, x.serviceContract));
+      if (sla.response === "BREACHED" || sla.resolve === "BREACHED")
+        out.push({ key: `sla:${x.id}`, severity: "critical", message: "serviceSlaBreached", params, href: `/service/tickets/${x.id}`, date: sla.resolveDue });
+      else if (!x.responsibleUserId)
+        out.push({ key: `ticket:${x.id}`, severity: "warning", message: "serviceTicketNew", params, href: `/service/tickets/${x.id}` });
+    }
+    const contracts = await db.serviceContract.findMany({
+      where: { companyId, status: "ACTIVE", endDate: { gte: today, lte: new Date(today.getTime() + 30 * DAY) } },
+      select: { id: true, number: true, endDate: true, client: { select: { name: true } } },
+    });
+    for (const c of contracts)
+      out.push({ key: `sc:${c.id}`, severity: "warning", message: "serviceContractEnding", params: { number: c.number, client: c.client.name }, href: `/service/contracts/${c.id}`, date: c.endDate });
   }
 
   return out.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "critical" ? -1 : 1));

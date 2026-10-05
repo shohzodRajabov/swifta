@@ -206,6 +206,8 @@ export const SYSTEM_ROLES: { key: SystemRoleKey; name: string; permissions: Perm
       "contractors.view",
       "outsource.verify",
       "kpi.self",
+      "service.view",
+      "service.edit",
     ],
   },
   {

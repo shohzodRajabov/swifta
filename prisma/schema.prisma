@@ -2012,7 +2012,11 @@ model ServiceTicket {
   isWarranty        Boolean             @default(false)
   responsibleUserId String?
   responsible       User?               @relation(fields: [responsibleUserId], references: [id])
+  /// Planned maintenance visit created from a service contract schedule.
+  planned           Boolean             @default(false)
   reportedAt        DateTime            @default(now())
+  /// First reaction (assigned / work started) — for the SLA response time.
+  respondedAt       DateTime?
   dueAt             DateTime?
   resolvedAt        DateTime?
   laborHours        Decimal?            @db.Decimal(6, 2)

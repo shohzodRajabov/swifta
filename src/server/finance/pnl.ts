@@ -8,7 +8,9 @@ import { netOf } from "@/lib/vat";
 /**
  * Company profit & loss for a period (management accounting).
  * Revenue = signed acts; direct costs = approved expenses, issued materials, approved labour sessions,
- * idle/travel days charged to projects, verified contractor work, turnover tax; overhead = approved overhead.
+ * idle/travel days charged to projects, verified contractor work, turnover tax, service tickets (labour, other, parts
+ * not charged to a project); service revenue = ticket charges + contracts spread evenly over their months;
+ * overhead = approved overhead.
  * Values are net of VAT for legal entities under the general regime.
  */
 export type PnlRow = {
@@ -32,7 +34,7 @@ const n = (v: unknown) => (v === null || v === undefined ? 0 : Number(v));
 
 export async function computePnl(companyId: string, from: Date | null, to: Date | null): Promise<PnlResult> {
   const range = from || to ? { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } : undefined;
-  const [company, entities, acts, expenses, issued, sessions, idle, outsource, overheads] = await Promise.all([
+  const [company, entities, acts, expenses, issued, sessions, idle, outsource, overheads, tickets, serviceParts, contracts] = await Promise.all([
     db.company.findUniqueOrThrow({ where: { id: companyId } }),
     db.legalEntity.findMany({ where: { companyId }, orderBy: [{ isDefault: "desc" }, { name: "asc" }] }),
     db.act.findMany({
@@ -81,6 +83,19 @@ export async function computePnl(companyId: string, from: Date | null, to: Date 
     db.overheadExpense.findMany({
       where: { companyId, approval: "APPROVED", date: range },
       select: { date: true, amountUzs: true, amountUsd: true, vatRate: true, legalEntityId: true },
+    }),
+    // Service: resolved tickets (labour / other costs, charges) and parts not charged to a project.
+    db.serviceTicket.findMany({
+      where: { companyId, status: { in: ["RESOLVED", "CLOSED"] }, resolvedAt: range },
+      select: { resolvedAt: true, laborCostUzs: true, otherCostUzs: true, chargeUzs: true, project: { select: { legalEntityId: true } } },
+    }),
+    db.stockMovement.findMany({
+      where: { companyId, type: "ISSUE", projectId: null, serviceTicketId: { not: null }, date: range },
+      select: { date: true, qty: true, unitCostUzs: true, unitCostUsd: true },
+    }),
+    db.serviceContract.findMany({
+      where: { companyId, status: { not: "CANCELLED" } },
+      select: { startDate: true, endDate: true, amountUzs: true, amountUsd: true, vatRate: true, project: { select: { legalEntityId: true } } },
     }),
   ]);
 
@@ -143,6 +158,33 @@ export async function computePnl(companyId: string, from: Date | null, to: Date 
     const cat = o.contractor?.kind === "COMPANY" ? "SUBCONTRACTOR" : "OUTSOURCING";
     addDirect(entityId, o.verifiedAt ?? new Date(), cat, valued(entityId, o.actualUzs ?? o.agreedUzs, o.actualUsd ?? o.agreedUsd, o.vatRate));
   }
+  // ---- service ----
+  const addRevenue = (entityId: string | null | undefined, date: Date, a: Amount) => {
+    const e = entityOf(entityId);
+    if (!e) return;
+    rows.get(e.id)!.revenue = add(rows.get(e.id)!.revenue, a);
+    month(date).revenue += a.uzs;
+  };
+  for (const x of tickets) {
+    const at = x.resolvedAt ?? new Date();
+    const cost = n(x.laborCostUzs) + n(x.otherCostUzs);
+    if (cost) addDirect(x.project?.legalEntityId, at, "SERVICE", { uzs: cost, usd: 0, count: 1 });
+    if (n(x.chargeUzs)) addRevenue(x.project?.legalEntityId, at, { uzs: n(x.chargeUzs), usd: 0, count: 1 });
+  }
+  for (const m of serviceParts) addDirect(null, m.date, "SERVICE", { uzs: n(m.qty) * n(m.unitCostUzs), usd: n(m.qty) * n(m.unitCostUsd), count: 1 });
+  // Service contracts are recognised evenly over their months (within the period).
+  for (const c of contracts) {
+    const months: Date[] = [];
+    for (let d = new Date(Date.UTC(c.startDate.getUTCFullYear(), c.startDate.getUTCMonth(), 1)); d <= c.endDate; d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1))) months.push(d);
+    if (months.length === 0) continue;
+    const per = valued(c.project?.legalEntityId, n(c.amountUzs) / months.length, n(c.amountUsd) / months.length, c.vatRate);
+    for (const d of months) {
+      const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+      if ((from && end < from) || (to && d > to) || d > new Date()) continue;
+      addRevenue(c.project?.legalEntityId, d, per);
+    }
+  }
+
   for (const o of overheads) {
     const e = entityOf(o.legalEntityId);
     if (!e) continue;
