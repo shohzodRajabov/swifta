@@ -7,6 +7,17 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { fail, formObject, runAction, zNumber, zOptText, zText, type ActionState } from "@/lib/action";
 import { normalizePhone } from "@/lib/phone";
+import { DEFAULT_RATING_WEIGHTS, DEFAULT_RELIABILITY_WEIGHTS, normalizeWeights } from "@/lib/contractor-score";
+
+/** Contractor score weights from the form ({prefix}{component}); invalid values fall back to defaults. */
+function weightsFrom<K extends string>(formData: FormData, prefix: string, defaults: Record<K, number>) {
+  const raw: Record<string, number> = {};
+  for (const k of Object.keys(defaults)) {
+    const v = String(formData.get(prefix + k) ?? "").trim().replace(",", ".");
+    raw[k] = v === "" ? NaN : Number(v);
+  }
+  return normalizeWeights(raw, defaults);
+}
 
 const zRate = zNumber.pipe(z.number().min(0).max(100));
 
@@ -47,6 +58,8 @@ export async function updateCompanySettings(_: ActionState, formData: FormData):
           contributionWeights: { LEADER: d.weightLeader, SENIOR: d.weightSenior, WORKER: d.weightWorker },
           efficiencyMinSessions: d.efficiencyMinSessions,
           contractorPhoneRequired: d.contractorPhoneRequired,
+          contractorRatingConfig: weightsFrom(formData, "rw_", DEFAULT_RATING_WEIGHTS),
+          contractorReliabilityConfig: weightsFrom(formData, "lw_", DEFAULT_RELIABILITY_WEIGHTS),
         },
       });
       const strip = (c: typeof before) => ({ ...c, telegramBotToken: c.telegramBotToken ? "***" : null });

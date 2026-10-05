@@ -30,7 +30,7 @@ const MAIN: Entry[] = [
 ];
 
 /** Routes that exist in this build (others are shown as "coming"). */
-const READY = new Set(["dashboard", "me", "tasks", "calendar", "employees", "projects", "clients", "catalog", "procurement", "warehouse", "suppliers", "finance", "notifications"]);
+const READY = new Set(["dashboard", "me", "tasks", "calendar", "employees", "contractors", "projects", "clients", "catalog", "procurement", "warehouse", "suppliers", "finance", "notifications"]);
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();

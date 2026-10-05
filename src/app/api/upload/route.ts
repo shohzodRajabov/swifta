@@ -20,7 +20,7 @@ const documentSchema = z.object({
 });
 const attachmentSchema = z.object({
   purpose: z.literal("attachment"),
-  entityType: z.enum(["expense", "task", "session", "remark", "ticket"]),
+  entityType: z.enum(["expense", "task", "session", "remark", "ticket", "contractor"]),
   entityId: z.string().min(1),
 });
 
@@ -92,6 +92,9 @@ export async function POST(request: Request) {
     if (projectId) {
       const visible = await db.project.findFirst({ where: { AND: [{ id: projectId }, projectWhere(user)] }, select: { id: true } });
       if (!visible) return json({ error: "forbidden" }, 403);
+    } else if (data.data.entityType === "contractor") {
+      if (!can(user, "contractors.edit")) return json({ error: "forbidden" }, 403);
+      if (!(await db.contractor.findFirst({ where: { id: data.data.entityId, companyId: user.companyId } }))) return json({ error: "invalid" }, 400);
     } else if (!can(user, "documents.edit") && !can(user, "service.edit")) {
       return json({ error: "forbidden" }, 403);
     }

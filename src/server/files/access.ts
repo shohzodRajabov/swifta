@@ -40,7 +40,11 @@ export async function canReadFile(user: CurrentUser, fileId: string): Promise<bo
   if (!file || file.companyId !== user.companyId) return false;
   const projectId = await projectOfFile(fileId);
   if (projectId === undefined) return can(user, "documents.view") || can(user, "settings.manage");
-  if (projectId === null) return can(user, "documents.view");
+  if (projectId === null) {
+    const att = await db.attachment.findFirst({ where: { fileId }, select: { entityType: true } });
+    if (att?.entityType === "contractor") return can(user, "contractors.view");
+    return can(user, "documents.view");
+  }
   const visible = await db.project.findFirst({ where: { AND: [{ id: projectId }, projectWhere(user)] }, select: { id: true } });
   return !!visible;
 }

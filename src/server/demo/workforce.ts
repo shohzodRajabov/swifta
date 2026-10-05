@@ -28,11 +28,16 @@ const EMPLOYEES: Emp[] = [
   { key: "ilhom", name: "Ilhom Qosimov", salary: 5_500_000, position: "Izolyatsiyachi", phone: "998901110009" },
   { key: "doniyor", name: "Doniyor Usmonov", salary: 5_800_000, position: "Montajchi", phone: "998901110010" },
   { key: "elyor", name: "Elyor Abdullayev", salary: 6_200_000, position: "Elektrik-avtomatchi", phone: "998901110011" },
+  { key: "azamat", name: "Azamat Yo'ldoshev", salary: 9_500_000, position: "Brigadir (elektr va avtomatika)", phone: "998901110012", login: "GROUP_LEADER" },
+  { key: "behruz", name: "Behruz Salimov", salary: 6_800_000, position: "Elektrik", phone: "998901110013" },
+  { key: "nodir", name: "Nodir Qurbonov", salary: 7_200_000, position: "Avtomatika ustasi", phone: "998901110014" },
+  { key: "zafar", name: "Zafar Haydarov", salary: 6_300_000, position: "Freon montajchisi", phone: "998901110015" },
+  { key: "sanjar", name: "Sanjar Rahimov", salary: 5_600_000, position: "Montajchi", phone: "998901110016" },
 ];
 
 /** Relative productivity of each worker (drives the efficiency index differences in the demo). */
 const SKILL: Record<string, number> = {
-  akmal: 1.25, bekzod: 1.35, sardor: 1.0, jahongir: 0.65, otabek: 1.2, ulugbek: 1.1, farrux: 0.75, ravshan: 1.1, ilhom: 0.9, doniyor: 0.7, elyor: 1,
+  akmal: 1.25, bekzod: 1.35, sardor: 1.0, jahongir: 0.65, otabek: 1.2, ulugbek: 1.1, farrux: 0.75, ravshan: 1.1, ilhom: 0.9, doniyor: 0.7, elyor: 1, azamat: 1.15, behruz: 0.95, nodir: 1.2, zafar: 0.85, sanjar: 1.05,
 };
 
 /** Real crews are slower than the nominal rates above (moving, preparation, waiting). */
@@ -68,8 +73,9 @@ export async function seedWorkforce(ctx: DemoCtx) {
   // ---- groups with composition history ----
   const groupDefs: { key: string; name: string; spec: string; members: [string, GroupRole, number, number | null][] }[] = [
     { key: "A", name: "1-brigada (ventilyatsiya)", spec: "Ventkanal, diffuzor, AHU", members: [["akmal", "LEADER", -300, null], ["bekzod", "WORKER", -300, null], ["sardor", "WORKER", -300, null], ["jahongir", "WORKER", -200, null], ["doniyor", "WORKER", -300, -41]] },
-    { key: "B", name: "2-brigada (VRF / freon)", spec: "Freon trassasi, VRF bloklari", members: [["otabek", "LEADER", -300, null], ["ulugbek", "SENIOR", -300, null], ["farrux", "WORKER", -250, null]] },
-    { key: "C", name: "3-brigada (izolyatsiya va montaj)", spec: "Izolyatsiya, quvurlar, diffuzorlar", members: [["ravshan", "LEADER", -300, null], ["ilhom", "WORKER", -300, null], ["doniyor", "WORKER", -40, null], ["elyor", "WORKER", -120, null]] },
+    { key: "B", name: "2-brigada (VRF / freon)", spec: "Freon trassasi, VRF bloklari", members: [["otabek", "LEADER", -300, null], ["ulugbek", "SENIOR", -300, null], ["farrux", "WORKER", -250, null], ["zafar", "WORKER", -90, null]] },
+    { key: "C", name: "3-brigada (izolyatsiya va montaj)", spec: "Izolyatsiya, quvurlar, diffuzorlar", members: [["ravshan", "LEADER", -300, null], ["ilhom", "WORKER", -300, null], ["doniyor", "WORKER", -40, null], ["elyor", "WORKER", -120, -61], ["sanjar", "WORKER", -150, null]] },
+    { key: "D", name: "4-brigada (elektr va avtomatika)", spec: "Elektr ulash, avtomatika, puskonaladka", members: [["azamat", "LEADER", -200, null], ["behruz", "WORKER", -200, null], ["nodir", "SENIOR", -200, null], ["elyor", "WORKER", -60, null]] },
   ];
   const groups: Record<string, { id: string; members: [string, GroupRole, number, number | null][] }> = {};
   for (const g of groupDefs) {
@@ -95,6 +101,12 @@ export async function seedWorkforce(ctx: DemoCtx) {
   await addLoc("mall", "mallB", "Yerto'la — chiller xonasi", "ROOM", 0);
   await addLoc("mall", "mall1", "1-qavat savdo zali", "FLOOR", 1);
   await addLoc("bomi", "bomiShop", "Ishlab chiqarish sexi", "ZONE", 0);
+  await addLoc("nest", "nestRoof", "Tom", "ZONE", 0);
+  await addLoc("nest", "nestLow", "1–4 qavatlar", "FLOOR", 1);
+  await addLoc("nest", "nestHigh", "5–10 qavatlar", "FLOOR", 2);
+  await addLoc("school", "schoolA", "A blok (sinfxonalar)", "ZONE", 0);
+  await addLoc("school", "schoolGym", "Sport zali", "ROOM", 1);
+  await addLoc("pharm", "pharmStore", "Saqlash zali", "ZONE", 0);
 
   // ---- tasks ----
   type TaskSpec = {
@@ -132,11 +144,23 @@ export async function seedWorkforce(ctx: DemoCtx) {
     { key: "bomiDuct", project: "bomi", loc: "bomiShop", title: "Sex ventkanallari montaji", type: "Ventkanal montaji", qty: 260, value: 46_800_000, groups: ["A"], start: -230, deadline: -150, done: 1, status: "APPROVED", rate: 0.55 },
     { key: "bomiDif", project: "bomi", loc: "bomiShop", title: "Diffuzorlar o'rnatish", type: "Diffuzor va panjara o'rnatish", qty: 48, value: 9_600_000, groups: ["C"], start: -150, deadline: -120, done: 1, status: "APPROVED", rate: 0.22 },
     { key: "bomiTest", project: "bomi", loc: "bomiShop", title: "Tizimni testlash va topshirish", type: "Testlash", qty: 1, value: 6_000_000, groups: ["A"], start: -40, deadline: -20, done: 1, status: "INSPECTION", rate: 0.02 },
+    { key: "nestVrfOut", project: "nest", loc: "nestRoof", title: "VRF tashqi bloklari — tom", type: "VRF tashqi blok o'rnatish", qty: 8, value: 12_000_000, groups: ["B"], start: -14, deadline: 10, done: 0.5, status: "IN_PROGRESS", rate: 0.03, reported: 50 },
+    { key: "nestFreon", project: "nest", loc: "nestLow", title: "Freon trassasi — 1–4 qavatlar", type: "Freon trassasi", qty: 900, value: 72_000_000, groups: ["B"], start: -30, deadline: 35, done: 0.3, status: "IN_PROGRESS", rate: 1.4, reported: 30 },
+    { key: "nestIn", project: "nest", loc: "nestHigh", title: "VRF ichki bloklari — 5–10 qavatlar", type: "VRF ichki blok o'rnatish", qty: 64, value: 38_400_000, groups: ["A"], start: 25, deadline: 90, done: 0, status: "NEW", rate: 0.07 },
+    { key: "nestEl", project: "nest", title: "VRF tizimini elektrga ulash", type: "Elektr ulash", qty: 72, value: 21_600_000, groups: ["D"], start: 15, deadline: 100, done: 0, status: "ASSIGNED", rate: 0.1 },
+    { key: "schoolDuct", project: "school", loc: "schoolA", title: "Ventkanal montaji — A blok", type: "Ventkanal montaji", qty: 420, value: 75_600_000, groups: ["A"], start: -8, deadline: 45, done: 0.12, status: "IN_PROGRESS", rate: 0.5, reported: 15 },
+    { key: "schoolGrl", project: "school", loc: "schoolGym", title: "Panjaralar o'rnatish — sport zali", type: "Diffuzor va panjara o'rnatish", qty: 80, value: 12_000_000, groups: ["C"], start: 40, deadline: 70, done: 0, status: "NEW", rate: 0.2 },
+    { key: "pharmRtu", project: "pharm", loc: "pharmStore", title: "Rooftop bloklarni o'rnatish", type: "AHU o'rnatish", qty: 3, value: 13_500_000, groups: ["A"], start: -85, deadline: -70, done: 1, status: "APPROVED", rate: 0.02 },
+    { key: "pharmDuct", project: "pharm", loc: "pharmStore", title: "Havo kanallari va diffuzorlar", type: "Ventkanal montaji", qty: 210, value: 37_800_000, groups: ["C"], start: -80, deadline: -40, done: 1, status: "APPROVED", rate: 0.5 },
+    { key: "pharmAut", project: "pharm", title: "Avtomatika va harorat datchiklari", type: "Avtomatika", qty: 1, value: 18_000_000, groups: ["D"], start: -35, deadline: -12, done: 1, status: "INSPECTION", rate: 0.01 },
+    { key: "pharmTest", project: "pharm", title: "Azot va pusk bilan testlash", type: "Testlash", qty: 1, value: 6_000_000, groups: ["D"], start: -6, deadline: 4, done: 0, status: "IN_PROGRESS", rate: 0.02, reported: 50 },
+    { key: "restoFan", project: "resto", title: "So'rish ventilyatorlarini o'rnatish", type: "Ventilyator o'rnatish", qty: 2, value: 6_000_000, groups: ["B"], start: -60, deadline: -45, done: 1, status: "APPROVED", rate: 0.02 },
+    { key: "restoDuct", project: "resto", title: "Oshxona kanallari montaji", type: "Ventkanal montaji", qty: 85, value: 15_300_000, groups: ["A"], start: -75, deadline: -50, done: 1, status: "APPROVED", rate: 0.5 },
   ];
 
   let number = 1;
   const tasks: Record<string, { id: string; projectId: string; unit: string; spec: TaskSpec }> = {};
-  const managerOf = (projectKey: string) => (projectKey === "mall" ? ctx.users.pm2 : ctx.users.pm1);
+  const managerOf = (projectKey: string) => (["mall", "nest", "pharm"].includes(projectKey) ? ctx.users.pm2 : ctx.users.pm1);
   for (const s of specs) {
     const w = wt[s.type];
     const created = d(s.start - 7);
@@ -171,14 +195,14 @@ export async function seedWorkforce(ctx: DemoCtx) {
   }
 
   // ---- work sessions ----
-  const leaderUser: Record<string, string> = { A: emp.akmal.userId!, B: emp.otabek.userId!, C: emp.ravshan.userId! };
+  const leaderUser: Record<string, string> = { A: emp.akmal.userId!, B: emp.otabek.userId!, C: emp.ravshan.userId!, D: emp.azamat.userId! };
   const material: Record<string, { bomName: string } | undefined> = {
     "Ventkanal montaji": { bomName: "Havo kanali" },
     Izolyatsiya: { bomName: "Kauchuk izolyatsiya" },
     "Freon trassasi": { bomName: "Mis quvur" },
   };
   const bomByProject = new Map<string, { id: string; name: string; unit: string; unitPriceUzs: Prisma.Decimal; productId: string | null }[]>();
-  for (const key of ["brb", "mall", "bomi"]) {
+  for (const key of ["brb", "mall", "bomi", "nest", "school", "pharm", "resto"]) {
     bomByProject.set(ctx.projects[key], await db.bomItem.findMany({ where: { projectId: ctx.projects[key] }, select: { id: true, name: true, unit: true, unitPriceUzs: true, productId: true } }));
   }
   let disputed = false;
@@ -359,6 +383,13 @@ export async function seedWorkforce(ctx: DemoCtx) {
   await remark("brbIns1", "brb", "Izolyatsiya choklari 3 joyda yopishmagan (1-qavat, zal)", "FIXED", -1, { responsible: emp.ravshan.userId! });
   await remark("brbAhu", "brb", "AHU uchun rama tayyor emas: quruvchi tomondan beton poydevor quyilmagan", "NEW", 7, { priority: "CRITICAL", responsible: ctx.users.pm1 });
   await remark(null, "brb", "3-qavat: shiftdagi teshiklar loyihaga mos emas, quruvchi bilan kelishish kerak", "ASSIGNED", 5, { locKey: "brb3", responsible: ctx.users.chief });
+  await remark("nestFreon", "nest", "Freon quvurlarida 2 joyda payvand choki sifatsiz — qayta kavsharlash", "IN_PROGRESS", 3, { priority: "HIGH", responsible: emp.otabek.userId! });
+  await remark("nestVrfOut", "nest", "Tashqi bloklar ostida vibroizolyatsiya qo'yilmagan", "NEW", 6, { locKey: "nestRoof" });
+  await remark(null, "nest", "5-qavat: shift ostida boshqa tizimlar bilan to'qnashuv (elektr lotoklari)", "ASSIGNED", 9, { locKey: "nestHigh", responsible: ctx.users.chief });
+  await remark("pharmAut", "pharm", "Harorat datchigi 3-zonada noto'g'ri ko'rsatmoqda (±3°C)", "IN_PROGRESS", 1, { priority: "HIGH", responsible: emp.azamat.userId! });
+  await remark("pharmDuct", "pharm", "Saqlash zalida 2 ta diffuzor qiyshiq o'rnatilgan", "ACCEPTED", -30);
+  await remark("schoolDuct", "school", "A blok koridori: kanal osmalari oralig'i 2 m dan ortiq", "NEW", 4, { locKey: "schoolA" });
+  await remark("restoDuct", "resto", "Oshxona kanalida yog' ushlagich filtri o'rnatilmagan", "FIXED", -2, { responsible: emp.akmal.userId! });
   await db.taskEvent.create({ data: { taskId: tasks.brbAhu.id, type: "PROBLEM", userId: emp.akmal.userId, employeeId: emp.akmal.id, note: "Poydevor tayyor emas, AHU ni o'rnatib bo'lmaydi", at: d(-3) } });
   await db.taskEvent.create({ data: { taskId: tasks.brbAhu.id, type: "STATUS", userId: ctx.users.foreman, fromStatus: "IN_PROGRESS", toStatus: "BLOCKED", note: "Quruvchi poydevorni tayyorlashini kutyapmiz", at: d(-3) } });
   await db.taskEvent.create({ data: { taskId: tasks.brbFreon.id, type: "COMMENT", userId: emp.otabek.userId, employeeId: emp.otabek.id, note: "Mis quvur yetishmayapti, 80 m qo'shimcha kerak", at: d(-2) } });

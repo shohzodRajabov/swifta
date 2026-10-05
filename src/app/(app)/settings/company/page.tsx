@@ -6,6 +6,7 @@ import { formatUzs } from "@/lib/format";
 import { Card, CardHeader, Field, Input, Notice, PageHeader, Select } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { updateCompanySettings } from "../actions";
+import { DEFAULT_RATING_WEIGHTS, DEFAULT_RELIABILITY_WEIGHTS, RATING_COMPONENTS, RELIABILITY_COMPONENTS, normalizeWeights } from "@/lib/contractor-score";
 
 export default async function CompanySettingsPage() {
   const user = await requirePermission("settings.manage");
@@ -13,6 +14,8 @@ export default async function CompanySettingsPage() {
   const c = await db.company.findUniqueOrThrow({ where: { id: user.companyId } });
   const w = (c.contributionWeights ?? {}) as Record<string, number>;
   const example = 6_000_000;
+  const rw = normalizeWeights(c.contractorRatingConfig, DEFAULT_RATING_WEIGHTS);
+  const lw = normalizeWeights(c.contractorReliabilityConfig, DEFAULT_RELIABILITY_WEIGHTS);
 
   return (
     <>
@@ -91,6 +94,27 @@ export default async function CompanySettingsPage() {
           <Field label={t("groupRole.WORKER")}>
             <Input name="weightWorker" inputMode="decimal" defaultValue={w.WORKER ?? 1} />
           </Field>
+        </Card>
+
+        <Card className="grid gap-4 p-5 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="sm:col-span-3 lg:col-span-5">
+            <h2 className="text-sm font-semibold">{t("settings.company.contractorRating")}</h2>
+            <p className="mt-0.5 text-xs text-muted">{t("settings.company.contractorRatingHint")}</p>
+          </div>
+          {RATING_COMPONENTS.map((k) => (
+            <Field key={k} label={t(`contractorScore.${k}`)}>
+              <Input name={`rw_${k}`} inputMode="decimal" defaultValue={rw[k]} />
+            </Field>
+          ))}
+          <div className="sm:col-span-3 lg:col-span-5">
+            <h2 className="text-sm font-semibold">{t("settings.company.contractorReliability")}</h2>
+            <p className="mt-0.5 text-xs text-muted">{t("settings.company.contractorReliabilityHint")}</p>
+          </div>
+          {RELIABILITY_COMPONENTS.map((k) => (
+            <Field key={k} label={t(`contractorScore.rel_${k}`)}>
+              <Input name={`lw_${k}`} inputMode="decimal" defaultValue={lw[k]} />
+            </Field>
+          ))}
         </Card>
 
         <div>

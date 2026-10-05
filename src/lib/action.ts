@@ -57,7 +57,8 @@ export async function runAction(
 
 // ---- form parsing helpers --------------------------------------------------
 
-const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
+/** Missing fields and empty strings both mean "not given". */
+const emptyToNull = (v: unknown) => (v === undefined || (typeof v === "string" && v.trim() === "") ? null : v);
 
 export const zText = z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(1));
 export const zOptText = z.preprocess(

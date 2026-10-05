@@ -1508,6 +1508,8 @@ model TaskAssignment {
   verifiedAt      DateTime?
   /// 1–5, given when the work is verified.
   qualityScore    Int?
+  /// How many times the work was sent back for rework (feeds rating / reliability).
+  reworkCount     Int              @default(0)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 

@@ -20,6 +20,7 @@ import { membersAt } from "@/server/workforce/groups";
 import { taskPercent } from "@/server/projects/progress";
 import { taskFormOptions } from "@/server/workforce/options";
 import { SessionForm } from "../session-form";
+import { OutsourcePanel } from "../outsource-panel";
 import { TaskForm } from "../task-form";
 import { addAssignment, addSession, approve, createRemark, decideSession, inspect, removeAssignment, setTaskStatus, updateTask, workerAct } from "../actions";
 
@@ -118,7 +119,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+        <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
           {/* Actions */}
           {(transitions.length > 0 || performer || can(user, "inspections.perform")) && !closed && (
             <Card>
@@ -286,6 +287,8 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
             )}
           </Card>
 
+          <OutsourcePanel user={user} task={task} workTypeName={task.workType?.name ?? null} />
+
           {/* Remarks */}
           <Card>
             <CardHeader title={t("remarks.title")} />
@@ -368,7 +371,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
         </div>
 
         {/* Side */}
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6">
           <Card className="p-5">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs uppercase tracking-wide text-muted">{t("tasks.progress")}</span>

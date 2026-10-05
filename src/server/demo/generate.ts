@@ -10,10 +10,11 @@ import { putObject } from "../files/storage";
 import { simplePdf } from "./pdf";
 import { wipeCompany } from "./wipe";
 import { seedWorkforce } from "./workforce";
+import { seedContractors } from "./contractors";
 
 export const DEMO_RATE = new Prisma.Decimal("11772.95");
 /** Bump when the demo data changes: deployed instances rebuild the demo workspace on start. */
-export const DEMO_VERSION = 2;
+export const DEMO_VERSION = 3;
 const DAY = 86400000;
 
 export type DemoCtx = {
@@ -84,6 +85,7 @@ export async function generateDemo(db: PrismaClient): Promise<string> {
 
   await seedCore(ctx);
   await seedWorkforce(ctx);
+  await seedContractors(ctx);
   return company.id;
 }
 
@@ -152,6 +154,13 @@ async function seedCore(ctx: DemoCtx) {
     ["hotel", "Samarqand Plaza Hotel", "COMPANY", "Feruza Nurmatova", "998662223344"],
     ["hospital", "Navoiy viloyat ko'p tarmoqli shifoxonasi", "GOVERNMENT", "Dilnoza Qosimova", "998792223344"],
     ["textile", "Andijon Tekstil MCHJ", "COMPANY", "Otabek Mirzayev", "998742221100"],
+    ["nest", "Nest One Development", "CONTRACTOR", "Kamola Yusupova", "998781205500"],
+    ["school", "Toshkent sh. Xalq ta'limi boshqarmasi", "GOVERNMENT", "Shuhrat Nazarov", "998712443322"],
+    ["nika", "Nika Farm MCHJ", "COMPANY", "Lola Karimova", "998935007711"],
+    ["afsona", "Afsona Restoran XK", "COMPANY", "Bobur Saidov", "998901777888"],
+    ["hamkor", "Hamkorbank ATB", "COMPANY", "Murod Xo'jayev", "998732441100"],
+    ["humo", "Humo Arena boshqaruvi", "GOVERNMENT", "Davron Ismoilov", "998712005050"],
+    ["utel", "Uzbektelecom AK", "GOVERNMENT", "Nilufar Abdullayeva", "998712339900"],
   ];
   for (const [k, name, type, contactPerson, phone] of clients) {
     const c = await db.client.create({ data: { companyId: cid, name, type, contactPerson, phone, address: "O'zbekiston" } });
@@ -172,6 +181,22 @@ async function seedCore(ctx: DemoCtx) {
     ["DMP-315", "Havo klapani d315", "Systemair", "SPI 315", "DAMPER", "dona", 410000, "UZS", 10],
     ["CH-350", "Chiller 350 kW", "Carrier", "30RB-352", "CHILLER", "dona", 96000, "USD", 0],
     ["FCU-4T", "Fankoyl 4 trubali 3.5 kW", "Daikin", "FWB04", "FCU", "dona", 780, "USD", 0],
+    ["VRF-OUT-02", "VRF tashqi blok 45 kW", "Midea", "MV6-450WV2GN1", "VRF_OUTDOOR", "dona", 13800, "USD", 0],
+    ["VRF-IN-02", "VRF kanalli ichki blok 7.1 kW", "Midea", "MI2-71T2DHN1", "VRF_INDOOR", "dona", 1150, "USD", 0],
+    ["SPL-24", "Split konditsioner 24000 BTU", "Gree", "GWH24", "SPLIT", "dona", 6_900_000, "UZS", 2],
+    ["SPL-12", "Split konditsioner 12000 BTU", "Gree", "GWH12", "SPLIT", "dona", 4_100_000, "UZS", 4],
+    ["CAS-36", "Kasseta konditsioner 36000 BTU", "Midea", "MCD-36", "CASSETTE", "dona", 14_500_000, "UZS", 0],
+    ["RTU-20", "Rooftop 20 kW", "Lennox", "Energence", "ROOFTOP", "dona", 21000, "USD", 0],
+    ["FAN-SUP-3000", "Kanal ventilyatori 3000 m³/h", "Systemair", "KVK 315", "SUPPLY_FAN", "dona", 5_600_000, "UZS", 2],
+    ["FAN-SMK-01", "Tutun chiqarish ventilyatori", "Vents", "VKRF 450", "SMOKE_FAN", "dona", 24_000_000, "UZS", 0],
+    ["PUMP-CH-01", "Sirkulyatsion nasos 18 m³/h", "Grundfos", "TP 65-180", "PUMP", "dona", 2900, "USD", 0],
+    ["VLV-BAL-50", "Balansirovka klapani DN50", "Danfoss", "MSV-F2", "VALVE", "dona", 1_850_000, "UZS", 6],
+    ["PIPE-CU-19", "Mis quvur 19.05 mm", "Halcor", null, "PIPE", "m", 98000, "UZS", 100],
+    ["PIPE-ST-89", "Po'lat quvur 89×3.5", "Mahalliy", null, "PIPE", "m", 135000, "UZS", 0],
+    ["DUCT-FLEX-200", "Egiluvchan kanal d200, izolyatsiyali", "Vents", "Polyvent", "DUCT", "m", 42000, "UZS", 50],
+    ["INS-K-13", "Kauchuk izolyatsiya 13 mm (quvur)", "K-Flex", "ST", "INSULATION", "m", 14000, "UZS", 200],
+    ["AUT-CTRL-01", "Avtomatika shkafi (AHU uchun)", "Siemens", "Climatix", "AUTOMATION", "dona", 4800, "USD", 0],
+    ["FST-ANCH", "Ankerli mahkamlagich to'plami", "Hilti", null, "FASTENERS", "to'plam", 85000, "UZS", 30],
   ];
   for (const [sku, name, manufacturer, model, key, unit, price, currency, minStock] of products) {
     const p = await db.product.create({
@@ -223,6 +248,13 @@ async function seedCore(ctx: DemoCtx) {
     { key: "hotel", name: "Samarqand Plaza — VRF tizimi", customer: "hotel", entity: "general", statusCode: "B1", objectType: "Mehmonxona", contract: [0, "UZS"], vat: 12, start: 20, end: 200, pm: "pm2", address: "Samarqand sh." },
     { key: "hospital", name: "Navoiy shifoxonasi — operatsiya bloki ventilyatsiyasi", customer: "invest", owner: "hospital", entity: "general", statusCode: "G1", objectType: "Shifoxona", contract: [980_000_000, "UZS"], vat: 12, start: -420, end: -75, actualEnd: -60, pm: "pm1", warrantyMonths: 12, address: "Navoiy sh." },
     { key: "textile", name: "Andijon Tekstil — sex konditsionerlash", customer: "textile", entity: "general", statusCode: "A3", objectType: "Ishlab chiqarish", contract: [0, "UZS"], vat: 12, start: 45, end: 240, pm: "pm2", address: "Andijon sh." },
+    { key: "nest", name: "Nest One biznes markazi — VRF tizimi", customer: "nest", entity: "general", statusCode: "D2", objectType: "Biznes markaz", contract: [365000, "USD"], vat: 12, start: -70, end: 150, pm: "pm2", priority: "HIGH", warrantyMonths: 36, address: "Toshkent sh., Yunusobod t." },
+    { key: "school", name: "110-maktab — ventilyatsiya rekonstruksiyasi", customer: "school", entity: "general", statusCode: "C4", objectType: "Ta'lim muassasasi", contract: [1_250_000_000, "UZS"], vat: 12, start: -25, end: 95, pm: "pm1", warrantyMonths: 24, address: "Toshkent sh., Chilonzor t." },
+    { key: "pharm", name: "Nika Farm ombori — konditsionerlash", customer: "nika", entity: "general", statusCode: "E1", objectType: "Ombor (farmatsevtika)", contract: [780_000_000, "UZS"], vat: 12, start: -150, end: 5, pm: "pm2", warrantyMonths: 24, address: "Toshkent viloyati, Zangiota" },
+    { key: "resto", name: "Afsona restorani — oshxona so'rish tizimi", customer: "afsona", entity: "turnover", statusCode: "F3", objectType: "Restoran", contract: [295_000_000, "UZS"], vat: 0, start: -120, end: -20, actualEnd: -18, pm: "pm1", warrantyMonths: 12, address: "Toshkent sh., Mirobod t." },
+    { key: "hamkor", name: "Hamkorbank Farg'ona filiali — split tizimlar", customer: "hamkor", entity: "turnover", statusCode: "G1", objectType: "Bank filiali", contract: [186_000_000, "UZS"], vat: 0, start: -300, end: -200, actualEnd: -205, pm: "pm2", warrantyMonths: 12, address: "Farg'ona sh." },
+    { key: "arena", name: "Humo Arena — chiller servis xizmati", customer: "humo", entity: "general", statusCode: "H", objectType: "Sport majmuasi", contract: [420_000_000, "UZS"], vat: 12, start: -500, end: -380, actualEnd: -380, pm: "pm1", warrantyMonths: 24, address: "Toshkent sh., Olmazor t." },
+    { key: "utel", name: "Uzbektelecom ma'lumotlar markazi — presizion konditsionerlar", customer: "utel", entity: "general", statusCode: "B3", objectType: "Data-markaz", contract: [0, "UZS"], vat: 12, start: 30, end: 210, pm: "pm2", priority: "HIGH", address: "Toshkent sh., Mirzo Ulug'bek t." },
   ];
 
   let n = 1;
@@ -252,8 +284,8 @@ async function seedCore(ctx: DemoCtx) {
         plannedEndDate: d(s.end),
         actualEndDate: s.actualEnd ? d(s.actualEnd) : null,
         warrantyMonths: s.warrantyMonths ?? null,
-        warrantyStart: s.statusCode.startsWith("G") ? d(s.actualEnd ?? -60) : null,
-        warrantyEnd: s.statusCode.startsWith("G") && s.warrantyMonths ? new Date(d(s.actualEnd ?? -60).getTime() + s.warrantyMonths * 30.4 * DAY) : null,
+        warrantyStart: /^[GH]/.test(s.statusCode) ? d(s.actualEnd ?? -60) : null,
+        warrantyEnd: /^[GH]/.test(s.statusCode) && s.warrantyMonths ? new Date(d(s.actualEnd ?? -60).getTime() + s.warrantyMonths * 30.4 * DAY) : null,
         contractNumber: s.contract[0] ? `SH-${100 + n}/${year}` : null,
         contractDate: s.contract[0] ? start : null,
         contractAmount: c.amount,
@@ -445,6 +477,104 @@ async function seedCore(ctx: DemoCtx) {
   await expense("hospital", "MATERIAL", "Havo kanallari va klapanlar", 52_000_000, "UZS", -320, 12);
   await expense("hospital", "LABOR", "Montaj brigadasi", 150_000_000, "UZS", -120);
 
+  // ---- more projects: BOM, budget, schedule, payments, acts, expenses (generic) ----
+  type Fin = {
+    key: string;
+    bom: [string, number, number, Currency][];
+    budget: [CostCategory, number, string][];
+    /** [name, percent, due day, paid day | null] */
+    ms: [string, number, number, number | null][];
+    /** [day, percent of contract, signed] */
+    acts: [number, number, boolean][];
+    exp: [CostCategory, string, number, number][];
+    docs: DocumentCategory[];
+  };
+  const fins: Fin[] = [
+    {
+      key: "nest",
+      bom: [["VRF-OUT-02", 8, 13800, "USD"], ["VRF-IN-02", 64, 1150, "USD"], ["PIPE-CU-19", 900, 98000, "UZS"], ["PIPE-CU-12", 1100, 62000, "UZS"], ["INS-K-13", 2000, 14000, "UZS"]],
+      budget: [["LABOR", 320_000_000, "Montaj brigadalari"], ["TRANSPORT", 30_000_000, "Yetkazish"], ["OUTSOURCING", 60_000_000, "Elektr ulash"]],
+      ms: [["Avans", 30, -65, -63], ["Uskuna yetkazilganda", 40, 20, null], ["Montaj tugaganda", 20, 120, null], ["Topshirish", 10, 160, null]],
+      acts: [[-10, 25, true]],
+      exp: [["TRANSPORT", "Tashqi bloklarni tomga ko'tarish", 12_000_000, -12], ["CUSTOMS", "VRF bloklar bojxonasi", 98_000_000, -40]],
+      docs: ["SIGNED_CONTRACT", "COMMERCIAL_OFFER", "SMETA", "DRAWING", "SPECIFICATION"],
+    },
+    {
+      key: "school",
+      bom: [["AHU-001", 2, 18500, "USD"], ["DUCT-500x300", 420, 185000, "UZS"], ["GRL-400", 80, 145000, "UZS"], ["DUCT-FLEX-200", 300, 42000, "UZS"], ["FAN-SUP-3000", 6, 5_600_000, "UZS"]],
+      budget: [["LABOR", 190_000_000, "Montaj"], ["OUTSOURCING", 25_000_000, "Devor teshish"]],
+      ms: [["Avans", 30, -20, -18], ["Montaj 50%", 40, 45, null], ["Topshirish", 30, 100, null]],
+      acts: [],
+      exp: [["TRANSPORT", "Kanallarni tashish", 4_500_000, -6]],
+      docs: ["SIGNED_CONTRACT", "SMETA", "TECH_SPEC"],
+    },
+    {
+      key: "pharm",
+      bom: [["RTU-20", 3, 21000, "USD"], ["DUCT-500x300", 210, 185000, "UZS"], ["DIF-600", 36, 320000, "UZS"], ["AUT-CTRL-01", 1, 4800, "USD"]],
+      budget: [["LABOR", 110_000_000, "Montaj"], ["TRANSPORT", 15_000_000, "Kran va tashish"]],
+      ms: [["Avans", 40, -148, -146], ["Uskuna yetkazilganda", 40, -80, -76], ["Topshirish", 20, 10, null]],
+      acts: [[-75, 40, true], [-15, 45, true]],
+      exp: [["EQUIPMENT", "Rooftop 3 dona (Lennox)", 63000 * 11772.95, -95], ["MATERIAL", "Havo kanallari va diffuzorlar", 51_000_000, -90], ["LABOR", "Montaj brigadasi (iyul–sentabr)", 96_000_000, -20], ["TRANSPORT", "Kran ijarasi", 7_500_000, -88]],
+      docs: ["SIGNED_CONTRACT", "SMETA", "HIDDEN_WORKS_ACT", "TEST_ACT"],
+    },
+    {
+      key: "resto",
+      bom: [["FAN-SMK-01", 2, 24_000_000, "UZS"], ["DUCT-500x300", 85, 185000, "UZS"], ["FAN-SUP-3000", 2, 5_600_000, "UZS"]],
+      budget: [["LABOR", 55_000_000, "Montaj"]],
+      ms: [["Avans", 50, -118, -117], ["Yakuniy", 50, -15, null]],
+      acts: [[-20, 100, true]],
+      exp: [["MATERIAL", "Ventilyatorlar va kanallar", 79_000_000, -100], ["LABOR", "Montaj", 48_000_000, -25]],
+      docs: ["SIGNED_CONTRACT", "COMPLETION_ACT"],
+    },
+    {
+      key: "hamkor",
+      bom: [["SPL-24", 14, 6_900_000, "UZS"], ["SPL-12", 10, 4_100_000, "UZS"], ["PIPE-CU-12", 220, 62000, "UZS"]],
+      budget: [["LABOR", 22_000_000, "Montaj"], ["HOTEL", 6_000_000, "Farg'onada yashash"]],
+      ms: [["Avans", 50, -298, -296], ["Yakuniy", 50, -200, -195]],
+      acts: [[-205, 100, true]],
+      exp: [["EQUIPMENT", "Split konditsionerlar 24 dona", 137_600_000, -290], ["HOTEL", "Mehmonxona", 5_400_000, -240], ["LABOR", "Montaj", 20_000_000, -205]],
+      docs: ["SIGNED_CONTRACT", "COMPLETION_ACT", "PAYMENT_PROOF", "FINAL_DOCS", "WARRANTY"],
+    },
+    {
+      key: "arena",
+      bom: [["PUMP-CH-01", 2, 2900, "USD"], ["VLV-BAL-50", 12, 1_850_000, "UZS"]],
+      budget: [["LABOR", 60_000_000, "Servis brigadasi"]],
+      ms: [["Avans", 50, -495, -490], ["Yakuniy", 50, -380, -375]],
+      acts: [[-380, 100, true]],
+      exp: [["EQUIPMENT", "Nasoslar", 68_000_000, -450], ["LABOR", "Montaj va servis", 52_000_000, -380]],
+      docs: ["SIGNED_CONTRACT", "COMPLETION_ACT", "PAYMENT_PROOF", "FINAL_DOCS", "SERVICE_REPORT"],
+    },
+    {
+      key: "utel",
+      bom: [["CAS-36", 6, 14_500_000, "UZS"], ["PIPE-CU-19", 160, 98000, "UZS"]],
+      budget: [],
+      ms: [],
+      acts: [],
+      exp: [],
+      docs: ["COMMERCIAL_OFFER", "TECH_SPEC"],
+    },
+  ];
+  let actNo = 10;
+  for (const f of fins) {
+    for (const [sku, qty, price, currency] of f.bom) await bom(f.key, sku, qty, price, currency, f.key === "resto" || f.key === "hamkor" ? 0 : 12);
+    for (const [cat, amount, desc] of f.budget) await budget(f.key, cat, amount, desc);
+    if (f.ms.length) {
+      const ids = await schedule(f.key, f.ms.map(([name, pct, due]) => [name, pct, due] as [string, number, number]));
+      const p = await db.project.findUniqueOrThrow({ where: { id: ctx.projects[f.key] } });
+      for (const [i, [, pct, , paidDay]] of f.ms.entries()) {
+        if (paidDay === null) continue;
+        const amount = Number(p.contractAmount) * (pct / 100);
+        await pay(f.key, paidDay, Math.round(amount), p.contractCurrency, ids[i]);
+      }
+    }
+    for (const [day, pct, signed] of f.acts) {
+      const p = await db.project.findUniqueOrThrow({ where: { id: ctx.projects[f.key] } });
+      await act(f.key, `AKT-${actNo++}`, day, Math.round(Number(p.contractAmount) * (pct / 100)), p.contractCurrency, Number(p.contractVatRate), signed);
+    }
+    for (const [cat, desc, amount, day] of f.exp) await expense(f.key, cat, desc, Math.round(amount), "UZS", day, cat === "LABOR" || cat === "HOTEL" ? 0 : 12);
+    for (const cat of f.docs) await demoDocument(ctx, ctx.projects[f.key], cat, `${cat === "SIGNED_CONTRACT" ? "Shartnoma" : cat === "SMETA" ? "Smeta" : cat === "COMMERCIAL_OFFER" ? "Tijorat taklifi" : "Hujjat"} — ${f.key.toUpperCase()}`);
+  }
+
   // ---- documents ----
   await demoDocument(ctx, ctx.projects.brb, "SIGNED_CONTRACT", "Shartnoma SH-102 (imzolangan)", ["Buyurtmachi: Qurilish Invest MCHJ", "Obyekt egasi: BRB", "Summa: 210 000 USD, QQS bilan"]);
   await demoDocument(ctx, ctx.projects.brb, "COMMERCIAL_OFFER", "Tijorat taklifi v2");
@@ -467,6 +597,13 @@ async function seedCore(ctx: DemoCtx) {
   const s1 = await sup("Climat Trade MCHJ", "Akmal Usmonov", "998901112233", "50% avans, 50% yetkazilganda", 14);
   const s2 = await sup("Ventmontaj Servis", "Rustam Qodirov", "998934445566", "100% yetkazilgandan keyin 10 kun", 5);
   const s3 = await sup("Euro Duct Group", "Anvar Sobirov", "998977778899", "30% avans", 7);
+  const s4 = await sup("Daikin Central Asia", "Oleg Kim", "998712508080", "100% avans", 45);
+  const s5 = await sup("LG Electronics Uzbekistan", "Sherzod Aminov", "998712007070", "50% avans, 50% 30 kun ichida", 30);
+  const s6 = await sup("Midea Climate Tashkent", "Rustam Ziyayev", "998935553311", "30% avans, 70% yetkazilganda", 21);
+  const s7 = await sup("Halcor Mis Quvurlari", "Ibrohim Yo'ldoshev", "998903334455", "Yetkazilgandan keyin 15 kun", 4);
+  const s8 = await sup("K-Flex Uzbekistan", "Gulchehra Saidova", "998946667788", "Yetkazilgandan keyin 7 kun", 3);
+  const s9 = await sup("Systemair Central Asia", "Andrey Pak", "998712556677", "50% avans", 35);
+  const s10 = await sup("Hilti Tashkent", "Kamron Aliev", "998977001122", "Naqd, yetkazilganda", 2);
   for (const [s, sku, price] of [
     [s2, "DUCT-500x300", 185000],
     [s3, "DUCT-500x300", 176000],
@@ -477,6 +614,21 @@ async function seedCore(ctx: DemoCtx) {
     [s3, "INS-K-19", 45500],
     [s1, "DIF-600", 320000],
     [s3, "DIF-600", 298000],
+    [s7, "PIPE-CU-12", 59500],
+    [s7, "PIPE-CU-19", 94000],
+    [s1, "PIPE-CU-19", 99000],
+    [s8, "INS-K-19", 44000],
+    [s8, "INS-K-13", 13500],
+    [s9, "FAN-SUP-3000", 5_400_000],
+    [s9, "DMP-315", 395000],
+    [s6, "SPL-24", 6_700_000],
+    [s6, "SPL-12", 3_950_000],
+    [s6, "CAS-36", 14_100_000],
+    [s10, "FST-ANCH", 82000],
+    [s2, "GRL-400", 140000],
+    [s4, "FCU-4T", 780 * 11772.95],
+    [s5, "VRF-OUT-01", 9800 * 11772.95],
+    [s5, "VRF-IN-01", 950 * 11772.95],
   ] as const) {
     const m = money(price, "UZS", d(-30));
     await db.supplierPrice.create({
@@ -570,6 +722,34 @@ async function seedCore(ctx: DemoCtx) {
       document: "Qoldiq",
     });
   }
+  // More purchase orders across projects (received ones are issued to the site).
+  const moreOrders: [string, { id: string }, string, "ORDERED" | "RECEIVED" | "PARTIAL", number, number, [string, number, number][], number][] = [
+    ["004", s7, "nest", "RECEIVED", -50, -45, [["PIPE-CU-19", 900, 94000], ["PIPE-CU-12", 1100, 59500]], 1],
+    ["005", s8, "nest", "PARTIAL", -30, 5, [["INS-K-13", 2000, 13500]], 0.5],
+    ["006", s9, "school", "ORDERED", -15, 20, [["FAN-SUP-3000", 6, 5_400_000], ["DMP-315", 10, 395000]], 0],
+    ["007", s3, "school", "ORDERED", -10, 8, [["DUCT-500x300", 420, 176000]], 0],
+    ["008", s2, "pharm", "RECEIVED", -100, -92, [["DUCT-500x300", 210, 185000], ["DIF-600", 36, 300000]], 1],
+    ["009", s6, "hamkor", "RECEIVED", -292, -285, [["SPL-24", 14, 6_700_000], ["SPL-12", 10, 3_950_000]], 1],
+    ["010", s10, "brb", "RECEIVED", -40, -39, [["FST-ANCH", 60, 82000]], 1],
+    ["011", s6, "utel", "ORDERED", -2, 25, [["CAS-36", 6, 14_100_000]], 0],
+    ["012", s1, "mall", "PARTIAL", -35, -5, [["PIPE-CU-12", 200, 62000], ["PIPE-ST-89", 160, 135000]], 0.6],
+  ];
+  for (const [no, supplier, projectKey, status, orderDate, expected, lines, received] of moreOrders) {
+    const o = await order(`PO-${year}-${no}`, supplier.id, projectKey, status, orderDate, expected, lines);
+    if (received > 0)
+      for (const l of o.lines) {
+        const qty = Math.round(Number(l.qty) * received);
+        const base = { companyId: cid, productId: l.productId, name: l.name, unit: l.unit, qty, ...cost(l) };
+        await move({ ...base, type: "RECEIPT", date: d(expected), warehouseId: ctx.warehouseId, poLineId: l.id, projectId: ctx.projects[projectKey], document: `Nakladnoy ${300 + Number(no)}`, createdById: ctx.users.storekeeper });
+        await move({ ...base, type: "ISSUE", date: d(expected + 1), warehouseId: ctx.warehouseId, projectId: ctx.projects[projectKey], createdById: ctx.users.storekeeper });
+      }
+    if (status !== "ORDERED" || no === "011") {
+      const part = status === "RECEIVED" ? 1 : 0.3;
+      const pm = money(Math.round((Number(o.totalUzs) * part) / 100_000) * 100_000, "UZS", d(orderDate + 2));
+      await db.supplierPayment.create({ data: { supplierId: supplier.id, orderId: o.id, date: d(orderDate + 2), ...pm, approval: "APPROVED" } });
+    }
+  }
+
   const payS = money(20_000_000, "UZS", d(-120));
   await db.supplierPayment.create({ data: { supplierId: s3.id, orderId: o1.id, date: d(-120), ...payS, approval: "APPROVED" } });
   const payP = money(25_000_000, "UZS", d(-2));
