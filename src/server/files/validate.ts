@@ -24,9 +24,15 @@ function isText(b: Buffer) {
   return !b.subarray(0, 512).includes(0);
 }
 
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp";
 export const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
+
+/** Extension-only check (before the bytes are available): allowed type → MIME. */
+export function mimeForName(fileName: string): string | null {
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  return TYPES[ext]?.mime ?? null;
+}
 
 export type ValidatedFile = { ext: string; mime: string; safeName: string };
 

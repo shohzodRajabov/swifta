@@ -633,7 +633,7 @@
     "missingDocs": "Bu statusga o'tish uchun hujjat yetishmaydi: {docs}. Avval \"Hujjatlar\" bo'limiga yuklang.",
     "phoneInvalid": "Telefon raqami noto'g'ri",
     "fileEmpty": "Fayl bo'sh",
-    "fileTooLarge": "Fayl juda katta (25 MB gacha)",
+    "fileTooLarge": "Fayl juda katta (100 MB gacha)",
     "fileType": "Bu turdagi fayl qabul qilinmaydi (Word, Excel, PDF, rasm)",
     "telegramToken": "Bot tokeni noto'g'ri yoki bot topilmadi",
     "telegramNotConfigured": "Avval token va guruh ID'sini saqlang",
@@ -672,7 +672,8 @@
     "aiKeyForProvider": "Xizmat almashtirildi — yangi xizmat uchun kalitni kiriting",
     "importNoFile": "Faylni tanlang",
     "importFileType": "Faqat .xlsx fayl (10 MB gacha) o'qiladi",
-    "importEmpty": "Faylda ma'lumotli qator topilmadi (sarlavhalar shablondagidek bo'lishi kerak)"
+    "importEmpty": "Faylda ma'lumotli qator topilmadi (sarlavhalar shablondagidek bo'lishi kerak)",
+    "uploadMissing": "Fayl yuklanmadi (aloqa uzildi). Qaytadan urinib ko'ring"
   },
   "poStatus": {
     "DRAFT": "Qoralama",
@@ -1028,7 +1029,7 @@
   "documents": {
     "title": "Obyekt hujjatlari",
     "new": "Hujjat yuklash",
-    "formats": "Word, Excel, PDF va rasm (25 MB gacha). Har bir yangi yuklash yangi versiya bo'ladi, eskilari o'chirilmaydi.",
+    "formats": "Word, Excel, PDF va rasm (100 MB gacha). Har bir yangi yuklash yangi versiya bo'ladi, eskilari o'chirilmaydi.",
     "category": "Turi",
     "titleOptional": "Nomi (ixtiyoriy)",
     "titlePlaceholder": "Fayl nomidan olinadi",

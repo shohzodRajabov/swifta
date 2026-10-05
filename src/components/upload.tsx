@@ -29,6 +29,53 @@ async function compressImage(file: File): Promise<File> {
   }
 }
 
+type Result = { error?: string };
+
+/** PUT straight to the bucket with progress; rejects on network/CORS failure so the caller can fall back. */
+function putWithProgress(url: string, file: File, contentType: string, onProgress: (p: number) => void): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("Content-Type", contentType);
+    xhr.upload.onprogress = (ev) => ev.lengthComputable && onProgress(Math.round((ev.loaded / ev.total) * 100));
+    xhr.onload = () => resolve(xhr.status);
+    xhr.onerror = () => reject(new Error("network"));
+    xhr.send(file);
+  });
+}
+
+/**
+ * Uploads one file: directly to the bucket when the server allows it (fast, up to 100 MB, with progress),
+ * otherwise (local storage, or the direct PUT failed) through /api/upload.
+ */
+export async function uploadFile(file: File, fields: Record<string, string>, onProgress: (p: number | null) => void = () => undefined): Promise<Result> {
+  const init = await fetch("/api/upload/init", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: file.name, size: file.size, fields }),
+  })
+    .then((r) => r.json() as Promise<{ direct?: boolean; url?: string; contentType?: string; ticket?: string; error?: string }>)
+    .catch(() => ({ direct: false }) as { direct?: boolean; error?: string; url?: string; contentType?: string; ticket?: string });
+  if (init.error) return { error: init.error };
+  if (init.direct && init.url && init.ticket) {
+    const status = await putWithProgress(init.url, file, init.contentType!, onProgress).catch(() => 0);
+    if (status >= 200 && status < 300) {
+      const done = (await fetch("/api/upload/complete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ticket: init.ticket }) })
+        .then((r) => r.json())
+        .catch(() => ({ error: "unknown" }))) as Result;
+      return done.error ? { error: done.error } : {};
+    }
+    // Direct upload unavailable (e.g. bucket CORS): fall back to the app route below.
+  }
+  onProgress(null);
+  const body = new FormData();
+  for (const [k, v] of Object.entries(fields)) body.set(k, v);
+  body.set("file", file);
+  const res = await fetch("/api/upload", { method: "POST", body });
+  const json = (await res.json().catch(() => ({ error: res.status === 413 ? "fileTooLarge" : "unknown" }))) as Result;
+  return !res.ok || json.error ? { error: json.error ?? "unknown" } : {};
+}
+
 /** Upload button posting to /api/upload with extra fields; refreshes the page on success. */
 export function UploadButton({
   fields,
@@ -53,6 +100,7 @@ export function UploadButton({
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
     const list = e.target.files;
@@ -67,13 +115,9 @@ export function UploadButton({
     try {
       for (const original of Array.from(list)) {
         const file = await compressImage(original);
-        const body = new FormData();
-        for (const [k, v] of Object.entries({ ...fields, ...extra })) body.set(k, v);
-        body.set("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body });
-        const json = (await res.json().catch(() => ({}))) as { error?: string };
-        if (!res.ok || json.error) {
-          setError(json.error ?? "unknown");
+        const result = await uploadFile(file, { ...fields, ...extra }, setProgress);
+        if (result.error) {
+          setError(result.error);
           break;
         }
       }
@@ -82,6 +126,7 @@ export function UploadButton({
       setError("unknown");
     } finally {
       setBusy(false);
+      setProgress(null);
       e.target.value = "";
     }
   }
@@ -91,6 +136,7 @@ export function UploadButton({
       <button type="button" disabled={busy} onClick={() => input.current?.click()} className={cn(buttonClass(variant), className)}>
         {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : (icon ?? <Upload className="size-4" aria-hidden />)}
         {label}
+        {busy && progress !== null && <span className="num text-xs">{progress}%</span>}
       </button>
       <input ref={input} type="file" accept={accept} multiple={fields.purpose === "attachment"} className="hidden" onChange={onChange} />
       {error && <span className="text-xs text-danger">{t(error)}</span>}

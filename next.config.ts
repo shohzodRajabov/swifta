@@ -9,13 +9,23 @@ const dev = process.env.NODE_ENV !== "production";
  * Next.js without nonces. Images may come from the storage bucket (signed https URLs). The site can't be
  * framed (clickjacking). The microphone is allowed only for this origin (voice notes).
  */
+// Direct uploads PUT to the storage bucket (Railway: https://<bucket>.t3.storageapi.dev).
+const storageHost = (() => {
+  try {
+    return process.env.S3_ENDPOINT ? new URL(process.env.S3_ENDPOINT).host : null;
+  } catch {
+    return null;
+  }
+})();
+const storageSrc = ["https://*.storageapi.dev", ...(storageHost ? [`https://${storageHost}`, `https://*.${storageHost}`] : [])].join(" ");
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self'${dev ? " ws: http://localhost:*" : ""}`,
+  `connect-src 'self' ${storageSrc}${dev ? " ws: http://localhost:*" : ""}`,
   "worker-src 'self' blob:",
   "frame-src 'self'",
   "object-src 'none'",

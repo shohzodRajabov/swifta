@@ -633,7 +633,7 @@
     "missingDocs": "This status requires documents: {docs}. Upload them in Documents first.",
     "phoneInvalid": "Invalid phone number",
     "fileEmpty": "The file is empty",
-    "fileTooLarge": "File too large (max 25 MB)",
+    "fileTooLarge": "File too large (max 100 MB)",
     "fileType": "Unsupported file type (Word, Excel, PDF, images)",
     "telegramToken": "Invalid bot token",
     "telegramNotConfigured": "Save the token and group ID first",
@@ -672,7 +672,8 @@
     "aiKeyForProvider": "The service changed — enter the key for the new service",
     "importNoFile": "Choose a file",
     "importFileType": "Only .xlsx files (up to 10 MB)",
-    "importEmpty": "No data rows found (headers must match the template)"
+    "importEmpty": "No data rows found (headers must match the template)",
+    "uploadMissing": "The file didn't arrive (connection lost). Please try again"
   },
   "poStatus": {
     "DRAFT": "Draft",
@@ -1028,7 +1029,7 @@
   "documents": {
     "title": "Project documents",
     "new": "Upload a document",
-    "formats": "Word, Excel, PDF and images (up to 25 MB). Each upload is a new version; old versions are kept.",
+    "formats": "Word, Excel, PDF and images (up to 100 MB). Each upload is a new version; old versions are kept.",
     "category": "Category",
     "titleOptional": "Title (optional)",
     "titlePlaceholder": "Taken from the file name",

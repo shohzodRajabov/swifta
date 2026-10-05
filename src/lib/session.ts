@@ -58,3 +58,20 @@ export async function verifyPending2fa(token: string | undefined): Promise<{ use
     return null;
   }
 }
+
+/** Direct upload ticket: binds the bucket key, file name and purpose fields to the user who asked (30 min). */
+export type UploadTicket = { uid: string; cid: string; key: string; name: string; fields: Record<string, string> };
+
+export async function signUploadTicket(t: UploadTicket): Promise<string> {
+  return new SignJWT({ ...t, purpose: "upload" }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("30m").sign(key());
+}
+
+export async function verifyUploadTicket(token: string): Promise<UploadTicket | null> {
+  try {
+    const { payload } = await jwtVerify(token, key(), { algorithms: ["HS256"] });
+    if (payload.purpose !== "upload") return null;
+    return { uid: String(payload.uid), cid: String(payload.cid), key: String(payload.key), name: String(payload.name), fields: payload.fields as Record<string, string> };
+  } catch {
+    return null;
+  }
+}
