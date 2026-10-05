@@ -34,6 +34,7 @@ pdf.js worker: `public/pdf.worker.min.mjs` (pdfjs-dist yangilansa qayta nusxalan
 Demo ma'lumot o'zgarsa `DEMO_VERSION` (src/server/demo/generate.ts) ni oshiring — sayt demo'ni qayta yaratadi.
 Lokal: `pnpm local` (yoki `pnpm dev --port 3100`); `pnpm db:seed`, `pnpm db:demo` (faqat lokal demo, parol demo12345).
 Konteyner start: `prisma migrate deploy` → idempotent seed → `next start`.
+Railway sozlamasi: `.railway/railway.ts` (IaC, railway.json o'rniga). O'zgaruvchilar `preserve()` bilan — `railway config apply` ularni o'chirmasligi uchun; yangi o'zgaruvchi qo'shilsa ro'yxatga ham yozing. `railway config plan/apply` uchun Node 22+ kerak (`~/.nvm/versions/node/v22.*`).
 
 <!-- BEGIN:nextjs-agent-rules -->
 
