@@ -37,6 +37,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   serverExternalPackages: ["exceljs"],
   poweredByHeader: false,
+  // Excel bulk import posts the workbook to a Server Action (default limit 1MB).
+  experimental: { serverActions: { bodySizeLimit: "10mb" } },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

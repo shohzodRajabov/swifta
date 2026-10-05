@@ -669,7 +669,10 @@
     "passportType": "Pasport uchun faqat PDF yoki rasm (JPG, PNG, WEBP)",
     "aiKey": "AI kaliti ishlamadi: {reason}",
     "aiProvider": "Avval AI xizmatini tanlang",
-    "aiKeyForProvider": "Xizmat almashtirildi — yangi xizmat uchun kalitni kiriting"
+    "aiKeyForProvider": "Xizmat almashtirildi — yangi xizmat uchun kalitni kiriting",
+    "importNoFile": "Faylni tanlang",
+    "importFileType": "Faqat .xlsx fayl (10 MB gacha) o'qiladi",
+    "importEmpty": "Faylda ma'lumotli qator topilmadi (sarlavhalar shablondagidek bo'lishi kerak)"
   },
   "poStatus": {
     "DRAFT": "Qoralama",
@@ -1296,6 +1299,10 @@
     "ai": {
       "title": "AI tarjima",
       "hint": "Foydalanuvchilar kiritgan matnlarni tanlangan tilga avtomatik tarjima qilish"
+    },
+    "import": {
+      "title": "Excel'dan import",
+      "hint": "Tovarlar, mijozlar, yetkazib beruvchilar va xodimlarni jadvaldan bir yo'la kiritish"
     }
   },
   "firms": {
@@ -2263,5 +2270,77 @@
     "cleared": "{n} ta tarjima o'chirildi",
     "cachedCount": "Saqlangan tarjimalar: {n}",
     "privacy": "Tarjima uchun matnlar tanlangan AI xizmatiga yuboriladi. Google Gemini bepul tarifida Google yuborilgan ma'lumotlardan o'z modellarini yaxshilash uchun foydalanishi mumkin; maxfiy ma'lumotlar uchun pullik tarif yoki Claude'ni tanlang. Odamlar va kompaniyalar nomlari, raqamlar va kodlar tarjima qilinmaydi. Asl matn sichqoncha bilan ustiga borganda ko'rinadi"
+  },
+  "bulkImport": {
+    "step1": "Turini tanlang va shablonni yuklab oling (yoki o'z jadvalingizda ustun sarlavhalarini shablondagidek qiling — qavs ichidagi kalit muhim)",
+    "step2": "Faylni yuklab \"Tekshirish\"ni bosing: har qator yangi, yangilanadigan yoki xato deb ko'rsatiladi. Mavjud yozuvlar artikul / STIR / telefon / nom bo'yicha topiladi va takrorlanmaydi",
+    "step3": "\"Import qilish\"ni bosing: xatoli qatorlar o'tkazib yuboriladi; bo'sh katak mavjud qiymatni o'chirmaydi. Pasport ma'lumotlari import qilinmaydi — xodim kartasida kiritiladi",
+    "noSalary": "Sizda maoshni ko'rish huquqi yo'q: maosh ustuni e'tiborga olinmaydi",
+    "type": "Nima import qilinadi",
+    "types": {
+      "products": "Tovarlar (katalog)",
+      "clients": "Mijozlar",
+      "suppliers": "Yetkazib beruvchilar",
+      "employees": "Xodimlar"
+    },
+    "file": "Excel fayl (.xlsx)",
+    "fileHint": "Birinchi varaq o'qiladi; 10 MB va 5000 qatorgacha",
+    "template": "Shablon",
+    "check": "Tekshirish",
+    "columns": "Ustunlar (* — majburiy)",
+    "preview": "Oldindan ko'rish",
+    "summary": "Jami {total}: yangi {create}, yangilanadi {update}, xato {errors}",
+    "apply": "Import qilish ({n})",
+    "done": "Tayyor: {created} ta yangi, {updated} ta yangilandi, {skipped} ta xatoli qator o'tkazib yuborildi",
+    "unknownHeaders": "Tanilmagan ustunlar (e'tiborga olinmaydi): {list}.",
+    "tooMany": "5000 qatordan keyingilari o'qilmadi.",
+    "more": "Yana {n} qator (ko'rsatilmadi, lekin import qilinadi)",
+    "problems": "Muammolar",
+    "action": {
+      "create": "yangi",
+      "update": "yangilanadi",
+      "error": "xato"
+    },
+    "issue": {
+      "required": "majburiy",
+      "number": "son emas yoki manfiy",
+      "date": "sana noto'g'ri (YYYY-MM-DD yoki DD.MM.YYYY)",
+      "phone": "telefon noto'g'ri",
+      "email": "email noto'g'ri",
+      "currency": "faqat UZS yoki USD",
+      "clientType": "COMPANY / GOVERNMENT / INDIVIDUAL / CONTRACTOR",
+      "duplicateInFile": "faylda takrorlangan"
+    }
+  },
+  "importCols": {
+    "sku": "Artikul",
+    "name": "Nomi",
+    "category": "Kategoriya",
+    "unit": "O'lchov birligi",
+    "manufacturer": "Ishlab chiqaruvchi",
+    "model": "Model",
+    "purchasePrice": "Xarid narxi",
+    "purchaseCurrency": "Xarid valyutasi",
+    "salePrice": "Sotuv narxi",
+    "saleCurrency": "Sotuv valyutasi",
+    "minStock": "Minimal qoldiq",
+    "supplier": "Yetkazib beruvchi",
+    "description": "Tavsif",
+    "type": "Turi",
+    "contactPerson": "Mas'ul shaxs",
+    "phone": "Telefon",
+    "email": "Email",
+    "address": "Manzil",
+    "tin": "STIR",
+    "bankDetails": "Bank rekvizitlari",
+    "note": "Izoh",
+    "paymentTerms": "To'lov shartlari",
+    "leadTimeDays": "Yetkazish muddati (kun)",
+    "fullName": "F.I.Sh.",
+    "position": "Lavozim",
+    "department": "Bo'lim",
+    "salary": "Maosh",
+    "hireDate": "Ishga kirgan sana",
+    "normDays": "Oylik norma (kun)"
   }
 }

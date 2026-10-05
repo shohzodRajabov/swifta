@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Building, DatabaseBackup, FileStack, KeyRound, ListChecks, ScrollText, Send, Settings2, Users, FlaskConical, Languages } from "lucide-react";
+import { Building, DatabaseBackup, FileStack, KeyRound, ListChecks, ScrollText, Send, Settings2, Users, FlaskConical, Languages, FileSpreadsheet } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { can, type Permission } from "@/lib/permissions";
 import { Card, PageHeader } from "@/components/ui";
 
-const ITEMS: { href: string; key: string; icon: typeof Users; perm: Permission }[] = [
+const ITEMS: { href: string; key: string; icon: typeof Users; perm: Permission | Permission[] }[] = [
   { href: "/settings/company", key: "company", icon: Settings2, perm: "settings.manage" },
   { href: "/settings/firms", key: "firms", icon: Building, perm: "settings.manage" },
   { href: "/settings/statuses", key: "statuses", icon: ListChecks, perm: "settings.manage" },
   { href: "/settings/users", key: "users", icon: Users, perm: "users.manage" },
   { href: "/settings/roles", key: "roles", icon: KeyRound, perm: "roles.manage" },
   { href: "/settings/work-types", key: "workTypes", icon: FileStack, perm: "settings.manage" },
+  { href: "/settings/import", key: "import", icon: FileSpreadsheet, perm: ["catalog.edit", "clients.edit", "suppliers.edit", "employees.edit"] },
   { href: "/settings/telegram", key: "telegram", icon: Send, perm: "settings.manage" },
   { href: "/settings/ai", key: "ai", icon: Languages, perm: "settings.manage" },
   { href: "/settings/backups", key: "backups", icon: DatabaseBackup, perm: "backups.manage" },
@@ -22,7 +23,7 @@ const ITEMS: { href: string; key: string; icon: typeof Users; perm: Permission }
 export default async function SettingsPage() {
   const user = await requireUser();
   const t = await getTranslations("settings");
-  const items = ITEMS.filter((i) => can(user, i.perm));
+  const items = ITEMS.filter((i) => (Array.isArray(i.perm) ? i.perm.some((p) => can(user, p)) : can(user, i.perm)));
   return (
     <>
       <PageHeader title={t("title")} />

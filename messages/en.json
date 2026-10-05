@@ -669,7 +669,10 @@
     "passportType": "Passport: PDF or image only (JPG, PNG, WEBP)",
     "aiKey": "AI key didn't work: {reason}",
     "aiProvider": "Choose the AI service first",
-    "aiKeyForProvider": "The service changed — enter the key for the new service"
+    "aiKeyForProvider": "The service changed — enter the key for the new service",
+    "importNoFile": "Choose a file",
+    "importFileType": "Only .xlsx files (up to 10 MB)",
+    "importEmpty": "No data rows found (headers must match the template)"
   },
   "poStatus": {
     "DRAFT": "Draft",
@@ -1296,6 +1299,10 @@
     "ai": {
       "title": "AI translation",
       "hint": "Translate user-entered texts into the viewer's language"
+    },
+    "import": {
+      "title": "Import from Excel",
+      "hint": "Load products, clients, suppliers and employees from a spreadsheet"
     }
   },
   "firms": {
@@ -2263,5 +2270,77 @@
     "cleared": "{n} translations removed",
     "cachedCount": "Cached translations: {n}",
     "privacy": "Texts are sent to the chosen AI service. On the free Gemini tier Google may use the data to improve its models; for confidential data use a paid tier or Claude. Names, numbers and codes are kept. The original shows on hover"
+  },
+  "bulkImport": {
+    "step1": "Choose the type and download the template (or name your columns like it — the key in parentheses matters)",
+    "step2": "Upload and press \"Check\": each row is new, an update or an error. Existing records are matched by SKU / TIN / phone / name, never duplicated",
+    "step3": "Press \"Import\": rows with errors are skipped; empty cells don't erase values. Passport data is not imported — enter it on the employee card",
+    "noSalary": "You can't view salaries: the salary column is ignored",
+    "type": "What to import",
+    "types": {
+      "products": "Products (catalog)",
+      "clients": "Clients",
+      "suppliers": "Suppliers",
+      "employees": "Employees"
+    },
+    "file": "Excel file (.xlsx)",
+    "fileHint": "First sheet is read; up to 10 MB and 5000 rows",
+    "template": "Template",
+    "check": "Check",
+    "columns": "Columns (* required)",
+    "preview": "Preview",
+    "summary": "{total} rows: {create} new, {update} updates, {errors} errors",
+    "apply": "Import ({n})",
+    "done": "Done: {created} created, {updated} updated, {skipped} rows with errors skipped",
+    "unknownHeaders": "Unrecognized columns (ignored): {list}.",
+    "tooMany": "Rows after 5000 were not read.",
+    "more": "{n} more rows (not shown, but will be imported)",
+    "problems": "Problems",
+    "action": {
+      "create": "new",
+      "update": "update",
+      "error": "error"
+    },
+    "issue": {
+      "required": "required",
+      "number": "not a number or negative",
+      "date": "bad date (YYYY-MM-DD or DD.MM.YYYY)",
+      "phone": "bad phone",
+      "email": "bad email",
+      "currency": "UZS or USD only",
+      "clientType": "COMPANY / GOVERNMENT / INDIVIDUAL / CONTRACTOR",
+      "duplicateInFile": "duplicate in the file"
+    }
+  },
+  "importCols": {
+    "sku": "SKU",
+    "name": "Name",
+    "category": "Category",
+    "unit": "Unit",
+    "manufacturer": "Manufacturer",
+    "model": "Model",
+    "purchasePrice": "Purchase price",
+    "purchaseCurrency": "Purchase currency",
+    "salePrice": "Sale price",
+    "saleCurrency": "Sale currency",
+    "minStock": "Min stock",
+    "supplier": "Supplier",
+    "description": "Description",
+    "type": "Type",
+    "contactPerson": "Contact person",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "tin": "TIN",
+    "bankDetails": "Bank details",
+    "note": "Note",
+    "paymentTerms": "Payment terms",
+    "leadTimeDays": "Lead time (days)",
+    "fullName": "Full name",
+    "position": "Position",
+    "department": "Department",
+    "salary": "Salary",
+    "hireDate": "Hire date",
+    "normDays": "Norm days per month"
   }
 }
