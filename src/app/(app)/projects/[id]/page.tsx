@@ -23,8 +23,9 @@ import { HistoryTab } from "./tabs/history";
 import { MaterialsTab } from "./tabs/materials";
 import { DocumentsTab } from "./tabs/documents";
 import { TasksTab } from "./tabs/tasks";
+import { DrawingsTab } from "./tabs/drawings";
 
-const TABS = ["overview", "tasks", "revenue", "budget", "expenses", "bom", "materials", "documents", "history"] as const;
+const TABS = ["overview", "tasks", "drawings", "revenue", "budget", "expenses", "bom", "materials", "documents", "history"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function ProjectPage({ params, searchParams }: PageProps<"/projects/[id]">) {
@@ -56,6 +57,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const visible: Record<Tab, boolean> = {
     overview: true,
     tasks: can(user, "tasks.view"),
+    drawings: can(user, "documents.view"),
     revenue: finance || can(user, "payments.edit") || can(user, "acts.edit"),
     budget: finance,
     expenses: finance || can(user, "expenses.edit"),
@@ -68,6 +70,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const tabLabel: Record<Tab, string> = {
     overview: t("projects.tabOverview"),
     tasks: t("tasks.title"),
+    drawings: t("drawings.title"),
     revenue: t("projects.tabRevenue"),
     budget: t("projects.tabBudget"),
     expenses: t("projects.tabExpenses"),
@@ -147,6 +150,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
 
       {tab === "overview" && <OverviewTab project={project} metrics={m} showFinance={finance} />}
       {tab === "tasks" && <TasksTab user={user} projectId={project.id} />}
+      {tab === "drawings" && <DrawingsTab user={user} projectId={project.id} />}
       {tab === "revenue" && <RevenueTab user={user} project={project} metrics={m} />}
       {tab === "budget" && <BudgetTab user={user} projectId={project.id} metrics={m} />}
       {tab === "expenses" && <ExpensesTab user={user} projectId={project.id} />}

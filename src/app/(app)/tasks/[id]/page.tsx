@@ -93,6 +93,13 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
       ? db.user.findMany({ where: { companyId: user.companyId, active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } })
       : [],
   ]);
+  // Zones of the latest drawing versions this task is mapped to ("Show on drawing").
+  const zoneLinks = (
+    await db.drawingZoneTask.findMany({
+      where: { taskId: task.id },
+      include: { zone: { include: { version: { include: { drawing: { select: { title: true, versions: { orderBy: { version: "desc" }, take: 1, select: { id: true } } } } } } } } },
+    })
+  ).filter((z) => z.zone.version.drawing.versions[0]?.id === z.zone.versionId);
   const company = canRecord ? await db.company.findUniqueOrThrow({ where: { id: user.companyId }, select: { defaultContribution: true } }) : null;
   const myGroup = user.employee ? groups.find((g) => g.members.some((m) => m.employeeId === user.employee!.id && m.role === "LEADER")) : undefined;
 
@@ -402,6 +409,19 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                   </div>
                 ))}
             </dl>
+            {zoneLinks.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                {zoneLinks.map((z) => (
+                  <Link
+                    key={z.zone.id}
+                    href={`/projects/${task.projectId}/drawings/${z.zone.version.drawingId}?zone=${z.zone.id}`}
+                    className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20"
+                  >
+                    ◎ {t("drawings.showOnDrawing")}: {z.zone.version.drawing.title} · {z.zone.name}
+                  </Link>
+                ))}
+              </div>
+            )}
             {task.description && <p className="mt-3 whitespace-pre-line border-t border-border pt-3 text-sm">{task.description}</p>}
             {task.parent && (
               <p className="mt-3 text-sm">

@@ -12,9 +12,11 @@ export async function GET(request: Request, { params }: RouteContext<"/api/files
   if (!user) return new Response("Unauthorized", { status: 401 });
   if (!(await canReadFile(user, id))) return new Response("Forbidden", { status: 403 });
   const file = await db.fileObject.findUniqueOrThrow({ where: { id } });
-  const download = new URL(request.url).searchParams.has("download");
+  const search = new URL(request.url).searchParams;
+  const download = search.has("download");
   const inline = !download && (file.mime.startsWith("image/") || file.mime === "application/pdf");
-  const url = await signedUrl(file.storageKey, file.fileName, inline);
+  // `raw` streams through this server (same origin) — used by the in-browser PDF viewer (no bucket CORS needed).
+  const url = search.has("raw") ? null : await signedUrl(file.storageKey, file.fileName, inline);
   if (url) return Response.redirect(url, 302);
   const body = await getObject(file.storageKey);
   return new Response(new Uint8Array(body), {

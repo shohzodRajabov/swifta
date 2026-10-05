@@ -12,10 +12,11 @@ import { wipeCompany } from "./wipe";
 import { seedWorkforce } from "./workforce";
 import { seedContractors } from "./contractors";
 import { seedKpi } from "./kpi";
+import { seedDrawings } from "./drawings";
 
 export const DEMO_RATE = new Prisma.Decimal("11772.95");
 /** Bump when the demo data changes: deployed instances rebuild the demo workspace on start. */
-export const DEMO_VERSION = 4;
+export const DEMO_VERSION = 5;
 const DAY = 86400000;
 
 export type DemoCtx = {
@@ -88,6 +89,7 @@ export async function generateDemo(db: PrismaClient): Promise<string> {
   await seedWorkforce(ctx);
   await seedContractors(ctx);
   await seedKpi(ctx);
+  await seedDrawings(ctx);
   return company.id;
 }
 

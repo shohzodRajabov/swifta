@@ -1,6 +1,14 @@
 /** Tiny PDF writer for demo documents and demo floor plans (Latin text + vector graphics). */
 function esc(s: string) {
-  return s.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)").replace(/[^\x20-\x7e]/g, "?");
+  return s
+    .replace(/[—–]/g, "-")
+    .replace(/[ʻʼ‘’`]/g, "'")
+    .replace(/[“”«»]/g, '"')
+    .replace(/×/g, "x")
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)")
+    .replace(/[^\x20-\x7e]/g, "?");
 }
 
 export function simplePdf(opts: { title: string; lines?: string[]; graphics?: string; landscape?: boolean }): Buffer {

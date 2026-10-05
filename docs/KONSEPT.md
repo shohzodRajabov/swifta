@@ -133,7 +133,7 @@ alohida hisoblanadi va hech qachon hajmni xodimlar soniga ko'paytirmaydi.
 | 2 | Ishchi kuchi: xodimlar, maosh, guruhlar va tarix, ish turlari, joylashuvlar, tasklar, sessiyalar, ulush, samaradorlik, kamchiliklar, Kanban, kalendar, davomat, oylik hisob, smeta importi (admin tasdig'i bilan), ishchi kabineti `/me` | Saytda |
 | 3 | Contractorlar: baza, tashqi tasklar, tasdiqlash, to'lov, rating, reliability (og'irliklar Sozlamalar → Kompaniya'da) | Saytda |
 | 4 | KPI: versiyalangan formulalar (xodim/guruh/contractor), oylik hisoblash va tasdiqlash, foizdan vazifagacha ochib ko'rish | Saytda |
-| 5 | Chizmalar: PDF, zonalar, taskga bog'lash, vizual progress, chizmadagi kamchiliklar | |
+| 5 | Chizmalar: PDF (pdf.js), nuqta/chiziq/to'rtburchak/ko'pburchak zonalar, ko'p taskka bog'lash, vizual holat va progress, chizmadagi kamchiliklar, versiyalar (zonalar ko'chiriladi + tekshirish) | Saytda |
 | 6 | Servis va kafolat: shartnoma, SLA, murojaatlar | |
 | 7 | Hisobotlar, rollarga mos bosh sahifalar, eksport | |
 

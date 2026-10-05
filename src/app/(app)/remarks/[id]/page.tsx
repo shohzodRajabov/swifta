@@ -34,6 +34,7 @@ export default async function RemarkPage({ params }: PageProps<"/remarks/[id]">)
       responsible: { select: { name: true } },
       createdBy: { select: { name: true } },
       inspection: { select: { attempt: true } },
+      drawingVersion: { select: { drawingId: true, version: true, drawing: { select: { title: true } } } },
     },
   });
   if (!remark) notFound();
@@ -124,6 +125,13 @@ export default async function RemarkPage({ params }: PageProps<"/remarks/[id]">)
                 </div>
               ))}
           </dl>
+          {remark.drawingVersion && (
+            <p className="mt-3 border-t border-border pt-3 text-sm">
+              <Link href={`/projects/${remark.project.id}/drawings/${remark.drawingVersion.drawingId}?v=${remark.drawingVersion.version}&page=${remark.drawingPage ?? 1}`} className="text-primary">
+                ◎ {t("drawings.showOnDrawing")}: {remark.drawingVersion.drawing.title} v{remark.drawingVersion.version}
+              </Link>
+            </p>
+          )}
           {remark.task && (
             <p className="mt-3 border-t border-border pt-3 text-sm">
               <Link href={`/tasks/${remark.task.id}`} className="text-primary">

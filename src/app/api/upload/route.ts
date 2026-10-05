@@ -7,6 +7,7 @@ import { projectWhere } from "@/server/projects/access";
 import { projectOfAttachment } from "@/server/files/access";
 import { storeUpload } from "@/server/files/files";
 import { parseSmeta } from "@/server/import/smeta";
+import { addDrawingVersion, pdfPageCount } from "@/server/drawings/drawings";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,30 @@ export async function POST(request: Request) {
       data: { companyId: user.companyId, fileId: stored.id, entityType: data.data.entityType, entityId: data.data.entityId },
     });
     return json({ ok: true, id: att.id, fileId: stored.id });
+  }
+
+  if (fields.purpose === "drawing") {
+    const projectId = typeof fields.projectId === "string" ? fields.projectId : "";
+    const drawingId = typeof fields.drawingId === "string" && fields.drawingId ? fields.drawingId : null;
+    if (!can(user, "drawings.edit")) return json({ error: "forbidden" }, 403);
+    const project = await db.project.findFirst({ where: { AND: [{ id: projectId }, projectWhere(user)] } });
+    if (!project) return json({ error: "forbidden" }, 403);
+    const drawing = drawingId ? await db.drawing.findFirst({ where: { id: drawingId, projectId } }) : null;
+    if (drawingId && !drawing) return json({ error: "invalid" }, 400);
+    const buf = Buffer.from(await file.arrayBuffer());
+    if (buf.subarray(0, 5).toString("latin1") !== "%PDF-") return json({ error: "drawingPdfOnly" }, 400);
+    const stored = await storeUpload(user.companyId, user.id, file);
+    if ("error" in stored) return json({ error: stored.error }, 400);
+    const title = (typeof fields.title === "string" && fields.title.trim()) || file.name.replace(/\.[^.]+$/, "");
+    const discipline = typeof fields.discipline === "string" && fields.discipline.trim() ? fields.discipline.trim() : null;
+    const note = typeof fields.note === "string" && fields.note.trim() ? fields.note.trim() : null;
+    const result = await db.$transaction(async (tx) => {
+      const d = drawing ?? (await tx.drawing.create({ data: { companyId: user.companyId, projectId, title, discipline } }));
+      const v = await addDrawingVersion(tx, d.id, stored.id, pdfPageCount(buf), user.id, note);
+      await audit(tx, { companyId: user.companyId, userId: user.id }, "Drawing", d.id, drawing ? "update" : "create", null, { title: d.title, version: v.version, fileName: stored.fileName });
+      return { drawingId: d.id, version: v.version };
+    });
+    return json({ ok: true, ...result });
   }
 
   if (fields.purpose === "smeta") {
