@@ -1948,7 +1948,13 @@
     "tone_check": "Tekshiruvda",
     "tone_done": "Qabul qilingan",
     "tone_bad": "Qayta ishlash / to'xtagan",
-    "tone_none": "Vazifasiz"
+    "tone_none": "Vazifasiz",
+    "carryZones": "Zonalarni ko'chirish",
+    "carryZonesHint": "Zonalar faqat chizma o'sha varaq bo'lsa ko'chiriladi (bet soni va o'lchami bir xil). Boshqa hujjat yuklansa, zonalar ko'chirilmaydi",
+    "notCarried": "Oldingi versiyada {n} ta zona bor edi. Bu fayl boshqa chizmaga o'xshaydi (bet soni yoki o'lchami farq qiladi), shuning uchun zonalar ko'chirilmadi",
+    "copyZones": "Baribir ko'chirish",
+    "clearZones": "Zonalarni o'chirish",
+    "clearZonesConfirm": "Bu versiyadagi {n} ta zona va ularning vazifalarga bog'lanishi o'chiriladi (vazifalarning o'zi qoladi). Davom etasizmi?"
   },
   "ticketStatus": {
     "NEW": "Yangi",

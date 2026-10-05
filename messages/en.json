@@ -1948,7 +1948,13 @@
     "tone_check": "Inspection",
     "tone_done": "Approved",
     "tone_bad": "Rework / blocked",
-    "tone_none": "No tasks"
+    "tone_none": "No tasks",
+    "carryZones": "Carry zones over",
+    "carryZonesHint": "Zones are carried over only to the same sheet (same page count and size); a different document starts clean",
+    "notCarried": "The previous version had {n} zones. This file looks like a different sheet (page count or size differs), so they were not carried over",
+    "copyZones": "Copy them anyway",
+    "clearZones": "Remove zones",
+    "clearZonesConfirm": "This removes {n} zones of this version and their task links (tasks stay). Continue?"
   },
   "ticketStatus": {
     "NEW": "New",

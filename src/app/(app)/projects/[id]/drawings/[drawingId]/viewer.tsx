@@ -4,12 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Expand, Hand, Minus, MousePointer2, Pentagon, Plus, Search, Spline, Square, MapPin, MessageSquareWarning, Maximize } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, Hand, Minus, MousePointer2, Pentagon, Plus, Search, Spline, Square, MapPin, MessageSquareWarning, Maximize, Loader2 } from "lucide-react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { Badge, Button, Input, Select, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { TaskSummary } from "@/server/drawings/drawings";
-import { addDrawingRemark, deleteZone, reviewZones, saveZone, type ZoneGeometry } from "../actions";
+import { addDrawingRemark, clearZones, copyZonesFromPrevious, deleteZone, reviewZones, saveZone, type ZoneGeometry } from "../actions";
 
 export type ViewerZone = { id: string; page: number; name: string; geometry: ZoneGeometry; locationId: string | null; needsReview: boolean; taskIds: string[] };
 export type ViewerRemark = { id: string; number: number; page: number; x: number; y: number; description: string; status: string; priority: string };
@@ -38,6 +38,8 @@ export function DrawingViewer(props: {
   versionId: string;
   isLatest: boolean;
   needsReview: boolean;
+  /** Zones of the previous version that were not carried over (a different sheet) — can be copied by hand. */
+  previousZones: number;
   initialPage: number;
   focusZoneId: string | null;
   zones: ViewerZone[];
@@ -97,35 +99,53 @@ export function DrawingViewer(props: {
   }, [props.fileUrl]);
 
   // ---- render the current page ----
+  // One render at a time on the canvas: a new page/zoom waits for the previous render to stop (pdf.js refuses
+  // two renders on one canvas). The canvas is capped to ~16 MP so large sheets render on every browser.
+  const renderRef = useRef<{ cancel: () => void; promise: Promise<unknown> } | null>(null);
+  const [rendering, setRendering] = useState(false);
   useEffect(() => {
     if (!doc) return;
-    let task: { cancel: () => void } | null = null;
     let cancelled = false;
     (async () => {
-      const p = await doc.getPage(page);
-      const vp1 = p.getViewport({ scale: 1 });
-      const box = scrollRef.current?.clientWidth ?? 900;
-      const f = Math.max(0.2, (box - 24) / vp1.width);
+      const prev = renderRef.current;
+      if (prev) {
+        prev.cancel();
+        await prev.promise.catch(() => undefined);
+      }
       if (cancelled) return;
-      setBase({ w: vp1.width, h: vp1.height });
-      setFit(f);
-      const scale = f * zoom;
-      const vp = p.getViewport({ scale });
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.floor(vp.width * dpr);
-      canvas.height = Math.floor(vp.height * dpr);
-      canvas.style.width = `${vp.width}px`;
-      canvas.style.height = `${vp.height}px`;
-      const ctx = canvas.getContext("2d")!;
-      const r = p.render({ canvasContext: ctx, canvas, viewport: vp, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined });
-      task = r;
-      await r.promise.catch(() => undefined);
+      setRendering(true);
+      try {
+        const p = await doc.getPage(page);
+        if (cancelled) return;
+        const vp1 = p.getViewport({ scale: 1 });
+        const box = scrollRef.current?.clientWidth ?? 900;
+        const f = Math.max(0.05, (box - 24) / vp1.width);
+        setBase({ w: vp1.width, h: vp1.height });
+        setFit(f);
+        const vp = p.getViewport({ scale: f * zoom });
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const MAX_PIXELS = 16_000_000;
+        let dpr = window.devicePixelRatio || 1;
+        if (vp.width * vp.height * dpr * dpr > MAX_PIXELS) dpr = Math.sqrt(MAX_PIXELS / (vp.width * vp.height));
+        canvas.width = Math.floor(vp.width * dpr);
+        canvas.height = Math.floor(vp.height * dpr);
+        canvas.style.width = `${vp.width}px`;
+        canvas.style.height = `${vp.height}px`;
+        const ctx = canvas.getContext("2d")!;
+        const r = p.render({ canvasContext: ctx, canvas, viewport: vp, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined });
+        renderRef.current = r;
+        await r.promise.catch(() => undefined);
+        if (renderRef.current === r) renderRef.current = null;
+      } catch {
+        // a cancelled or failed render leaves the previous image; the next page/zoom change retries
+      } finally {
+        if (!cancelled) setRendering(false);
+      }
     })();
     return () => {
       cancelled = true;
-      task?.cancel();
+      renderRef.current?.cancel();
     };
   }, [doc, page, zoom]);
 
@@ -309,7 +329,24 @@ export function DrawingViewer(props: {
             <ChevronLeft className="size-4" />
           </button>
           <span className="num text-xs">
-            {page} / {numPages}
+            <input
+              key={page}
+              defaultValue={page}
+              inputMode="numeric"
+              aria-label="page"
+              className="num w-10 rounded border border-border bg-transparent px-1 text-center"
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                const n = Number((e.target as HTMLInputElement).value);
+                if (n >= 1 && n <= numPages) setPage(Math.round(n));
+              }}
+              onBlur={(e) => {
+                const n = Number(e.target.value);
+                if (n >= 1 && n <= numPages && n !== page) setPage(Math.round(n));
+              }}
+            />{" "}
+            / {numPages}
+            {rendering && <Loader2 className="ml-1 inline size-3.5 animate-spin" aria-hidden />}
           </span>
           <button type="button" disabled={page >= numPages} onClick={() => setPage(page + 1)} className="rounded-lg p-1.5 text-muted hover:bg-surface-2 disabled:opacity-40" aria-label="next">
             <ChevronRight className="size-4" />
@@ -449,10 +486,29 @@ export function DrawingViewer(props: {
               <div className="font-medium">{t("drawings.reviewBanner")}</div>
               <div className="mt-1 text-xs">{t("drawings.reviewCount", { n: String(reviewCount) })}</div>
               {props.canEdit && (
-                <Button type="button" variant="secondary" className="mt-2 h-8 text-xs" disabled={pending} onClick={() => run(reviewZones(props.versionId, null))}>
-                  {t("drawings.reviewAll")}
-                </Button>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button type="button" variant="secondary" className="h-8 text-xs" disabled={pending} onClick={() => run(reviewZones(props.versionId, null))}>
+                    {t("drawings.reviewAll")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-8 text-xs text-danger"
+                    disabled={pending}
+                    onClick={() => confirm(t("drawings.clearZonesConfirm", { n: String(props.zones.length) })) && run(clearZones(props.versionId))}
+                  >
+                    {t("drawings.clearZones")}
+                  </Button>
+                </div>
               )}
+            </div>
+          )}
+          {props.canEdit && props.isLatest && props.previousZones > 0 && props.zones.length === 0 && (
+            <div className="rounded-xl border border-border bg-surface p-3 text-sm">
+              <div>{t("drawings.notCarried", { n: String(props.previousZones) })}</div>
+              <Button type="button" variant="secondary" className="mt-2 h-8 text-xs" disabled={pending} onClick={() => run(copyZonesFromPrevious(props.versionId))}>
+                {t("drawings.copyZones")}
+              </Button>
             </div>
           )}
           {error && <div className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{t(`errors.${error}`)}</div>}

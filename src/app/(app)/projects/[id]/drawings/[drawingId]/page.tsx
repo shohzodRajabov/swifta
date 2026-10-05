@@ -85,6 +85,9 @@ export default async function DrawingPage({ params, searchParams }: PageProps<"/
         versionId={version.id}
         isLatest={version.id === latest.id}
         needsReview={version.needsReview}
+        previousZones={
+          version.id === latest.id && version._count.zones === 0 ? (drawing.versions[drawing.versions.indexOf(version) + 1]?._count.zones ?? 0) : 0
+        }
         initialPage={focus?.page ?? (Number(sp.page) || 1)}
         focusZoneId={focus?.id ?? null}
         zones={viewerZones}

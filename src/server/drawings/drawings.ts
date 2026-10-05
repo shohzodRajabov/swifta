@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { taskPercent } from "@/server/projects/progress";
+import { sameSheet } from "@/lib/drawing-match";
 
 /** Rough page count of a PDF (counts page objects); the viewer reads the exact number itself. */
 export function pdfPageCount(buf: Buffer): number {
@@ -10,31 +11,15 @@ export function pdfPageCount(buf: Buffer): number {
   return Math.max(1, n);
 }
 
-/**
- * A new version of a drawing. Zones and their task links are carried over from the previous version and
- * marked "needs review" (the geometry may have moved) — mappings are never silently lost.
- */
-export async function addDrawingVersion(
-  tx: Prisma.TransactionClient,
-  drawingId: string,
-  fileId: string,
-  pageCount: number,
-  userId: string,
-  note?: string | null,
-) {
-  const prev = await tx.drawingVersion.findFirst({
-    where: { drawingId },
-    orderBy: { version: "desc" },
-    include: { zones: { include: { tasks: true } } },
-  });
-  const version = await tx.drawingVersion.create({
-    data: { drawingId, version: (prev?.version ?? 0) + 1, fileId, pageCount, note, createdById: userId, needsReview: !!prev?.zones.length },
-  });
-  for (const z of prev?.zones ?? []) {
+/** Copies zones (with task links) from one version to another, marked "needs review". Returns the count. */
+export async function copyZones(tx: Prisma.TransactionClient, fromVersionId: string, toVersionId: string, pageCount: number, userId: string) {
+  const zones = await tx.drawingZone.findMany({ where: { versionId: fromVersionId }, include: { tasks: true } });
+  let n = 0;
+  for (const z of zones) {
     if (z.page > pageCount) continue;
     await tx.drawingZone.create({
       data: {
-        versionId: version.id,
+        versionId: toVersionId,
         page: z.page,
         name: z.name,
         kind: z.kind,
@@ -45,8 +30,33 @@ export async function addDrawingVersion(
         tasks: { create: z.tasks.map((t) => ({ taskId: t.taskId })) },
       },
     });
+    n++;
   }
-  return version;
+  if (n) await tx.drawingVersion.update({ where: { id: toVersionId }, data: { needsReview: true } });
+  return n;
+}
+
+/**
+ * A new version of a drawing. Zones are carried over (marked "needs review") only when the new file is the same
+ * sheet — same page count and page size — or when explicitly asked; a different document starts clean and the
+ * previous zones can still be copied by hand from the viewer.
+ */
+export async function addDrawingVersion(
+  tx: Prisma.TransactionClient,
+  drawingId: string,
+  fileId: string,
+  sheet: { pageCount: number; pageWidth: number | null; pageHeight: number | null },
+  userId: string,
+  note: string | null,
+  carry: "auto" | "no" | "yes" = "auto",
+) {
+  const prev = await tx.drawingVersion.findFirst({ where: { drawingId }, orderBy: { version: "desc" }, include: { _count: { select: { zones: true } } } });
+  const version = await tx.drawingVersion.create({
+    data: { drawingId, version: (prev?.version ?? 0) + 1, fileId, ...sheet, note, createdById: userId, needsReview: false },
+  });
+  const copy = !!prev?._count.zones && (carry === "yes" || (carry === "auto" && sameSheet(prev, sheet)));
+  const copied = copy ? await copyZones(tx, prev!.id, version.id, sheet.pageCount, userId) : 0;
+  return { ...version, copied, previousZones: prev?._count.zones ?? 0 };
 }
 
 export type TaskSummary = {

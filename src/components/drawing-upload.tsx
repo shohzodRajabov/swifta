@@ -33,10 +33,20 @@ export function NewDrawingForm({ projectId }: { projectId: string }) {
 export function NewVersionButton({ projectId, drawingId }: { projectId: string; drawingId: string }) {
   const t = useTranslations();
   const note = useRef<HTMLInputElement>(null);
+  const carry = useRef<HTMLInputElement>(null);
   return (
     <div className="flex flex-wrap items-end gap-2">
       <Input ref={note} placeholder={t("drawings.versionNote")} className="h-9 w-56" />
-      <UploadButton accept=".pdf" label={t("drawings.uploadVersion")} fields={{ purpose: "drawing", projectId, drawingId }} getFields={() => ({ note: note.current?.value ?? "" })} />
+      <label className="flex h-9 items-center gap-1.5 text-xs text-muted" title={t("drawings.carryZonesHint")}>
+        <input ref={carry} type="checkbox" defaultChecked className="size-4" />
+        {t("drawings.carryZones")}
+      </label>
+      <UploadButton
+        accept=".pdf"
+        label={t("drawings.uploadVersion")}
+        fields={{ purpose: "drawing", projectId, drawingId }}
+        getFields={() => ({ note: note.current?.value ?? "", copyZones: carry.current?.checked ? "auto" : "no" })}
+      />
     </div>
   );
 }

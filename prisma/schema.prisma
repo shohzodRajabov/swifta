@@ -1946,6 +1946,9 @@ model DrawingVersion {
   fileId      String
   file        FileObject @relation(fields: [fileId], references: [id])
   pageCount   Int        @default(1)
+  /// First page size in PDF points (to tell whether a new version is the same sheet).
+  pageWidth   Float?
+  pageHeight  Float?
   note        String?
   /// Set when zones were carried over from the previous version and need review.
   needsReview Boolean    @default(false)

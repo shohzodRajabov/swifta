@@ -9,6 +9,7 @@ import { fail, runAction, type ActionState } from "@/lib/action";
 import type { CurrentUser } from "@/lib/auth";
 import { accessibleProject } from "@/server/projects/access";
 import { nextRemarkNumber } from "@/server/workforce/tasks";
+import { copyZones } from "@/server/drawings/drawings";
 
 const ctx = (u: CurrentUser) => ({ companyId: u.companyId, userId: u.id });
 const coord = z.number().min(-0.05).max(1.05);
@@ -98,6 +99,40 @@ export async function reviewZones(versionId: string, zoneId: string | null): Pro
       const left = await tx.drawingZone.count({ where: { versionId, needsReview: true } });
       if (left === 0) await tx.drawingVersion.update({ where: { id: versionId }, data: { needsReview: false } });
       await audit(tx, ctx(user), "DrawingVersion", versionId, "update", null, { reviewed: zoneId ?? "all" });
+    });
+  });
+  if (res?.ok && path) revalidatePath(path);
+  return res;
+}
+
+/** Copies the previous version's zones onto this (latest) version — when they weren't carried over automatically. */
+export async function copyZonesFromPrevious(versionId: string): Promise<ActionState> {
+  let path = "";
+  const res = await runAction("drawings.edit", async (user) => {
+    const v = await loadVersion(user, versionId);
+    path = `/projects/${v.drawing.projectId}/drawings/${v.drawingId}`;
+    const prev = await db.drawingVersion.findFirst({ where: { drawingId: v.drawingId, version: { lt: v.version } }, orderBy: { version: "desc" } });
+    if (!prev) fail("invalid");
+    await db.$transaction(async (tx) => {
+      const n = await copyZones(tx, prev.id, v.id, v.pageCount, user.id);
+      await audit(tx, ctx(user), "DrawingVersion", v.id, "update", null, { zonesCopiedFrom: prev.version, count: n });
+    });
+  });
+  if (res?.ok && path) revalidatePath(path);
+  return res;
+}
+
+/** Removes every zone of a version (e.g. zones carried over onto a different sheet). Task links go with them. */
+export async function clearZones(versionId: string): Promise<ActionState> {
+  let path = "";
+  const res = await runAction("drawings.edit", async (user) => {
+    const v = await loadVersion(user, versionId);
+    path = `/projects/${v.drawing.projectId}/drawings/${v.drawingId}`;
+    await db.$transaction(async (tx) => {
+      const zones = await tx.drawingZone.findMany({ where: { versionId }, select: { id: true, name: true, page: true } });
+      await tx.drawingZone.deleteMany({ where: { versionId } });
+      await tx.drawingVersion.update({ where: { id: versionId }, data: { needsReview: false } });
+      await audit(tx, ctx(user), "DrawingVersion", versionId, "update", { zones }, { zones: [] });
     });
   });
   if (res?.ok && path) revalidatePath(path);

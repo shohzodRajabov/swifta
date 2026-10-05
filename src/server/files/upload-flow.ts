@@ -8,6 +8,7 @@ import { projectWhere } from "@/server/projects/access";
 import { projectOfAttachment } from "@/server/files/access";
 import { parseSmeta } from "@/server/import/smeta";
 import { addDrawingVersion, pdfPageCount } from "@/server/drawings/drawings";
+import { pdfFirstPageSize } from "@/lib/drawing-match";
 import { deleteObject } from "./storage";
 
 // What an upload is for and who may do it — shared by the multipart route and the direct (browser → bucket) flow.
@@ -135,9 +136,11 @@ export async function finishUpload(user: CurrentUser, fields: UploadFields, stor
     const note = fields.note?.trim() || null;
     const result = await db.$transaction(async (tx) => {
       const d = drawing ?? (await tx.drawing.create({ data: { companyId: user.companyId, projectId: fields.projectId, title, discipline } }));
-      const v = await addDrawingVersion(tx, d.id, stored.id, pdfPageCount(buf), user.id, note);
-      await audit(tx, ctx, "Drawing", d.id, drawing ? "update" : "create", null, { title: d.title, version: v.version, fileName: stored.fileName });
-      return { drawingId: d.id, version: v.version };
+      const size = pdfFirstPageSize(buf.subarray(0, 4_000_000).toString("latin1"));
+      const carry = fields.copyZones === "no" ? "no" : "auto";
+      const v = await addDrawingVersion(tx, d.id, stored.id, { pageCount: pdfPageCount(buf), pageWidth: size?.w ?? null, pageHeight: size?.h ?? null }, user.id, note, carry);
+      await audit(tx, ctx, "Drawing", d.id, drawing ? "update" : "create", null, { title: d.title, version: v.version, fileName: stored.fileName, zonesCopied: v.copied });
+      return { drawingId: d.id, version: v.version, zonesCopied: v.copied, previousZones: v.previousZones };
     });
     return { status: 200, body: { ok: true, ...result } };
   }
