@@ -68,6 +68,7 @@ export const REPORTS: ReportDef[] = [
           acts: m.revenue.actual.uzs,
           received: m.received.uzs,
           receivable: m.receivable.uzs,
+          advance: m.advance.uzs,
           costPlan: m.cost.plan.uzs,
           costForecast: m.cost.forecast.uzs,
           costActual: m.cost.actual.uzs,
@@ -76,7 +77,7 @@ export const REPORTS: ReportDef[] = [
           end: p.plannedEndDate,
         };
       });
-      const totals: Row = { code: "", name: "", contract: sum(rows, "contract"), acts: sum(rows, "acts"), received: sum(rows, "received"), receivable: sum(rows, "receivable"), costPlan: sum(rows, "costPlan"), costForecast: sum(rows, "costForecast"), costActual: sum(rows, "costActual"), profit: sum(rows, "profit") };
+      const totals: Row = { code: "", name: "", contract: sum(rows, "contract"), acts: sum(rows, "acts"), received: sum(rows, "received"), receivable: sum(rows, "receivable"), advance: sum(rows, "advance"), costPlan: sum(rows, "costPlan"), costForecast: sum(rows, "costForecast"), costActual: sum(rows, "costActual"), profit: sum(rows, "profit") };
       return {
         columns: [
           { key: "code", label: "reports.col.code" },
@@ -88,6 +89,7 @@ export const REPORTS: ReportDef[] = [
           { key: "acts", label: "reports.col.acts", type: "money" },
           { key: "received", label: "reports.col.received", type: "money" },
           { key: "receivable", label: "reports.col.receivable", type: "money" },
+          { key: "advance", label: "reports.col.advance", type: "money" },
           { key: "costPlan", label: "reports.col.costPlan", type: "money" },
           { key: "costForecast", label: "reports.col.costForecast", type: "money" },
           { key: "costActual", label: "reports.col.costActual", type: "money" },

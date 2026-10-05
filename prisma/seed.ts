@@ -38,6 +38,8 @@ async function main() {
         name: "Administrator",
         roleId: adminRole.id,
         passwordHash: await bcrypt.hash(password, 10),
+        // The initial password is known to whoever deployed the system: it must be replaced at first sign-in.
+        mustChangePassword: true,
       },
     });
     console.log(`Admin created: ${email}`);

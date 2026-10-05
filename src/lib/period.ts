@@ -22,8 +22,10 @@ export function resolvePeriod(
 }
 
 function presetPeriod(key: PeriodKey, sp: { from?: string; to?: string }, now: Date): Period {
-  const y = now.getFullYear();
-  const m = now.getMonth();
+  // Calendar position in Tashkent (the server may run in UTC).
+  const local = toDateOnly(now);
+  const y = local.getUTCFullYear();
+  const m = local.getUTCMonth();
   const utc = (yy: number, mm: number, dd: number) => new Date(Date.UTC(yy, mm, dd));
   switch (key) {
     case "month":

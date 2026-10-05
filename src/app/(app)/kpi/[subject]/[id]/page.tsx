@@ -5,7 +5,7 @@ import type { KpiSubject } from "@prisma/client";
 import { requireAnyPermission } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { db } from "@/lib/db";
-import { isoDate } from "@/lib/utils";
+import { isoDate, today } from "@/lib/utils";
 import { Badge, Button, Card, CardHeader, Input, Notice, PageHeader } from "@/components/ui";
 import { CoverageNote, KpiScore, scoreTone } from "@/components/kpi-bits";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ export default async function KpiDetailPage({ params, searchParams }: PageProps<
   const own = subject === "EMPLOYEE" && user.employee?.id === id;
   if (!can(user, "kpi.view") && !own) redirect("/forbidden");
   const t = await getTranslations();
-  const d = new Date();
+  const d = today();
   const month = sp.month && /^\d{4}-\d{2}$/.test(sp.month) ? sp.month : isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
 
   const name =

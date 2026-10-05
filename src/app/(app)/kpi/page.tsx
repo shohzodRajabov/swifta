@@ -6,7 +6,7 @@ import { Settings2 } from "lucide-react";
 import { requireAnyPermission } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { db } from "@/lib/db";
-import { cn, formatDateTime, isoDate } from "@/lib/utils";
+import { cn, formatDateTime, isoDate, today } from "@/lib/utils";
 import { Badge, Button, Card, Empty, Input, LinkButton, Notice, PageHeader, Table, Td, Th } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { CoverageNote, KpiBar, KpiScore } from "@/components/kpi-bits";
@@ -17,7 +17,7 @@ import { calculateKpi, setKpiPeriodStatus } from "./actions";
 const SUBJECTS: KpiSubject[] = ["EMPLOYEE", "GROUP", "CONTRACTOR"];
 
 function prevMonth() {
-  const d = new Date();
+  const d = today();
   return isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
 }
 

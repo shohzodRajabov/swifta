@@ -28,7 +28,7 @@ export async function createUser(_: ActionState, formData: FormData): Promise<Ac
     if (!phone && !email) fail("required");
     await ownRole(user, data.roleId);
     const password = data.password ?? generateOneTimePassword();
-    if (password.length < 6) fail("invalid");
+    if (password.length < 8) fail("passwordShort");
     await db.$transaction(async (tx) => {
       const u = await tx.user.create({
         data: {
@@ -100,7 +100,7 @@ export async function resetPassword(id: string, _: ActionState): Promise<ActionS
     await db.$transaction(async (tx) => {
       await tx.user.update({
         where: { id },
-        data: { passwordHash: await bcrypt.hash(password, 10), mustChangePassword: true },
+        data: { passwordHash: await bcrypt.hash(password, 10), mustChangePassword: true, sessionVersion: { increment: 1 } },
       });
       await audit(tx, { companyId: user.companyId, userId: user.id }, "User", id, "update", null, { password: "reset" });
     });

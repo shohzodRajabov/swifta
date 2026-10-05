@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { resolvePeriod } from "@/lib/period";
-import { formatDate, isoDate } from "@/lib/utils";
+import { formatDate, isoDate, today } from "@/lib/utils";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Badge, Button, Card, Empty, Input, Notice, PageHeader, Select } from "@/components/ui";
@@ -15,7 +15,7 @@ import { reportsFor, type Col, type Row } from "@/server/reports/defs";
 import { cellText } from "@/server/reports/format";
 
 function prevMonth() {
-  const d = new Date();
+  const d = today();
   return isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
 }
 

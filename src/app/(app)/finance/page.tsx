@@ -40,7 +40,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/finance"
       .map((p) => ({ p, m: metrics.get(p.id)! }))
       .filter((r) => r.m.contractTotalGross.uzs > 0 || r.m.actsGross.uzs > 0)
       .sort((a, b) => b.m.overdueDebt.uzs - a.m.overdueDebt.uzs || b.m.receivable.uzs - a.m.receivable.uzs);
-    const keys = ["contractTotalGross", "actsGross", "received", "receivable", "overdueDebt"] as const;
+    const keys = ["contractTotalGross", "actsGross", "received", "receivable", "advance", "overdueDebt"] as const;
     const total = (k: (typeof keys)[number]) => sumAmounts(rows.map((r) => r.m[k]));
     return (
       <>
@@ -59,6 +59,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/finance"
                   <Th className="text-right">{t("finance.actsSigned")}</Th>
                   <Th className="text-right">{t("finance.received")}</Th>
                   <Th className="text-right">{t("finance.receivable")}</Th>
+                  <Th className="text-right">{t("finance.advance")}</Th>
                   <Th className="text-right">{t("finance.overdue")}</Th>
                 </tr>
               </thead>

@@ -406,6 +406,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
                 {t("finance.overdue")}: <Money value={total((m) => m.overdueDebt)} size="sm" compact align="left" />
               </>
             ))}
+            {kpi(t("finance.advance"), total((m) => m.advance), undefined, t("finance.advanceHint"))}
             {kpi(t("dashboard.supplierDebt"), supplierDebt)}
             {kpi(t("dashboard.contractorDebt"), contractorDebt)}
             {kpi(t("finance.actsSigned"), total((m) => m.actsGross))}

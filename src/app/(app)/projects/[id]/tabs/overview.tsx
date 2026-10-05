@@ -109,12 +109,13 @@ export async function OverviewTab({
               </div>
             )}
           </Card>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {(
               [
                 ["finance.contractTotal", m.contractTotalGross],
                 ["finance.received", m.received],
                 ["finance.receivable", m.receivable],
+                ["finance.advance", m.advance],
                 ["finance.overdue", m.overdueDebt],
               ] as const
             ).map(([label, value]) => (

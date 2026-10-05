@@ -474,6 +474,8 @@ model User {
   roleDef            RoleDef?  @relation(fields: [roleId], references: [id])
   /// Set when an admin issues a one-time password; the user must choose their own on next login.
   mustChangePassword Boolean   @default(false)
+  /// Bumped on password change / reset / "sign out everywhere": older session tokens stop working.
+  sessionVersion     Int       @default(0)
   lastLoginAt        DateTime?
   locale             String    @default("uz")
   active             Boolean   @default(true)
@@ -2031,4 +2033,13 @@ model ServiceTicket {
 
   @@unique([companyId, number])
   @@index([companyId, status])
+}
+
+/// Failed sign-in attempts per key ("id:<identifier>" or "ip:<address>") for brute-force protection.
+model AuthThrottle {
+  key         String    @id
+  failures    Int       @default(0)
+  firstAt     DateTime  @default(now())
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
 }

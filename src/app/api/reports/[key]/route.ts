@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { resolvePeriod } from "@/lib/period";
-import { isoDate } from "@/lib/utils";
+import { isoDate, today } from "@/lib/utils";
 import { reportsFor } from "@/server/reports/defs";
 import { cellText } from "@/server/reports/format";
 
@@ -18,7 +18,7 @@ export async function GET(request: Request, { params }: RouteContext<"/api/repor
   if (!def) return new Response("Not found", { status: 404 });
   const sp = Object.fromEntries(new URL(request.url).searchParams);
   const period = resolvePeriod(sp, "year");
-  const d = new Date();
+  const d = today();
   const month = sp.month && /^\d{4}-\d{2}$/.test(sp.month) ? sp.month : isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
   const data = await def.run({
     user,

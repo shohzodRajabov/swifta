@@ -20,10 +20,11 @@ export const getCurrentUser = cache(async () => {
   if (!user && session.homeUserId) {
     // The demo workspace was rebuilt while being viewed: fall back to the user's own account.
     const home = await load(session.homeUserId);
-    if (!home || !home.active || home.company.isDemo) return null;
+    if (!home || !home.active || home.company.isDemo || home.sessionVersion !== (session.hsv ?? 0)) return null;
     return { ...home, perms: home.roleDef?.permissions ?? [], homeUserId: null };
   }
   if (!user || !user.active || user.companyId !== session.companyId) return null;
+  if (user.sessionVersion !== (session.sv ?? 0)) return null; // signed out everywhere / password changed
   return { ...user, perms: user.roleDef?.permissions ?? [], homeUserId: session.homeUserId ?? null };
 });
 

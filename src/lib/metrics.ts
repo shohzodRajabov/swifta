@@ -55,8 +55,10 @@ export type ProjectMetrics = {
   revenue: { plan: Amount; forecast: Amount; actual: Amount };
   /** Money received from the customer (gross, cash). */
   received: Amount;
-  /** Signed acts (gross) minus payments received. */
+  /** Signed acts (gross) minus payments received (never negative). */
   receivable: Amount;
+  /** Payments received beyond signed acts: an advance — work we still owe the customer (contract liability). */
+  advance: Amount;
   /** Payment-schedule instalments past due and not yet paid. */
   overdueDebt: Amount;
   scheduled: Amount;
@@ -343,6 +345,7 @@ export async function computeMetrics(projects: ProjectLite[]): Promise<Map<strin
       revenue,
       received,
       receivable: clamp0(sub(actsGross, received)),
+      advance: clamp0(sub(received, actsGross)),
       overdueDebt: clamp0(sub(dueSoFar, received)),
       scheduled,
       actsGross,

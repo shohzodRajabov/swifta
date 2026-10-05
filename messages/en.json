@@ -110,7 +110,16 @@
     "passwordHint": "At least 8 characters",
     "passwordMismatch": "Passwords do not match",
     "passwordShort": "Password must be at least 8 characters",
-    "savePassword": "Save and continue"
+    "savePassword": "Save and continue",
+    "locked": "Too many failed attempts. Try again in {minutes} min",
+    "currentPassword": "Current password",
+    "currentWrong": "Current password is wrong",
+    "passwordSame": "The new password must differ from the old one",
+    "changePasswordText": "After the change, all other sessions are signed out",
+    "changePassword": "Change password",
+    "logoutEverywhere": "Sign out everywhere",
+    "logoutEverywhereHint": "If a phone is lost or the password leaked",
+    "back": "Back"
   },
   "roles": {
     "ADMIN": "Administrator",
@@ -547,7 +556,9 @@
     "pnlHint": "Revenue = signed acts; direct costs = project costs; profit tax = estimate for general-regime firms",
     "netMargin": "Net margin",
     "directByCategory": "Direct costs by category",
-    "byMonth": "By month"
+    "byMonth": "By month",
+    "advance": "Advance received",
+    "advanceHint": "Paid by the customer but not yet covered by signed acts — our obligation (work still owed)"
   },
   "users": {
     "title": "Users",
@@ -634,7 +645,8 @@
     "drawingPdfOnly": "The drawing must be a PDF",
     "drawingOldVersion": "Zones can only be edited on the latest version",
     "ticketClientRequired": "Choose a client or a project",
-    "ticketSolutionRequired": "Describe the solution first"
+    "ticketSolutionRequired": "Describe the solution first",
+    "passwordShort": "The password must be at least 8 characters"
   },
   "poStatus": {
     "DRAFT": "Draft",
@@ -2098,7 +2110,8 @@
       "warrantyCost": "Warranty cost",
       "warrantyTickets": "Warranty tickets",
       "workedDays": "Worked days",
-      "zone": "Zone"
+      "zone": "Zone",
+      "advance": "Advance received"
     },
     "r_projects": "Project report",
     "r_projects_hint": "Contract, revenue, receivables, costs plan/forecast/actual, profit, progress",

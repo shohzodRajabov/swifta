@@ -63,6 +63,7 @@ export async function RevenueTab({
             ["finance.actsSigned", m.actsGross],
             ["finance.received", m.received],
             ["finance.receivable", m.receivable],
+            ["finance.advance", m.advance],
           ] as const
         ).map(([label, value]) => (
           <Card key={label} className="p-4">

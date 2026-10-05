@@ -3,7 +3,7 @@ import type { KpiSubject } from "@prisma/client";
 import { requireAnyPermission } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { db } from "@/lib/db";
-import { formatDate, isoDate } from "@/lib/utils";
+import { formatDate, isoDate, today } from "@/lib/utils";
 import { Badge, Card, CardHeader, Field, Input, Notice, PageHeader } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { KPI_COMPONENTS, type RuleComponent } from "@/lib/kpi";
@@ -16,7 +16,7 @@ export default async function KpiRulesPage() {
   const t = await getTranslations();
   const manage = can(user, "kpi.manage");
   const rules = await db.kpiRule.findMany({ where: { companyId: user.companyId }, orderBy: [{ subject: "asc" }, { version: "desc" }] });
-  const d = new Date();
+  const d = today();
   const nextMonth = isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)));
 
   return (

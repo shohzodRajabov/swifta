@@ -33,7 +33,7 @@ import {
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { LocaleSwitcher } from "./locale-switcher";
-import { logout } from "@/app/login/actions";
+import { logout, logoutEverywhere } from "@/app/login/actions";
 
 const ICONS: Record<string, typeof Boxes> = {
   dashboard: LayoutDashboard,
@@ -153,6 +153,16 @@ export function AppShell({
       <div className="mb-2 min-w-0">
         <div className="truncate text-sm font-medium">{user.name}</div>
         <div className="truncate text-xs text-muted">{user.roleLabel}</div>
+      </div>
+      <div className="mb-1 flex flex-wrap gap-x-3 text-xs">
+        <Link href="/set-password" className="text-muted hover:text-text">
+          {t("auth.changePassword")}
+        </Link>
+        <form action={logoutEverywhere}>
+          <button type="submit" className="text-muted hover:text-text" title={t("auth.logoutEverywhereHint")}>
+            {t("auth.logoutEverywhere")}
+          </button>
+        </form>
       </div>
       <div className="flex items-center justify-between">
         <LocaleSwitcher />

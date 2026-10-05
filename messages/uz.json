@@ -110,7 +110,16 @@
     "passwordHint": "Kamida 8 belgi",
     "passwordMismatch": "Parollar mos kelmadi",
     "passwordShort": "Parol kamida 8 belgidan iborat bo'lishi kerak",
-    "savePassword": "Saqlash va davom etish"
+    "savePassword": "Saqlash va davom etish",
+    "locked": "Juda ko'p noto'g'ri urinish. {minutes} daqiqadan keyin qayta urinib ko'ring",
+    "currentPassword": "Joriy parol",
+    "currentWrong": "Joriy parol noto'g'ri",
+    "passwordSame": "Yangi parol eskisi bilan bir xil bo'lmasin",
+    "changePasswordText": "Parol almashtirilgach, boshqa barcha qurilmalardagi sessiyalar yopiladi",
+    "changePassword": "Parolni o'zgartirish",
+    "logoutEverywhere": "Barcha qurilmalardan chiqish",
+    "logoutEverywhereHint": "Telefon yo'qolsa yoki parol boshqalarga ma'lum bo'lsa",
+    "back": "Orqaga"
   },
   "roles": {
     "ADMIN": "Administrator",
@@ -547,7 +556,9 @@
     "pnlHint": "Daromad — imzolangan dalolatnomalar; to'g'ridan-to'g'ri xarajat — obyektlar xarajatlari; foyda solig'i — umumiy rejimdagi firmalar uchun taxmin",
     "netMargin": "Sof foyda marjasi",
     "directByCategory": "To'g'ridan-to'g'ri xarajatlar toifalar bo'yicha",
-    "byMonth": "Oylar bo'yicha"
+    "byMonth": "Oylar bo'yicha",
+    "advance": "Olingan avans",
+    "advanceHint": "Mijoz to'lagan, lekin akt bilan hali yopilmagan summa — bizning majburiyatimiz (bajarilishi kerak bo'lgan ish)"
   },
   "users": {
     "title": "Foydalanuvchilar",
@@ -634,7 +645,8 @@
     "drawingPdfOnly": "Chizma PDF formatida bo'lishi kerak",
     "drawingOldVersion": "Zonalar faqat oxirgi versiyada o'zgartiriladi",
     "ticketClientRequired": "Mijoz yoki obyektni tanlang",
-    "ticketSolutionRequired": "Avval yechimni yozing (nima qilindi)"
+    "ticketSolutionRequired": "Avval yechimni yozing (nima qilindi)",
+    "passwordShort": "Parol kamida 8 belgidan iborat bo'lsin"
   },
   "poStatus": {
     "DRAFT": "Qoralama",
@@ -2098,7 +2110,8 @@
       "warrantyCost": "Kafolat xarajati",
       "warrantyTickets": "Kafolat murojaatlari",
       "workedDays": "Ish kunlari",
-      "zone": "Zona"
+      "zone": "Zona",
+      "advance": "Olingan avans"
     },
     "r_projects": "Obyektlar bo'yicha hisobot",
     "r_projects_hint": "Shartnoma, tushum, debitorlik, reja/prognoz/amalda xarajat, foyda va bajarilish",

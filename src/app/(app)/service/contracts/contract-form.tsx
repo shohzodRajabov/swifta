@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import type { ServiceContract } from "@prisma/client";
-import { isoDate } from "@/lib/utils";
+import { isoDate, today } from "@/lib/utils";
 import { Field, Input, Select, Textarea } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { MoneyInput } from "@/components/forms/money-input";
@@ -20,7 +20,7 @@ export async function ContractForm({
   projects: Opt[];
 }) {
   const t = await getTranslations();
-  const d = new Date();
+  const d = today();
   return (
     <ActionForm action={action} className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
       <Field label={t("service.contractNumber")} required>

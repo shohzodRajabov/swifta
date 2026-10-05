@@ -3,8 +3,12 @@ import { SignJWT, jwtVerify } from "jose";
 export const SESSION_COOKIE = "swifta_session";
 const MAX_AGE = 60 * 60 * 24 * 14; // 14 days
 
-/** `homeUserId` is set while an admin is viewing the demo workspace (to switch back). */
-export type SessionPayload = { userId: string; companyId: string; homeUserId?: string | null };
+/**
+ * `homeUserId` is set while an admin is viewing the demo workspace (to switch back).
+ * `sv` / `hsv` are the users' session versions at sign-in: a password change or "sign out everywhere"
+ * bumps the version and every older token stops working.
+ */
+export type SessionPayload = { userId: string; companyId: string; homeUserId?: string | null; sv?: number; hsv?: number };
 
 function key() {
   const secret = process.env.AUTH_SECRET;

@@ -21,7 +21,7 @@ export async function switchWorkspace() {
   if (user.company.isDemo) {
     const home = user.homeUserId ? await db.user.findFirst({ where: { id: user.homeUserId, active: true } }) : null;
     if (!home) redirect("/login");
-    jar.set(SESSION_COOKIE, await signSession({ userId: home.id, companyId: home.companyId }), sessionCookieOptions);
+    jar.set(SESSION_COOKIE, await signSession({ userId: home.id, companyId: home.companyId, sv: home.sessionVersion }), sessionCookieOptions);
     redirect("/");
   }
   if (!can(user, "demo.access")) redirect("/forbidden");
@@ -45,7 +45,7 @@ export async function switchWorkspace() {
       },
     });
   }
-  jar.set(SESSION_COOKIE, await signSession({ userId: demoUser.id, companyId: demo.id, homeUserId: user.id }), sessionCookieOptions);
+  jar.set(SESSION_COOKIE, await signSession({ userId: demoUser.id, companyId: demo.id, homeUserId: user.id, sv: demoUser.sessionVersion, hsv: user.sessionVersion }), sessionCookieOptions);
   redirect("/");
 }
 

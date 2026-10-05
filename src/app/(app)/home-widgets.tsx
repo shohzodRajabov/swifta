@@ -107,7 +107,7 @@ export async function HomeWidgets({ user, compact = false }: { user: CurrentUser
   }
 
   if (can(user, "kpi.view")) {
-    const d = new Date();
+    const d = toDateOnly(new Date());
     const month = isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
     const [emp, grp] = await Promise.all([kpiTable(user.companyId, "EMPLOYEE", month), kpiTable(user.companyId, "GROUP", month)]);
     const ok = emp.rows.filter((r) => coverage(r.components) >= MIN_COVERAGE && r.score !== null);
@@ -127,7 +127,7 @@ export async function HomeWidgets({ user, compact = false }: { user: CurrentUser
   }
 
   if (can(user, "payroll.manage")) {
-    const d = new Date();
+    const d = toDateOnly(new Date());
     const month = isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
     const pm = await db.payrollMonth.findUnique({ where: { companyId_month: { companyId: user.companyId, month } } });
     widgets.push({
@@ -174,7 +174,7 @@ export async function ManagementTiles({ user }: { user: CurrentUser }) {
   const today = toDateOnly(new Date());
   const tiles: { label: string; value: React.ReactNode; sub?: React.ReactNode; href: string }[] = [];
   if (can(user, "kpi.view")) {
-    const d = new Date();
+    const d = toDateOnly(new Date());
     const month = isoDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1))).slice(0, 7);
     const emp = await kpiTable(user.companyId, "EMPLOYEE", month);
     const ok = emp.rows.filter((r) => coverage(r.components) >= MIN_COVERAGE && r.score !== null);

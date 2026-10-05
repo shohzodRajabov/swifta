@@ -15,6 +15,8 @@ async function tick() {
   try {
     await maybeDailyBackup();
     await maybeTelegramDigests();
+    // Stale sign-in throttle counters.
+    await db.authThrottle.deleteMany({ where: { updatedAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } } });
   } catch (e) {
     console.error("[scheduler]", e);
   } finally {
