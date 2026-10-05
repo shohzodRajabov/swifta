@@ -27,8 +27,9 @@ Kelishilgan arxitektura va ochiq savollar: [docs/KONSEPT.md](docs/KONSEPT.md). Y
 Saytga (`railway up`) faqat foydalanuvchi aniq ruxsat bergandan keyin chiqariladi.
 
 ## Holat
-Saytda (swifta.uz): obyektlar, mijozlar, katalog, moliya, xarid, ombor, yetkazib beruvchilar, material nazorati, bildirishnomalar; 1-bosqich (asos) va 2-bosqich (xodimlar, guruhlar, vazifalar, sessiyalar, kamchiliklar, davomat, oylik, smeta importi, /me); 3-bosqich (contractorlar, tashqi ishlar, rating/reliability); 4-bosqich (KPI); 5-bosqich (chizmalar); 6-bosqich (servis va kafolat).
-Keyingi: 7-bosqich hisobotlar, rollarga mos bosh sahifalar, eksport (docs/KONSEPT.md §13).
+Saytda (swifta.uz): obyektlar, mijozlar, katalog, moliya, xarid, ombor, yetkazib beruvchilar, material nazorati, bildirishnomalar; 1-bosqich (asos) va 2-bosqich (xodimlar, guruhlar, vazifalar, sessiyalar, kamchiliklar, davomat, oylik, smeta importi, /me); 3-bosqich (contractorlar, tashqi ishlar, rating/reliability); 4-bosqich (KPI); 5-bosqich (chizmalar); 6-bosqich (servis va kafolat); 7-bosqich (hisobotlar, Excel eksport, rollarga mos bosh sahifa).
+Barcha rejalashtirilgan bosqichlar bajarilgan; keyingi ishlar foydalanuvchi bilan kelishiladi.
+Hisobot qo'shish: src/server/reports/defs.ts (REPORTS) + scripts/i18n tarjimalar.
 pdf.js worker: `public/pdf.worker.min.mjs` (pdfjs-dist yangilansa qayta nusxalang).
 Demo ma'lumot o'zgarsa `DEMO_VERSION` (src/server/demo/generate.ts) ni oshiring — sayt demo'ni qayta yaratadi.
 Lokal: `pnpm local` (yoki `pnpm dev --port 3100`); `pnpm db:seed`, `pnpm db:demo` (faqat lokal demo, parol demo12345).

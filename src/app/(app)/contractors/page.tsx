@@ -185,7 +185,7 @@ export default async function ContractorsPage({ searchParams }: PageProps<"/cont
                   </Td>
                   <Td className="num text-right">{s?.stats.withDeadline ? `${Math.round((s.stats.onTime / s.stats.withDeadline) * 100)}%` : "—"}</Td>
                   <Td className="num text-right">
-                    {s && s.stats.completed + s.stats.rejected > 0 ? `${Math.round((s.stats.reworked / (s.stats.completed + s.stats.rejected)) * 100)}%` : "—"}
+                    {s && s.stats.total - s.stats.active > 0 ? `${Math.min(100, Math.round((s.stats.reworked / (s.stats.total - s.stats.active)) * 100))}%` : "—"}
                   </Td>
                   {showMoney && (
                     <Td className="text-right">

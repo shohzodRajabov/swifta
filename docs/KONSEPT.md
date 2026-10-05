@@ -135,7 +135,7 @@ alohida hisoblanadi va hech qachon hajmni xodimlar soniga ko'paytirmaydi.
 | 4 | KPI: versiyalangan formulalar (xodim/guruh/contractor), oylik hisoblash va tasdiqlash, foizdan vazifagacha ochib ko'rish | Saytda |
 | 5 | Chizmalar: PDF (pdf.js), nuqta/chiziq/to'rtburchak/ko'pburchak zonalar, ko'p taskka bog'lash, vizual holat va progress, chizmadagi kamchiliklar, versiyalar (zonalar ko'chiriladi + tekshirish) | Saytda |
 | 6 | Servis va kafolat: shartnomalar (chastota, SLA, rejali tashriflar), murojaatlar (tashxis, yechim, ehtiyot qismlar, xarajat, hisob, rasmlar), SLA nazorati, kafolat muddatlari, P&L ga servis daromad/xarajatlari | Saytda |
-| 7 | Hisobotlar, rollarga mos bosh sahifalar, eksport | |
+| 7 | Hisobotlar (13 ta, filtrlar, Excel eksport), rollarga mos bosh sahifa bloklari | Saytda |
 
 ## 14. Foydalanuvchi javoblari (2026-10-03)
 

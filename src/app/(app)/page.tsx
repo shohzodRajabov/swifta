@@ -24,10 +24,23 @@ import { computePnl } from "@/server/finance/pnl";
 import { contractorBalances } from "@/server/contractors/balances";
 import { missingDocsByProject } from "@/server/projects/missing-docs";
 import { attentionCounts } from "@/server/attention";
+import type { Permission } from "@/lib/permissions";
+import { HomeWidgets } from "./home-widgets";
 
 export default async function DashboardPage({ searchParams }: PageProps<"/">) {
   const user = await requireUser();
-  if (!can(user, "dashboard.view")) redirect(can(user, "worker.self") ? "/me" : "/projects");
+  if (!can(user, "dashboard.view")) {
+    // Roles without the management dashboard get a home built from their own work blocks.
+    const ops: Permission[] = ["tasks.manage", "inspections.perform", "sessions.approve", "service.view", "warehouse.view", "procurement.view", "finance.approve", "kpi.view", "payroll.manage", "outsource.verify"];
+    if (!ops.some((p) => can(user, p))) redirect(can(user, "worker.self") ? "/me" : "/projects");
+    const th = await getTranslations("home");
+    return (
+      <>
+        <PageHeader title={th("greeting", { name: user.name.split(" ")[0] })} subtitle={th("roleHomeHint")} />
+        <HomeWidgets user={user} />
+      </>
+    );
+  }
   const sp = (await searchParams) as {
     client?: string;
     manager?: string;
@@ -187,6 +200,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
   return (
     <>
       <PageHeader title={t("dashboard.title")} subtitle={t("dashboard.subtitle")} />
+      <HomeWidgets user={user} compact />
 
       <Card className="mb-6">
         <form className="flex flex-wrap items-end gap-2 p-3">

@@ -11,7 +11,7 @@ type Entry = { key: string; href: string; perm: Permission | Permission[]; phase
 
 /** Modules in the order they appear in the sidebar. `phase` marks modules that are not available yet. */
 const MAIN: Entry[] = [
-  { key: "dashboard", href: "/", perm: "dashboard.view" },
+  { key: "dashboard", href: "/", perm: ["dashboard.view", "tasks.manage", "inspections.perform", "sessions.approve", "service.view", "warehouse.view", "procurement.view", "finance.approve", "kpi.view"] },
   { key: "me", href: "/me", perm: "worker.self" },
   { key: "projects", href: "/projects", perm: "projects.view" },
   { key: "tasks", href: "/tasks", perm: "tasks.view" },
@@ -30,7 +30,7 @@ const MAIN: Entry[] = [
 ];
 
 /** Routes that exist in this build (others are shown as "coming"). */
-const READY = new Set(["dashboard", "me", "tasks", "calendar", "employees", "contractors", "kpi", "service", "projects", "clients", "catalog", "procurement", "warehouse", "suppliers", "finance", "notifications"]);
+const READY = new Set(["dashboard", "me", "tasks", "calendar", "employees", "contractors", "kpi", "service", "reports", "projects", "clients", "catalog", "procurement", "warehouse", "suppliers", "finance", "notifications"]);
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
